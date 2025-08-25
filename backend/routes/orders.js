@@ -1,0 +1,190 @@
+const express = require('express');
+const jwt = require('jsonwebtoken');
+const { v4: uuidv4 } = require('uuid');
+const router = express.Router();
+const { getDatabase, getCollection, COLLECTIONS } = require('../config/database');
+
+// Middleware to verify JWT token
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ error: 'Access token required' });
+  }
+
+  try {
+    // Verify JWT token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(403).json({ error: 'Invalid or expired token' });
+  }
+};
+
+// In-memory storage for orders (replace with database in production)
+let orders = [];
+
+async function getOrdersCollection() {
+  try {
+    const db = await getDatabase();
+    if (!db) return null;
+    return await getCollection(COLLECTIONS.ORDERS);
+  } catch (e) {
+    return null;
+  }
+}
+
+// Create new order
+router.post('/', authenticateToken, async (req, res) => {
+  try {
+    const { items, total_amount, shipping_address, shipping_city, shipping_state, shipping_pincode, shipping_phone } = req.body;
+
+    if (!items || !total_amount || !shipping_address || !shipping_city || !shipping_state || !shipping_pincode) {
+      return res.status(400).json({ error: 'Missing required order details' });
+    }
+
+    const newOrder = {
+      id: uuidv4(),
+      user_id: req.user.id,
+      items: items,
+      total_amount: total_amount,
+      shipping_address: shipping_address,
+      shipping_city: shipping_city,
+      shipping_state: shipping_state,
+      shipping_pincode: shipping_pincode,
+      shipping_phone: shipping_phone || '',
+      status: 'pending',
+      payment_status: 'pending',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    const col = await getOrdersCollection();
+    if (col) {
+      await col.insertOne({ ...newOrder });
+      return res.status(201).json({ success: true, message: 'Order created successfully', order: newOrder });
+    }
+
+    orders.push(newOrder);
+
+    res.status(201).json({ success: true, message: 'Order created successfully', order: newOrder });
+
+  } catch (error) {
+    console.error('Order creation error:', error);
+    res.status(500).json({ error: 'Failed to create order' });
+  }
+});
+
+// Get user orders
+router.get('/', authenticateToken, async (req, res) => {
+  try {
+    const col = await getOrdersCollection();
+    if (col) {
+      const userOrders = await col.find({ user_id: req.user.id }).sort({ created_at: -1 }).toArray();
+      return res.json({ success: true, orders: userOrders });
+    }
+    const userOrders = orders.filter(order => order.user_id === req.user.id);
+    res.json({ success: true, orders: userOrders });
+
+  } catch (error) {
+    console.error('Orders fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch orders' });
+  }
+});
+
+// Get order by ID
+router.get('/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const col = await getOrdersCollection();
+    const order = col ? await col.findOne({ id, user_id: req.user.id }) : orders.find(o => o.id === id && o.user_id === req.user.id);
+    
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+    
+    res.json({
+      success: true,
+      order: order
+    });
+
+  } catch (error) {
+    console.error('Order fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch order' });
+  }
+});
+
+// Update order status
+router.put('/:id/status', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    
+    if (!status) {
+      return res.status(400).json({ error: 'Status is required' });
+    }
+
+    const col = await getOrdersCollection();
+    if (col) {
+      const result = await col.findOneAndUpdate(
+        { id, user_id: req.user.id },
+        { $set: { status, updated_at: new Date().toISOString() } },
+        { returnDocument: 'after' }
+      );
+      if (!result.value) return res.status(404).json({ error: 'Order not found' });
+      return res.json({ success: true, message: 'Order status updated successfully', order: result.value });
+    }
+    const orderIndex = orders.findIndex(o => o.id === id && o.user_id === req.user.id);
+    if (orderIndex === -1) return res.status(404).json({ error: 'Order not found' });
+    orders[orderIndex].status = status;
+    orders[orderIndex].updated_at = new Date().toISOString();
+    res.json({ success: true, message: 'Order status updated successfully', order: orders[orderIndex] });
+
+  } catch (error) {
+    console.error('Order status update error:', error);
+    res.status(500).json({ error: 'Failed to update order status' });
+  }
+});
+
+// Confirm payment for order
+router.post('/:id/confirm-payment', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { razorpay_payment_id, razorpay_signature } = req.body;
+
+    if (!razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({ error: 'Payment details required' });
+    }
+
+    const col = await getOrdersCollection();
+    if (col) {
+      const result = await col.findOneAndUpdate(
+        { id, user_id: req.user.id },
+        { $set: {
+          payment_status: 'completed',
+          razorpay_payment_id,
+          razorpay_signature,
+          updated_at: new Date().toISOString()
+        } },
+        { returnDocument: 'after' }
+      );
+      if (!result.value) return res.status(404).json({ error: 'Order not found' });
+      return res.json({ success: true, message: 'Payment confirmed successfully', order: result.value });
+    }
+    const orderIndex = orders.findIndex(o => o.id === id && o.user_id === req.user.id);
+    if (orderIndex === -1) return res.status(404).json({ error: 'Order not found' });
+    orders[orderIndex].payment_status = 'completed';
+    orders[orderIndex].razorpay_payment_id = razorpay_payment_id;
+    orders[orderIndex].razorpay_signature = razorpay_signature;
+    orders[orderIndex].updated_at = new Date().toISOString();
+    res.json({ success: true, message: 'Payment confirmed successfully', order: orders[orderIndex] });
+
+  } catch (error) {
+    console.error('Payment confirmation error:', error);
+    res.status(500).json({ error: 'Failed to confirm payment' });
+  }
+});
+
+module.exports = router;

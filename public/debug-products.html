@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Products - Figure Store</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        .warning { background: #fff3cd; border-color: #ffeaa7; }
+        .info { background: #d1ecf1; border-color: #bee5eb; }
+        
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .product-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            background: white;
+        }
+        .product-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .url-display {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            word-break: break-all;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .status { font-weight: bold; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Debug Products - Figure Store</h1>
+        
+        <div class="section info">
+            <h3>What This Page Does:</h3>
+            <p>This page helps diagnose product-related issues by:</p>
+            <ul>
+                <li>Testing API endpoints</li>
+                <li>Showing available products</li>
+                <li>Testing Google Drive image proxy</li>
+                <li>Checking for common errors</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h3>🚀 API Status Check</h3>
+            <button onclick="checkApiStatus()">Check API Status</button>
+            <div id="apiStatus"></div>
+        </div>
+
+        <div class="section">
+            <h3>📦 Available Products</h3>
+            <button onclick="loadProducts()">Load Products</button>
+            <div id="productsList"></div>
+        </div>
+
+        <div class="section">
+            <h3>🖼️ Test Google Drive Image Proxy</h3>
+            <p>Test if the image proxy is working with your Google Drive image:</p>
+            <div class="url-display">File ID: 1eCZ1MqayGsGzI1WwrLlJVYEmMl_Kn6pb</div>
+            <button onclick="testImageProxy()">Test Image Proxy</button>
+            <div id="imageProxyTest"></div>
+        </div>
+
+        <div class="section">
+            <h3>🔧 Common Issues & Solutions</h3>
+            <div id="commonIssues">
+                <h4>1. "Product not found" Error</h4>
+                <ul>
+                    <li><strong>Cause:</strong> Trying to access a product ID that doesn't exist</li>
+                    <li><strong>Solution:</strong> Check the product ID in the URL or use existing IDs (1, 2)</li>
+                </ul>
+                
+                <h4>2. Images Not Loading</h4>
+                <ul>
+                    <li><strong>Cause:</strong> CORS restrictions on Google Drive</li>
+                    <li><strong>Solution:</strong> Use the backend proxy: <code>/api/products/image-proxy?url=YOUR_DRIVE_LINK</code></li>
+                </ul>
+                
+                <h4>3. Backend Not Running</h4>
+                <ul>
+                    <li><strong>Cause:</strong> Server not started or crashed</li>
+                    <li><strong>Solution:</strong> Start backend with <code>cd backend && npm start</code></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        
+        async function checkApiStatus() {
+            const statusDiv = document.getElementById('apiStatus');
+            statusDiv.innerHTML = '<p>🔄 Checking API...</p>';
+            
+            try {
+                // Test health endpoint
+                const healthResponse = await fetch(`${API_BASE.replace('/api', '')}/health`);
+                const healthData = await healthResponse.json();
+                
+                // Test products endpoint
+                const productsResponse = await fetch(`${API_BASE}/products`);
+                const productsData = await productsResponse.json();
+                
+                statusDiv.innerHTML = `
+                    <div class="section success">
+                        <h4>✅ API Status: HEALTHY</h4>
+                        <p><strong>Backend:</strong> Running on port 5000</p>
+                        <p><strong>Health Check:</strong> ${healthData.status}</p>
+                        <p><strong>Products Endpoint:</strong> Working (${productsData.products?.length || 0} products)</p>
+                    </div>
+                `;
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div class="section error">
+                        <h4>❌ API Status: ERROR</h4>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p><strong>Solution:</strong> Make sure backend is running on port 5000</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function loadProducts() {
+            const productsDiv = document.getElementById('productsList');
+            productsDiv.innerHTML = '<p>🔄 Loading products...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/products`);
+                const data = await response.json();
+                
+                if (data.success && data.products.length > 0) {
+                    let html = `<h4>📦 Found ${data.products.length} Products:</h4>`;
+                    html += '<div class="product-grid">';
+                    
+                    data.products.forEach(product => {
+                        html += `
+                            <div class="product-card">
+                                <img src="${product.image}" alt="${product.name}" class="product-image" 
+                                     onerror="this.src='/placeholder.svg'">
+                                <h5>${product.name}</h5>
+                                <p><strong>ID:</strong> ${product.id}</p>
+                                <p><strong>Category:</strong> ${product.category}</p>
+                                <p><strong>Price:</strong> ₹${product.price}</p>
+                                <p><strong>Image:</strong> ${product.image}</p>
+                                <a href="/product/${product.id}" target="_blank">View Product</a>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                    productsDiv.innerHTML = html;
+                } else {
+                    productsDiv.innerHTML = `
+                        <div class="section warning">
+                            <h4>⚠️ No Products Found</h4>
+                            <p>Your product store is empty. Add some products through the admin dashboard.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                productsDiv.innerHTML = `
+                    <div class="section error">
+                        <h4>❌ Failed to Load Products</h4>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function testImageProxy() {
+            const testDiv = document.getElementById('imageProxyTest');
+            testDiv.innerHTML = '<p>🔄 Testing image proxy...</p>';
+            
+            const googleDriveUrl = 'https://drive.google.com/file/d/1eCZ1MqayGsGzI1WwrLlJVYEmMl_Kn6pb/view?usp=sharing';
+            const proxyUrl = `${API_BASE}/products/image-proxy?url=${encodeURIComponent(googleDriveUrl)}`;
+            
+            try {
+                const response = await fetch(proxyUrl);
+                
+                if (response.ok) {
+                    testDiv.innerHTML = `
+                        <div class="section success">
+                            <h4>✅ Image Proxy Working!</h4>
+                            <p><strong>Proxy URL:</strong></p>
+                            <div class="url-display">${proxyUrl}</div>
+                            <p><strong>Status:</strong> ${response.status}</p>
+                            <p><strong>Use this URL in your products:</strong></p>
+                            <div class="url-display">${proxyUrl}</div>
+                        </div>
+                    `;
+                } else {
+                    testDiv.innerHTML = `
+                        <div class="section error">
+                            <h4>❌ Image Proxy Failed</h4>
+                            <p><strong>Status:</strong> ${response.status}</p>
+                            <p><strong>Response:</strong> ${response.statusText}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                testDiv.innerHTML = `
+                    <div class="section error">
+                        <h4>❌ Image Proxy Error</h4>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p>Make sure backend is running and the proxy endpoint is working.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Auto-load on page load
+        window.onload = function() {
+            checkApiStatus();
+            loadProducts();
+        };
+    </script>
+</body>
+</html>

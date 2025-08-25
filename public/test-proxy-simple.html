@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Proxy Simple</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test { margin: 20px 0; padding: 20px; border: 1px solid #ccc; }
+        img { max-width: 200px; border: 1px solid #ddd; }
+        .success { background: #d4edda; }
+        .error { background: #f8d7da; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Simple Proxy Test</h1>
+    
+    <div class="test">
+        <h3>Testing Backend Proxy</h3>
+        <p>URL: <code>https://drive.google.com/uc?export=view&id=1eCZ1MqayGsGzI1WwrLlJVYEmMl_Kn6pb</code></p>
+        <img 
+            src="http://localhost:5000/api/products/image-proxy?url=https://drive.google.com/uc?export=view&id=1eCZ1MqayGsGzI1WwrLlJVYEmMl_Kn6pb" 
+            alt="Test Image"
+            onload="this.parentElement.classList.add('success')"
+            onerror="this.parentElement.classList.add('error')"
+        />
+    </div>
+    
+    <div class="test">
+        <h3>Direct Google Drive Test</h3>
+        <p>URL: <code>https://drive.google.com/uc?export=view&id=1eCZ1MqayGsGzI1WwrLlJVYEmMl_Kn6pb</code></p>
+        <img 
+            src="https://drive.google.com/uc?export=view&id=1eCZ1MqayGsGzI1WwrLlJVYEmMl_Kn6pb" 
+            alt="Direct Test"
+            onload="this.parentElement.classList.add('success')"
+            onerror="this.parentElement.classList.add('error')"
+        />
+    </div>
+    
+    <p><strong>Check your backend console for proxy logs!</strong></p>
+</body>
+</html>
