@@ -11,13 +11,23 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(helmet());
+const allowedOrigins = [
+  process.env.FRONTEND_URL || 'http://localhost:5173',
+  'http://localhost:8081',
+  'http://localhost:3000',
+  'https://www.figureitoutstore.in',
+  'https://figureitoutstore.in',
+  'https://figureitout.in'
+];
+
 app.use(cors({
-  origin: [
-    process.env.FRONTEND_URL || 'http://localhost:5173',
-    'http://localhost:8081', // Add this for your current frontend port
-    'http://localhost:3000' , // Common alternative port
-     'https://www.figureitoutstore.in' // add your live frontend url
-  ],
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 
