@@ -15,7 +15,8 @@ app.use(cors({
   origin: [
     process.env.FRONTEND_URL || 'http://localhost:5173',
     'http://localhost:8081', // Add this for your current frontend port
-    'http://localhost:3000'  // Common alternative port
+    'http://localhost:3000' , // Common alternative port
+     'https://www.figureitoutstore.in' // add your live frontend url
   ],
   credentials: true
 }));
