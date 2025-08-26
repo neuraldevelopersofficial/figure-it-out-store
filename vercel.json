@@ -11,8 +11,11 @@
     }
   ],
   "routes": [
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.html" }
+    {
+      "src": "[^\\.]*",
+      "dest": "/index.html",
+      "status": 200
+    }
   ],
   "env": {
     "VITE_API_URL": "https://api.figureitoutstore.in/api"
