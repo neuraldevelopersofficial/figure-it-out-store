@@ -83,7 +83,7 @@ router.post('/multiple', upload.array('images', 10), (req, res) => {
 });
 
 // Bulk product images upload
-router.post('/bulk-product', upload.array('product_images', 50), (req, res) => {
+router.post('/bulk-product', upload.array('images', 50), (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: 'No image files uploaded' });

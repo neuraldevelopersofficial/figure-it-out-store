@@ -214,12 +214,27 @@ router.get('/category/:category', async (req, res) => {
     const { category } = req.params;
     const col = await getProductsCollection();
     if (col) {
+      // Improved category matching with more flexible regex
+      // This allows for case insensitive partial matches and handles slug variations
       const docs = await col.find({
         $or: [
-          { category: { $regex: `^${category}$`, $options: 'i' } },
-          { category_slug: { $regex: `^${category}$`, $options: 'i' } }
+          { category: { $regex: category, $options: 'i' } },
+          { category_slug: { $regex: category, $options: 'i' } }
         ]
       }).toArray();
+      
+      console.log(`Found ${docs.length} products for category: ${category}`);
+      if (docs.length === 0) {
+        // Log the first few products to help debug category issues
+        const sampleDocs = await col.find({}).limit(5).toArray();
+        console.log('Sample products in database:', sampleDocs.map(d => ({ 
+          id: d._id || d.id, 
+          name: d.name, 
+          category: d.category, 
+          category_slug: d.category_slug 
+        })));
+      }
+      
       const products = docs.map(mapDbProductToApi);
       return res.json({ success: true, products, category });
     }
@@ -267,7 +282,16 @@ router.get('/:id', async (req, res) => {
     const { id } = req.params;
     const col = await getProductsCollection();
     if (col) {
-      const doc = await col.findOne({ $or: [ { id: String(id) }, { _id: { $eq: require('mongodb').ObjectId.isValid(id) ? new (require('mongodb').ObjectId)(id) : undefined } } ] });
+      // Improved query to handle ObjectId validation more safely
+      let query = { $or: [{ id: String(id) }] };
+      
+      // Only attempt to use ObjectId if it's a valid format
+      const { ObjectId } = require('mongodb');
+      if (id.match(/^[0-9a-fA-F]{24}$/) && ObjectId.isValid(id)) {
+        query.$or.push({ _id: new ObjectId(id) });
+      }
+      
+      const doc = await col.findOne(query);
       const product = mapDbProductToApi(doc);
       if (!product) return res.status(404).json({ error: 'Product not found' });
       return res.json({ success: true, product });
@@ -276,6 +300,7 @@ router.get('/:id', async (req, res) => {
     if (!product) return res.status(404).json({ error: 'Product not found' });
     res.json({ success: true, product });
   } catch (error) {
+    console.error('Error fetching product by ID:', error);
     res.status(500).json({ error: 'Failed to fetch product' });
   }
 });

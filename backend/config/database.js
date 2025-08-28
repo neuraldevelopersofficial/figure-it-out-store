@@ -22,7 +22,19 @@ let db = null;
 async function connectToDatabase() {
   try {
     if (client && db) {
-      return { client, db };
+      // Check if connection is still alive
+      try {
+        await db.command({ ping: 1 });
+        return { client, db };
+      } catch (pingError) {
+        console.log('⚠️  MongoDB connection lost, reconnecting...');
+        // Connection lost, will reconnect below
+        if (client) {
+          try { await client.close(); } catch (e) { /* ignore close errors */ }
+        }
+        client = null;
+        db = null;
+      }
     }
 
     // Check if we're in development mode and MongoDB Atlas is not available
@@ -31,7 +43,19 @@ async function connectToDatabase() {
       return { client: null, db: null };
     }
 
-    client = new MongoClient(MONGODB_URI);
+    // Connection options for better reliability
+    const options = {
+      connectTimeoutMS: 30000,        // 30 seconds connection timeout
+      socketTimeoutMS: 45000,         // 45 seconds socket timeout
+      serverSelectionTimeoutMS: 30000,// 30 seconds server selection timeout
+      maxPoolSize: 10,                // Maximum 10 connections in pool
+      minPoolSize: 1,                 // Minimum 1 connection in pool
+      maxIdleTimeMS: 60000,           // Close idle connections after 60 seconds
+      retryWrites: true,              // Retry write operations
+      retryReads: true                // Retry read operations
+    };
+
+    client = new MongoClient(MONGODB_URI, options);
     await client.connect();
     db = client.db(DB_NAME);
     
