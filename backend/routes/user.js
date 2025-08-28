@@ -262,10 +262,19 @@ router.post('/addresses', authenticateToken, async (req, res) => {
       });
     }
     
+    // Map 'address' field to 'addressLine1' for consistent storage
+    const mappedAddressData = {
+      ...addressData,
+      addressLine1: addressData.address,
+      addressLine2: addressData.address_line2 || addressData.addressLine2 || ''
+    };
+    delete mappedAddressData.address;
+    delete mappedAddressData.address_line2;
+    
     const col = await getUsersCollection();
     const newAddress = { 
       id: require('uuid').v4(), 
-      ...addressData, 
+      ...mappedAddressData, 
       created_at: new Date().toISOString() 
     };
     
@@ -286,7 +295,7 @@ router.post('/addresses', authenticateToken, async (req, res) => {
       
       if (!r.matchedCount) return res.status(404).json({ error: 'User not found' });
     } else {
-      const a = userStore.addAddress(req.user.id, addressData);
+      const a = userStore.addAddress(req.user.id, mappedAddressData);
       if (!a) return res.status(404).json({ error: 'User not found' });
     }
     
@@ -305,18 +314,30 @@ router.put('/addresses/:addressId', authenticateToken, async (req, res) => {
   try {
     const { addressId } = req.params;
     const updates = req.body;
+    
+    // Map 'address' field to 'addressLine1' for consistent storage
+    const mappedUpdates = { ...updates };
+    if (updates.address) {
+      mappedUpdates.addressLine1 = updates.address;
+      delete mappedUpdates.address;
+    }
+    if (updates.address_line2) {
+      mappedUpdates.addressLine2 = updates.address_line2;
+      delete mappedUpdates.address_line2;
+    }
+    
     const col = await getUsersCollection();
     if (col) {
       const r = await col.findOneAndUpdate(
         { id: req.user.id, 'addresses.id': addressId },
-        { $set: { 'addresses.$': { id: addressId, ...updates }, updated_at: new Date().toISOString() } },
+        { $set: { 'addresses.$': { id: addressId, ...mappedUpdates }, updated_at: new Date().toISOString() } },
         { returnDocument: 'after' }
       );
       if (!r.value) return res.status(404).json({ error: 'Address not found' });
       const updated = (r.value.addresses || []).find(a => a.id === addressId);
       return res.json({ success: true, message: 'Address updated successfully', address: updated });
     }
-    const updatedAddress = userStore.updateAddress(req.user.id, addressId, updates);
+    const updatedAddress = userStore.updateAddress(req.user.id, addressId, mappedUpdates);
     if (!updatedAddress) return res.status(404).json({ error: 'Address not found' });
     res.json({ success: true, message: 'Address updated successfully', address: updatedAddress });
   } catch (error) {

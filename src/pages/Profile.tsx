@@ -193,7 +193,7 @@ const Profile = () => {
       // Map frontend field names to backend field names
       const addressPayload = {
         name: addressForm.name,
-        address: addressForm.addressLine1,
+        address: addressForm.addressLine1, // This maps to the 'address' field expected by the backend
         address_line2: addressForm.addressLine2,
         landmark: addressForm.landmark,
         city: addressForm.city,
@@ -240,7 +240,24 @@ const Profile = () => {
 
   const updateAddress = async (addressId: string) => {
     try {
-      const response = await apiClient.put(`/user/addresses/${addressId}`, addressForm);
+      // Map frontend field names to backend field names
+      const addressPayload = {
+        name: addressForm.name,
+        address: addressForm.addressLine1, // This maps to the 'address' field expected by the backend
+        address_line2: addressForm.addressLine2,
+        landmark: addressForm.landmark,
+        city: addressForm.city,
+        state: addressForm.state,
+        pincode: addressForm.pincode,
+        phone: addressForm.phone,
+        is_default: addressForm.isDefault,
+        address_type: addressForm.addressType
+      };
+      
+      // Log the payload for debugging
+      console.log('Sending address update payload:', addressPayload);
+      
+      const response = await apiClient.put(`/user/addresses/${addressId}`, addressPayload);
       if (response.success) {
         await fetchProfile();
         setEditingAddress(null);
