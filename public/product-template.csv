@@ -1,9 +1,9 @@
-id,name,category,price,originalPrice,discount,isOnSale,isNew,image,allImages,description,inStock,rating,reviews,stockQuantity
-,One Piece Luffy Gear 5 Figure,Anime Figures,4299,,,FALSE,TRUE,luffy-gear5.jpg,"luffy-gear5-1.jpg,luffy-gear5-2.jpg,luffy-gear5-3.jpg",Premium Luffy Gear 5 figure,TRUE,4.9,78,15
-,Dragon Ball Z Goku Keychain,Keychains,599,799,25,TRUE,FALSE,goku-keychain.jpg,"goku-keychain-1.jpg,goku-keychain-2.jpg",Durable metal Goku keychain,TRUE,4.6,89,120
-,Attack on Titan Levi Figure,Anime Figures,3499,,,FALSE,TRUE,levi-figure.jpg,"levi-figure-1.jpg,levi-figure-2.jpg,levi-figure-3.jpg",Exclusive Levi Ackerman figure,TRUE,4.9,156,8
-,My Hero Academia Deku Figure,Anime Figures,2899,3499,17,TRUE,FALSE,deku-figure.jpg,"deku-figure-1.jpg,deku-figure-2.jpg",Detailed Deku figure with accessories,TRUE,4.7,92,12
-,Studio Ghibli Totoro Keychain,Keychains,399,,,FALSE,TRUE,totoro-keychain.jpg,"totoro-keychain-1.jpg",Cute Totoro keychain design,TRUE,4.8,45,85
-,One Piece Luffy Keychain,Keychains,299,,,FALSE,FALSE,luffy-keychain.jpg,"luffy-keychain-1.jpg",Luffy themed keychain,TRUE,4.5,67,200
-,Hot Wheels Premium Collection,Hot Wheels,899,1199,25,TRUE,FALSE,hotwheels-premium.jpg,"hotwheels-premium-1.jpg,hotwheels-premium-2.jpg,hotwheels-premium-3.jpg",Premium Hot Wheels collection set,TRUE,4.6,34,30
-,Anime Figures Bundle Pack,Trending,5999,7999,25,TRUE,TRUE,anime-bundle.jpg,"anime-bundle-1.jpg,anime-bundle-2.jpg,anime-bundle-3.jpg,anime-bundle-4.jpg",Multiple anime figures bundle,TRUE,4.8,156,5
+Product Name,Price,Stock,Category,Image
+One Piece Luffy Gear 5 Figure,4299,15,Anime Figures,luffy-gear5.jpg
+Dragon Ball Z Goku Keychain,599,120,Keychains,goku-keychain.jpg
+Attack on Titan Levi Figure,3499,8,Anime Figures,levi-figure.jpg
+My Hero Academia Deku Figure,2899,12,Anime Figures,deku-figure.jpg
+Studio Ghibli Totoro Keychain,399,85,Keychains,totoro-keychain.jpg
+One Piece Luffy Keychain,299,200,Keychains,luffy-keychain.jpg
+Hot Wheels Premium Collection,899,30,Hot Wheels,hotwheels-premium.jpg
+Anime Figures Bundle Pack,5999,5,Trending,anime-bundle.jpg

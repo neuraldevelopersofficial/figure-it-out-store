@@ -78,9 +78,10 @@ export function getGoogleDriveProxyUrl(url: string, fallbackUrl?: string): strin
   }
   
   try {
-    // Use our backend proxy
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-    return `${apiUrl}/api/products/image-proxy?url=${encodeURIComponent(url)}`;
+    // Use our backend proxy - fix double /api issue
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const baseUrl = apiUrl.endsWith('/api') ? apiUrl : `${apiUrl}/api`;
+    return `${baseUrl}/products/image-proxy?url=${encodeURIComponent(url)}`;
   } catch (error) {
     console.error('Error creating proxy URL:', error);
     return fallbackUrl || url; // Return fallback or original URL if encoding fails

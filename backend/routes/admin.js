@@ -291,7 +291,7 @@ router.post('/products', authenticateToken, requireAdmin, async (req, res) => {
   }
 });
 
-// Update product
+// Update product (supports both ID and name-based updates)
 router.put('/products/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const store = require('../store/productsStore');
@@ -310,18 +310,38 @@ router.put('/products/:id', authenticateToken, requireAdmin, async (req, res) =>
     const col = await getProductsCollection();
     if (col) {
       const { ObjectId } = require('mongodb');
-      const filter = {
+      
+      // First try to find by ID
+      let filter = {
         $or: [
           { id: String(id) },
           ...(ObjectId.isValid(id) ? [{ _id: new ObjectId(id) }] : [])
         ]
       };
-      const result = await col.findOneAndUpdate(filter, { $set: { ...updates, updated_at: new Date().toISOString() } }, { returnDocument: 'after' });
+      
+      let result = await col.findOneAndUpdate(filter, { $set: { ...updates, updated_at: new Date().toISOString() } }, { returnDocument: 'after' });
+      
+      // If not found by ID, try to find by name
+      if (!result.value) {
+        filter = { name: { $regex: new RegExp(`^${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } };
+        result = await col.findOneAndUpdate(filter, { $set: { ...updates, updated_at: new Date().toISOString() } }, { returnDocument: 'after' });
+      }
+      
       if (!result.value) return res.status(404).json({ error: 'Product not found' });
       return res.json({ success: true, message: 'Product updated successfully', product: result.value });
     }
 
-    const updatedProduct = store.update(id, updates);
+    // Try updating by ID first, then by name in memory store
+    let updatedProduct = store.update(id, updates);
+    if (!updatedProduct) {
+      // Try to find by name in memory store
+      const products = store.getAll();
+      const productByName = products.find(p => p.name.toLowerCase() === id.toLowerCase());
+      if (productByName) {
+        updatedProduct = store.update(productByName.id, updates);
+      }
+    }
+    
     if (!updatedProduct) {
       return res.status(404).json({ error: 'Product not found' });
     }
@@ -500,22 +520,22 @@ router.post('/products/bulk', authenticateToken, requireAdmin, bulkUploadLimiter
         const key = String(k).trim();
         obj[key] = r[k];
       });
-      // Convert to camelCase schema if snake_case provided
+      // Convert to camelCase schema supporting both old and new CSV formats
       const product = {
         id: obj.id || obj.ID || '',
-        name: obj.name || obj.Name,
-        category: obj.category || obj.Category,
-        price: obj.price ?? obj.Price,
+        name: obj.name || obj.Name || obj['Product Name'] || '',
+        category: obj.category || obj.Category || '',
+        price: obj.price ?? obj.Price ?? 0,
         originalPrice: obj.originalPrice ?? obj.original_price ?? obj.OriginalPrice,
-        discount: obj.discount ?? obj.Discount,
-        isOnSale: obj.isOnSale ?? obj.is_on_sale ?? obj.IsOnSale,
-        isNew: obj.isNew ?? obj.is_new ?? obj.IsNew,
-        image: obj.image ?? obj.Image,
-        description: obj.description ?? obj.Description,
-        inStock: obj.inStock ?? obj.in_stock ?? obj.InStock,
-        rating: obj.rating ?? obj.Rating,
-        reviews: obj.reviews ?? obj.Reviews,
-        stockQuantity: obj.stockQuantity ?? obj.stock_quantity ?? obj.StockQuantity
+        discount: obj.discount ?? obj.Discount ?? 0,
+        isOnSale: obj.isOnSale ?? obj.is_on_sale ?? obj.IsOnSale ?? false,
+        isNew: obj.isNew ?? obj.is_new ?? obj.IsNew ?? true,
+        image: obj.image ?? obj.Image ?? '',
+        description: obj.description ?? obj.Description ?? `High quality ${obj.name || obj.Name || obj['Product Name'] || 'product'}`,
+        inStock: obj.inStock ?? obj.in_stock ?? obj.InStock ?? true,
+        rating: obj.rating ?? obj.Rating ?? 4.5,
+        reviews: obj.reviews ?? obj.Reviews ?? 0,
+        stockQuantity: obj.stockQuantity ?? obj.stock_quantity ?? obj.StockQuantity ?? obj.Stock ?? obj.stock ?? 0
       };
       return product;
     });

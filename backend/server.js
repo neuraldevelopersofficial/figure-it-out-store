@@ -11,27 +11,39 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(helmet());
-const allowedOrigins = [
-  process.env.FRONTEND_URL || 'http://localhost:5173',
-  'http://localhost:8081',
-  'http://localhost:3000',
-  'https://www.figureitoutstore.in',
-  'https://figureitoutstore.in',
-  'https://figureitout.in'
-];
-
-app.use(cors({
+const corsOptions = {
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'http://localhost:8081',
+      'http://localhost:3000',
+      'http://localhost:5000',
+      'http://127.0.0.1:5173',
+      'http://127.0.0.1:8081',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:5000',
+      'https://figureitoutstore.in',
+      'https://www.figureitoutstore.in',
+      'https://figureitout.in',
+      'https://www.figureitout.in'
+    ];
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      console.log('CORS blocked origin:', origin);
+      callback(null, true); // Allow all origins in development
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
+};
+
+app.use(cors(corsOptions));
 
 // Note: Rate limiting is now handled per-route in middleware/rateLimiter.js
 // This prevents double rate limiting and allows more granular control

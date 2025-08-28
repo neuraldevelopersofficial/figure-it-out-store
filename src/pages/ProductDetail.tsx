@@ -288,7 +288,7 @@ const ProductDetail = () => {
               <div className="flex gap-3">
                 <Button
                   size="lg"
-                  className="flex-1 bg-brand-red hover:bg-brand-red-dark text-white"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-lg border-2 border-blue-600"
                   disabled={!product.inStock}
                   onClick={handleAddToCart}
                 >
@@ -297,12 +297,11 @@ const ProductDetail = () => {
                 </Button>
                 <Button
                   size="lg"
-                  variant="outline"
                   onClick={handleWishlistToggle}
-                  className={`px-6 ${
+                  className={`px-6 font-semibold shadow-lg border-2 ${
                     isWishlisted 
-                      ? 'border-brand-red text-brand-red hover:bg-brand-red hover:text-white' 
-                      : ''
+                      ? 'bg-red-500 border-red-500 text-white hover:bg-red-600 hover:border-red-600' 
+                      : 'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200 hover:border-gray-400'
                   }`}
                 >
                   <Heart className={`h-5 w-5 ${isWishlisted ? 'fill-current' : ''}`} />
