@@ -322,12 +322,12 @@ router.put('/products/:id', authenticateToken, requireAdmin, async (req, res) =>
       let result = await col.findOneAndUpdate(filter, { $set: { ...updates, updated_at: new Date().toISOString() } }, { returnDocument: 'after' });
       
       // If not found by ID, try to find by name
-      if (!result.value) {
+      if (!result || !result.value) {
         filter = { name: { $regex: new RegExp(`^${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } };
         result = await col.findOneAndUpdate(filter, { $set: { ...updates, updated_at: new Date().toISOString() } }, { returnDocument: 'after' });
       }
       
-      if (!result.value) return res.status(404).json({ error: 'Product not found' });
+      if (!result || !result.value) return res.status(404).json({ error: 'Product not found' });
       return res.json({ success: true, message: 'Product updated successfully', product: result.value });
     }
 
