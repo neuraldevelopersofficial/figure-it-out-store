@@ -48,13 +48,31 @@ function formatProductData(excelData) {
     const originalPrice = Number(item.OriginalPrice || item.Price) || price;
     const stockQuantity = Number(item.StockQuantity || 0);
     
+    // Handle image paths - if they're filenames, prepend /uploads/ path
+    const mainImage = item.ImageLink || '';
+    const formattedMainImage = mainImage.includes('http') ? mainImage : 
+                              (mainImage ? `/uploads/${mainImage}` : '');
+    
+    // Process additional images
+    const additionalImages = item.AllImages ? 
+      String(item.AllImages).split(',').map(img => {
+        const trimmed = img.trim();
+        // If it's a URL, keep as is; if it's a filename, prepend /uploads/
+        return trimmed.includes('http') ? trimmed : `/uploads/${trimmed}`;
+      }).filter(Boolean) : [];
+    
+    // If no additional images but we have a main image, use that
+    const allImages = additionalImages.length > 0 ? 
+                     additionalImages : 
+                     (formattedMainImage ? [formattedMainImage] : []);
+    
     return {
       id: uuidv4(),
       name: item.ProductName || '',
       price: price,
       original_price: originalPrice,
-      image: item.ImageLink || '',
-      images: item.AllImages ? String(item.AllImages).split(',').map(s => s.trim()).filter(Boolean) : [item.ImageLink || ''],
+      image: formattedMainImage,
+      images: allImages,
       category: item.Category || 'Anime Figures',
       category_slug: normalizeCategoryToSlug(item.Category || 'Anime Figures'),
       description: item.Description || '',

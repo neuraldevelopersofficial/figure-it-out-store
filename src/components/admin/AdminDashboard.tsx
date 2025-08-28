@@ -28,6 +28,7 @@ import { apiClient } from "@/lib/api";
 import { Navigate } from "react-router-dom";
 import ProductForm from "./ProductForm";
 import ImageUpload from "./ImageUpload";
+import BulkImageUpload from "./BulkImageUpload";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface AdminStats {
@@ -116,6 +117,8 @@ const AdminDashboard = () => {
   const [bulkMode, setBulkMode] = useState<'add' | 'update' | 'upsert'>('upsert');
   const [bulkUploading, setBulkUploading] = useState(false);
   const [bulkSummary, setBulkSummary] = useState<string | null>(null);
+  const [imageMap, setImageMap] = useState<Record<string, string>>({});
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
   
   // Carousel management state
   const [carousels, setCarousels] = useState<Carousel[]>([]);
@@ -295,7 +298,10 @@ const AdminDashboard = () => {
     const attemptUpload = async (): Promise<any> => {
       try {
         setBulkUploading(true);
-        const response = await apiClient.bulkUpsertProducts(bulkFile, bulkMode);
+        
+        // Use the updated bulkUpsertProducts method with imageMap
+        const response = await apiClient.bulkUpsertProducts(bulkFile, bulkMode, imageMap);
+        
         if (response.success) {
           const summary = `Mode: ${response.mode} | Processed: ${response.processed}/${response.total} | Created: ${response.created} | Updated: ${response.updated}${response.errors && response.errors.length ? ` | Errors: ${response.errors.length}` : ''}`;
           setBulkSummary(summary);
@@ -579,7 +585,7 @@ const AdminDashboard = () => {
                 </div>
                 <div className="aspect-video bg-white rounded border overflow-hidden">
                   <img 
-                    src={slideData.image.startsWith('/uploads/') ? slideData.image : slideData.image}
+                    src={slideData.image}
                     alt="Slide preview" 
                     className="w-full h-full object-cover"
                     onError={(e) => {
@@ -962,22 +968,48 @@ const AdminDashboard = () => {
                           Download Template
                         </a>
                         <a 
-                          href="/GOOGLE_DRIVE_GUIDE.md" 
+                          href="/IMAGE_UPLOAD_GUIDE.md" 
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-sm text-green-600 hover:text-green-800 underline"
                         >
-                          Google Drive Guide
+                          Image Upload Guide
                         </a>
                       </div>
                     </div>
 
-                    {/* Bulk Upload */}
+                    {/* Bulk Image Upload */}
+                    <div className="p-4 border rounded-lg mb-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <Image className="h-5 w-5" />
+                          <span className="font-medium">Step 1: Bulk Upload Product Images</span>
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Upload product images first. The original filenames will be mapped to URLs for use in your CSV/Excel file.
+                      </p>
+                      <BulkImageUpload 
+                        onImagesUploaded={setImageMap} 
+                        onUploading={setIsUploadingImages}
+                      />
+                      {Object.keys(imageMap).length > 0 && (
+                        <div className="mt-3 p-3 bg-gray-50 rounded-md">
+                          <p className="text-sm font-medium">✅ {Object.keys(imageMap).length} images uploaded</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            In your CSV/Excel file, use the original filenames in the <code>image</code> column. 
+                            Example: If you uploaded "red-figure.jpg", just put "red-figure.jpg" in your spreadsheet.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Bulk Product Upload */}
                     <div className="p-4 border rounded-lg">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                           <FileSpreadsheet className="h-5 w-5" />
-                          <span className="font-medium">Bulk Upload (CSV/Excel)</span>
+                          <span className="font-medium">Step 2: Bulk Upload Products (CSV/Excel)</span>
                         </div>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
@@ -1002,7 +1034,11 @@ const AdminDashboard = () => {
                           </Select>
                         </div>
                         <div className="md:col-span-1">
-                          <Button onClick={handleBulkUpload} disabled={bulkUploading || !bulkFile} className="w-full">
+                          <Button 
+                            onClick={handleBulkUpload} 
+                            disabled={bulkUploading || !bulkFile || isUploadingImages} 
+                            className="w-full"
+                          >
                             <Upload className="h-4 w-5 mr-2" />
                             {bulkUploading ? 'Uploading...' : 'Upload'}
                           </Button>

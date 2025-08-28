@@ -149,33 +149,33 @@ const Header = () => {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link to="/profile">
+                    <Link to="/profile" className="flex items-center text-popover-foreground">
                       <User className="mr-2 h-4 w-4" />
                       <span>Profile</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/orders">
+                    <Link to="/orders" className="flex items-center text-popover-foreground">
                       <ShoppingCart className="mr-2 h-4 w-4" />
                       <span>Orders</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/wishlist">
+                    <Link to="/wishlist" className="flex items-center text-popover-foreground">
                       <Heart className="mr-2 h-4 w-4" />
                       <span>Wishlist</span>
                     </Link>
                   </DropdownMenuItem>
                   {isAdmin && (
                     <DropdownMenuItem asChild>
-                      <Link to="/admin">
+                      <Link to="/admin" className="flex items-center text-popover-foreground">
                         <Shield className="mr-2 h-4 w-4" />
                         <span>Admin Dashboard</span>
                       </Link>
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut}>
+                  <DropdownMenuItem onClick={handleSignOut} className="text-popover-foreground">
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Sign out</span>
                   </DropdownMenuItem>

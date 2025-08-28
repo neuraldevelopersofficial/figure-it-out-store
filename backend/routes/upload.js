@@ -82,6 +82,43 @@ router.post('/multiple', upload.array('images', 10), (req, res) => {
   }
 });
 
+// Bulk product images upload
+router.post('/bulk-product', upload.array('product_images', 50), (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: 'No image files uploaded' });
+    }
+
+    // Map uploaded files to their original filenames and URLs
+    const imageMap = {};
+    const imageUrls = req.files.map(file => {
+      // Extract original filename without extension
+      const originalName = path.parse(file.originalname).name;
+      const url = `/uploads/${file.filename}`;
+      
+      // Store mapping of original filename to new URL
+      imageMap[originalName] = url;
+      imageMap[file.originalname] = url;
+      
+      return {
+        originalName: file.originalname,
+        url: url,
+        filename: file.filename
+      };
+    });
+    
+    res.json({
+      success: true,
+      message: `${req.files.length} product images uploaded successfully`,
+      images: imageUrls,
+      imageMap: imageMap
+    });
+  } catch (error) {
+    console.error('Bulk product images upload error:', error);
+    res.status(500).json({ error: 'Failed to upload product images' });
+  }
+});
+
 // Delete image
 router.delete('/:filename', (req, res) => {
   try {

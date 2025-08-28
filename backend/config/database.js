@@ -63,6 +63,8 @@ async function initializeCollections() {
     const productsCollection = db.collection(COLLECTIONS.PRODUCTS);
     await productsCollection.createIndex({ category: 1 });
     await productsCollection.createIndex({ name: 'text', description: 'text' });
+    await productsCollection.createIndex({ image: 1 });
+    await productsCollection.createIndex({ images: 1 });
     
     // Orders collection
     const ordersCollection = db.collection(COLLECTIONS.ORDERS);

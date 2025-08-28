@@ -190,10 +190,16 @@ class ApiClient {
     });
   }
 
-  async bulkUpsertProducts(file: File, mode: 'add' | 'update' | 'upsert' = 'upsert') {
+  async bulkUpsertProducts(file: File, mode: 'add' | 'update' | 'upsert' = 'upsert', imageMap?: Record<string, string>) {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('mode', mode);
+    
+    // Add imageMap if provided
+    if (imageMap && Object.keys(imageMap).length > 0) {
+      formData.append('imageMap', JSON.stringify(imageMap));
+    }
+    
     return this.request('/admin/products/bulk', {
       method: 'POST',
       body: formData,

@@ -199,6 +199,16 @@ router.get('/image-proxy', async (req, res) => {
 });
 
 // Get products by category
+router.options('/category/:category', (req, res) => {
+  res.set({
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Max-Age': '86400'
+  });
+  res.status(200).end();
+});
+
 router.get('/category/:category', async (req, res) => {
   try {
     const { category } = req.params;
@@ -216,6 +226,7 @@ router.get('/category/:category', async (req, res) => {
     const categoryProducts = store.getByCategory(category);
     res.json({ success: true, products: categoryProducts, category });
   } catch (error) {
+    console.error('Error fetching products by category:', error);
     res.status(500).json({ error: 'Failed to fetch products by category' });
   }
 });

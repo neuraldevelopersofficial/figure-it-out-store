@@ -371,6 +371,8 @@ router.post('/products/bulk', authenticateToken, requireAdmin, bulkUploadLimiter
     const store = require('../store/productsStore');
     const mode = (req.body.mode || 'upsert').toLowerCase(); // 'add' | 'update' | 'upsert'
     const file = req.file;
+    // Get image map from request body if available
+    const imageMap = req.body.imageMap ? JSON.parse(req.body.imageMap) : {};
 
     if (!file) {
       return res.status(400).json({ error: 'File is required. Upload a CSV or Excel file under field name "file".' });
@@ -396,23 +398,44 @@ router.post('/products/bulk', authenticateToken, requireAdmin, bulkUploadLimiter
       return Number.isFinite(n) ? n : undefined;
     };
 
-    const mapCamelToSnake = (p) => ({
-      id: p.id,
-      name: p.name,
-      category: p.category,
-      price: toNumber(p.price),
-      original_price: toNumber(p.originalPrice),
-      discount: toNumber(p.discount),
-      is_on_sale: toBoolean(p.isOnSale),
-      is_new: toBoolean(p.isNew),
-      image: p.image ? convertGoogleDriveUrl(p.image) : p.image,
-      images: p.allImages ? p.allImages.split(',').map(img => convertGoogleDriveUrl(img.trim())).filter(img => img) : [],
-      description: p.description || '',
-      in_stock: typeof p.inStock === 'boolean' ? p.inStock : undefined,
-      rating: toNumber(p.rating),
-      reviews: toNumber(p.reviews),
-      stock_quantity: toNumber(p.stockQuantity)
-    });
+    const mapCamelToSnake = (p, imageMap = {}) => {
+      // Process image filenames to URLs if imageMap is provided
+      let mainImage = p.image || '';
+      let imagesList = p.allImages ? p.allImages.split(',').map(img => img.trim()).filter(img => img) : [];
+      
+      // If imageMap is provided, map filenames to URLs
+      if (Object.keys(imageMap).length > 0) {
+        // Map main image if it's a filename in the imageMap
+        if (mainImage && imageMap[mainImage]) {
+          mainImage = imageMap[mainImage];
+        }
+        
+        // Map additional images if they're filenames in the imageMap
+        imagesList = imagesList.map(img => imageMap[img] || img);
+      } else {
+        // If no imageMap, use the old Google Drive URL conversion
+        mainImage = mainImage ? convertGoogleDriveUrl(mainImage) : mainImage;
+        imagesList = imagesList.map(img => convertGoogleDriveUrl(img));
+      }
+      
+      return {
+        id: p.id,
+        name: p.name,
+        category: p.category,
+        price: toNumber(p.price),
+        original_price: toNumber(p.originalPrice),
+        discount: toNumber(p.discount),
+        is_on_sale: toBoolean(p.isOnSale),
+        is_new: toBoolean(p.isNew),
+        image: mainImage,
+        images: imagesList,
+        description: p.description || '',
+        in_stock: typeof p.inStock === 'boolean' ? p.inStock : undefined,
+        rating: toNumber(p.rating),
+        reviews: toNumber(p.reviews),
+        stock_quantity: toNumber(p.stockQuantity)
+      };
+    };
 
     const parseCSV = (buffer) => {
       const text = buffer.toString('utf8');
@@ -505,7 +528,7 @@ router.post('/products/bulk', authenticateToken, requireAdmin, bulkUploadLimiter
         errors.push({ row: idx + 2, error: 'Missing required fields: name, category, price' });
         return;
       }
-      const mapped = mapCamelToSnake(p);
+      const mapped = mapCamelToSnake(p, imageMap);
       // Derive in_stock from stock_quantity if not provided
       if (typeof mapped.in_stock !== 'boolean' && typeof mapped.stock_quantity === 'number') {
         mapped.in_stock = mapped.stock_quantity > 0;

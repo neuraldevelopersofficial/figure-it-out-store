@@ -155,9 +155,16 @@ function addSlide(carouselId, slideData) {
   if (!carousel) return null;
 
   const slideId = slideData.id || uuidv4();
+  
+  // Ensure image path starts with /uploads/ if it's not already a full URL
+  let imagePath = slideData.image;
+  if (imagePath && !imagePath.startsWith('/uploads/') && !imagePath.startsWith('http')) {
+    imagePath = `/uploads/${imagePath}`;
+  }
+  
   const newSlide = {
     id: slideId,
-    image: slideData.image,
+    image: imagePath,
     title: slideData.title,
     subtitle: slideData.subtitle,
     ctaText: slideData.ctaText,
@@ -178,6 +185,11 @@ function updateSlide(carouselId, slideId, updates) {
 
   const slideIndex = carousel.slides.findIndex(s => s.id === slideId);
   if (slideIndex === -1) return null;
+  
+  // Handle image path formatting if image is being updated
+  if (updates.image && !updates.image.startsWith('/uploads/') && !updates.image.startsWith('http')) {
+    updates.image = `/uploads/${updates.image}`;
+  }
 
   carousel.slides[slideIndex] = {
     ...carousel.slides[slideIndex],
