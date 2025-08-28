@@ -66,18 +66,25 @@ export function convertGoogleDriveUrl(url: string): string {
 
 /**
  * Gets a proxy URL for Google Drive images to bypass CORS issues
+ * @param url The original image URL
+ * @param fallbackUrl Optional fallback URL to use if the image fails to load
  */
-export function getGoogleDriveProxyUrl(url: string): string {
-  if (!url) return '';
+export function getGoogleDriveProxyUrl(url: string, fallbackUrl?: string): string {
+  if (!url) return fallbackUrl || '';
   
   // If it's not a Google Drive URL, return as is
   if (!url.includes('drive.google.com')) {
     return url;
   }
   
-  // Use our backend proxy
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-  return `${apiUrl}/api/products/image-proxy?url=${encodeURIComponent(url)}`;
+  try {
+    // Use our backend proxy
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    return `${apiUrl}/api/products/image-proxy?url=${encodeURIComponent(url)}`;
+  } catch (error) {
+    console.error('Error creating proxy URL:', error);
+    return fallbackUrl || url; // Return fallback or original URL if encoding fails
+  }
 }
 
 /**

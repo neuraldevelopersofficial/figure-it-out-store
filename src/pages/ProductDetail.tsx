@@ -10,6 +10,7 @@ import { toCategorySlug, convertGoogleDriveUrl, getGoogleDriveProxyUrl } from "@
 import ProductCard from "@/components/ProductCard";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { FallbackImage } from "@/components/ui/fallback-image";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -160,13 +161,11 @@ const ProductDetail = () => {
           <div className="space-y-4">
             {/* Main Image */}
             <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-              <img
-                src={productImages[selectedImage].includes('drive.google.com') ? getGoogleDriveProxyUrl(productImages[selectedImage]) : convertGoogleDriveUrl(productImages[selectedImage])}
+              <FallbackImage
+                src={productImages[selectedImage]}
                 alt={product.name}
                 className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.src = "/placeholder.svg";
-                }}
+                fallbackSrc="/placeholder-image.png"
               />
             </div>
             
@@ -182,13 +181,11 @@ const ProductDetail = () => {
                       : 'border-border hover:border-brand-red/50'
                   }`}
                 >
-                  <img
-                    src={image.includes('drive.google.com') ? getGoogleDriveProxyUrl(image) : convertGoogleDriveUrl(image)}
+                  <FallbackImage
+                    src={image}
                     alt={`${product.name} ${index + 1}`}
                     className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src = "/placeholder.svg";
-                    }}
+                    fallbackSrc="/placeholder-image.png"
                   />
                 </button>
               ))}

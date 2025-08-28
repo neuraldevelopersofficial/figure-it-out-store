@@ -246,22 +246,58 @@ router.get('/addresses', authenticateToken, async (req, res) => {
 router.post('/addresses', authenticateToken, async (req, res) => {
   try {
     const addressData = req.body;
-    if (!addressData.name || !addressData.address || !addressData.city || !addressData.pincode) {
-      return res.status(400).json({ error: 'Name, address, city, and pincode are required' });
+    console.log('Received address data:', addressData);
+    
+    // Validate required fields
+    const missingFields = [];
+    if (!addressData.name) missingFields.push('name');
+    if (!addressData.address) missingFields.push('address');
+    if (!addressData.city) missingFields.push('city');
+    if (!addressData.pincode) missingFields.push('pincode');
+    
+    if (missingFields.length > 0) {
+      return res.status(400).json({ 
+        error: `Missing required fields: ${missingFields.join(', ')}`,
+        received: addressData
+      });
     }
+    
     const col = await getUsersCollection();
-    const newAddress = { id: require('uuid').v4(), ...addressData, created_at: new Date().toISOString() };
+    const newAddress = { 
+      id: require('uuid').v4(), 
+      ...addressData, 
+      created_at: new Date().toISOString() 
+    };
+    
     if (col) {
-      const r = await col.updateOne({ id: req.user.id }, { $push: { addresses: newAddress }, $set: { updated_at: new Date().toISOString() } });
+      // Ensure user has an addresses array
+      const user = await col.findOne({ id: req.user.id });
+      if (!user) return res.status(404).json({ error: 'User not found' });
+      
+      // Initialize addresses array if it doesn't exist
+      if (!user.addresses) {
+        await col.updateOne({ id: req.user.id }, { $set: { addresses: [] } });
+      }
+      
+      const r = await col.updateOne(
+        { id: req.user.id }, 
+        { $push: { addresses: newAddress }, $set: { updated_at: new Date().toISOString() } }
+      );
+      
       if (!r.matchedCount) return res.status(404).json({ error: 'User not found' });
     } else {
       const a = userStore.addAddress(req.user.id, addressData);
       if (!a) return res.status(404).json({ error: 'User not found' });
     }
+    
     res.status(201).json({ success: true, message: 'Address added successfully', address: newAddress });
   } catch (error) {
     console.error('Address creation error:', error);
-    res.status(500).json({ error: 'Failed to add address' });
+    res.status(500).json({ 
+      error: 'Failed to add address', 
+      message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 

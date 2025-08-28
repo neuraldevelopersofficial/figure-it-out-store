@@ -21,6 +21,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { FallbackImage } from "@/components/ui/fallback-image";
 import { useAuth } from "@/context/AuthContext";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
@@ -104,7 +105,7 @@ const Profile = () => {
       return;
     }
     fetchProfile();
-  }, [user, navigate]);
+  }, [user, navigate, fetchProfile]);
 
   useEffect(() => {
     const handlePincodeChange = async () => {
@@ -133,12 +134,21 @@ const Profile = () => {
     try {
       const response = await apiClient.get('/user/profile');
       if (response.success) {
-        setProfile(response.user);
+        // Ensure addresses is always an array
+        const userData = {
+          ...response.user,
+          addresses: Array.isArray(response.user.addresses) ? response.user.addresses : [],
+          wishlist: Array.isArray(response.user.wishlist) ? response.user.wishlist : []
+        };
+        
+        setProfile(userData);
         setProfileForm({
-          name: response.user.name || '',
-          email: response.user.email || '',
-          phone: response.user.phone || ''
+          name: userData.name || '',
+          email: userData.email || '',
+          phone: userData.phone || ''
         });
+        
+        console.log('Profile data:', userData);
       }
     } catch (error) {
       console.error('Failed to fetch profile:', error);
@@ -147,6 +157,12 @@ const Profile = () => {
         description: "Failed to fetch profile",
         variant: "destructive"
       });
+      // Set default empty profile with empty arrays to prevent undefined errors
+      setProfile(prev => ({
+        ...prev || {},
+        addresses: [],
+        wishlist: []
+      }) as UserProfile);
     } finally {
       setLoading(false);
     }
@@ -174,7 +190,24 @@ const Profile = () => {
 
   const addAddress = async () => {
     try {
-      const response = await apiClient.post('/user/addresses', addressForm);
+      // Map frontend field names to backend field names
+      const addressPayload = {
+        name: addressForm.name,
+        address: addressForm.addressLine1,
+        address_line2: addressForm.addressLine2,
+        landmark: addressForm.landmark,
+        city: addressForm.city,
+        state: addressForm.state,
+        pincode: addressForm.pincode,
+        phone: addressForm.phone,
+        is_default: addressForm.isDefault,
+        address_type: addressForm.addressType
+      };
+      
+      // Log the payload for debugging
+      console.log('Sending address payload:', addressPayload);
+      
+      const response = await apiClient.post('/user/addresses', addressPayload);
       if (response.success) {
         await fetchProfile();
         setShowAddAddress(false);
@@ -196,9 +229,10 @@ const Profile = () => {
         });
       }
     } catch (error) {
+      console.error('Failed to add address:', error);
       toast({
         title: "Error",
-        description: "Failed to add address",
+        description: error.message || "Failed to add address",
         variant: "destructive"
       });
     }
@@ -542,7 +576,7 @@ const Profile = () => {
                 )}
 
                 <div className="space-y-4">
-                  {profile.addresses.length === 0 ? (
+                  {!profile?.addresses || profile.addresses.length === 0 ? (
                     <div className="text-center py-8">
                       <Home className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                       <h3 className="text-lg font-medium text-gray-900 mb-2">No addresses saved</h3>
@@ -553,7 +587,7 @@ const Profile = () => {
                       </Button>
                     </div>
                   ) : (
-                    profile.addresses.map((address) => (
+                    (profile.addresses || []).map((address) => (
                       <div key={address.id} className="border rounded-lg p-4">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
@@ -678,10 +712,11 @@ const Profile = () => {
                     {profile.wishlist.map((item) => (
                       <div key={item.productId} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
                         <div className="aspect-square bg-gray-100 rounded-lg mb-4 overflow-hidden">
-                          <img
+                          <FallbackImage
                             src={item.image}
                             alt={item.name}
                             className="w-full h-full object-cover"
+                            fallbackSrc="/placeholder-image.png"
                           />
                         </div>
                         <h3 className="font-medium text-lg mb-2 line-clamp-2">{item.name}</h3>

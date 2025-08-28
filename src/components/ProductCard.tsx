@@ -7,6 +7,7 @@ import { useStore } from "@/context/StoreContext";
 import { Product } from "@/context/StoreContext";
 import { useToast } from "@/hooks/use-toast";
 import { convertGoogleDriveUrl, getGoogleDriveProxyUrl } from "@/lib/utils";
+import { FallbackImage } from "@/components/ui/fallback-image";
 
 interface ProductCardProps {
   product: Product;
@@ -78,17 +79,11 @@ const ProductCard = ({ product, showQuickView = true }: ProductCardProps) => {
       {/* Image Container - Clickable */}
       <Link to={`/product/${product.id}`} className="block">
         <div className="relative aspect-square overflow-hidden">
-          <img
-            src={allImages[currentImageIndex].includes('drive.google.com') ? 
-              getGoogleDriveProxyUrl(allImages[currentImageIndex]) : 
-              convertGoogleDriveUrl(allImages[currentImageIndex])
-            }
+          <FallbackImage
+            src={allImages[currentImageIndex]}
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 cursor-pointer"
-            onError={(e) => {
-              // Fallback to placeholder
-              e.currentTarget.src = "/placeholder.svg";
-            }}
+            fallbackSrc="/placeholder-image.png"
           />
           
           {/* Image counter indicator */}

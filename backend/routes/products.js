@@ -146,42 +146,66 @@ router.get('/image-proxy', async (req, res) => {
     console.log(`🖼️ Image proxy: Converting "${url}" to "${directUrl}"`);
     console.log(`🖼️ Image proxy: URL length - Original: ${url.length}, Converted: ${directUrl.length}`);
     
-    // Fetch the image from Google Drive
-    const response = await fetch(directUrl);
+    // Set timeout for fetch to avoid hanging requests
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
     
-    console.log(`🖼️ Image proxy: Response status ${response.status} for ${directUrl}`);
-    
-    if (!response.ok) {
-      console.error(`❌ Image proxy failed: ${response.status} - ${response.statusText}`);
-      return res.status(response.status).json({ 
-        error: `Failed to fetch image: ${response.status}`,
-        details: response.statusText,
-        originalUrl: url,
-        convertedUrl: directUrl
+    try {
+      // Fetch the image from Google Drive with better headers
+      const response = await fetch(directUrl, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Referer': 'https://drive.google.com/'
+        }
       });
+      
+      clearTimeout(timeoutId);
+      
+      console.log(`🖼️ Image proxy: Response status ${response.status} for ${directUrl}`);
+      
+      if (!response.ok) {
+        console.error(`❌ Image proxy failed: ${response.status} - ${response.statusText}`);
+        
+        // For 404 errors, try to serve a default placeholder image
+        if (response.status === 404) {
+          return res.redirect('/placeholder-image.png');
+        }
+        
+        return res.status(response.status).json({ 
+          error: `Failed to fetch image: ${response.status}`,
+          details: response.statusText,
+          originalUrl: url,
+          convertedUrl: directUrl
+        });
+      }
+
+      // Get image content and headers
+      const contentType = response.headers.get('content-type') || 'image/jpeg';
+      const contentLength = response.headers.get('content-length');
+      
+      // Set appropriate headers with proper CORS
+      res.set({
+        'Content-Type': contentType,
+        'Content-Length': contentLength,
+        'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, OPTIONS',
+        'Access-Control-Allow-Headers': '*',
+        'Access-Control-Max-Age': '86400',
+        'Cross-Origin-Resource-Policy': 'cross-origin'
+      });
+
+      // Convert response to buffer and send (Node.js fetch compatibility)
+      const arrayBuffer = await response.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      res.send(buffer);
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      throw fetchError; // Re-throw to be caught by outer try/catch
     }
-
-    // Get image content and headers
-    const contentType = response.headers.get('content-type') || 'image/jpeg';
-    const contentLength = response.headers.get('content-length');
-    
-    // Set appropriate headers with proper CORS
-    res.set({
-      'Content-Type': contentType,
-      'Content-Length': contentLength,
-      'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': '*',
-      'Access-Control-Max-Age': '86400',
-      'Cross-Origin-Resource-Policy': 'cross-origin'
-    });
-
-    // Convert response to buffer and send (Node.js fetch compatibility)
-    const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    res.send(buffer);
-    
   } catch (error) {
     console.error('❌ Image proxy error:', error);
     console.error('❌ Error details:', {
@@ -190,11 +214,27 @@ router.get('/image-proxy', async (req, res) => {
       originalUrl: req.query.url,
       query: req.query
     });
-    res.status(500).json({ 
-      error: 'Failed to proxy image',
-      details: error.message,
-      originalUrl: req.query.url
-    });
+    
+    // For abort errors (timeouts), provide a specific message
+    if (error.name === 'AbortError') {
+      return res.status(504).json({
+        error: 'Request timed out',
+        details: 'The image request took too long to complete',
+        originalUrl: req.query.url
+      });
+    }
+    
+    // Try to serve a default placeholder image for any error
+    try {
+      return res.redirect('/placeholder-image.png');
+    } catch (redirectError) {
+      // If redirect fails, send JSON error
+      res.status(500).json({ 
+        error: 'Failed to proxy image',
+        details: error.message,
+        originalUrl: req.query.url
+      });
+    }
   }
 });
 
