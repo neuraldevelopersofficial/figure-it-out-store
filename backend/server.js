@@ -18,17 +18,20 @@ const corsOptions = {
     
     const allowedOrigins = [
       'http://localhost:5173',
+      'http://localhost:8080',
       'http://localhost:8081',
       'http://localhost:3000',
       'http://localhost:5000',
       'http://127.0.0.1:5173',
+      'http://127.0.0.1:8080',
       'http://127.0.0.1:8081',
       'http://127.0.0.1:3000',
       'http://127.0.0.1:5000',
       'https://figureitoutstore.in',
       'https://www.figureitoutstore.in',
       'https://figureitout.in',
-      'https://www.figureitout.in'
+      'https://www.figureitout.in',
+      'https://api.figureitoutstore.in'
     ];
     
     if (allowedOrigins.indexOf(origin) !== -1) {
@@ -40,10 +43,26 @@ const corsOptions = {
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  exposedHeaders: ['Access-Control-Allow-Origin']
 };
 
 app.use(cors(corsOptions));
+
+// Add additional CORS headers for preflight requests
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  // Handle preflight OPTIONS requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
+  next();
+});
 
 // Note: Rate limiting is now handled per-route in middleware/rateLimiter.js
 // This prevents double rate limiting and allows more granular control
