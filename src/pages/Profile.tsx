@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { 
   User, 
   MapPin, 
@@ -154,10 +154,29 @@ const Profile = () => {
   const fetchProfile = async () => {
     const response = await apiClient.get('/user/profile');
     if (response.success) {
-      // Ensure addresses is always an array
+      // Ensure addresses is always an array and map backend fields to frontend fields
+      const addresses = Array.isArray(response.user.addresses) 
+        ? response.user.addresses.map(addr => ({
+            id: addr.id,
+            name: addr.name || '',
+            addressLine1: addr.address || '',
+            addressLine2: addr.address_line2 || '',
+            landmark: addr.landmark || '',
+            city: addr.city || '',
+            state: addr.state || '',
+            pincode: addr.pincode || '',
+            phone: addr.phone || '',
+            isDefault: addr.is_default || false,
+            addressType: addr.address_type || 'Home'
+          }))
+        : [];
+      
+      console.log('Fetched addresses:', response.user.addresses);
+      console.log('Mapped addresses:', addresses);
+      
       const userData = {
         ...response.user,
-        addresses: Array.isArray(response.user.addresses) ? response.user.addresses : [],
+        addresses: addresses,
         wishlist: Array.isArray(response.user.wishlist) ? response.user.wishlist : []
       };
       
@@ -213,24 +232,33 @@ const Profile = () => {
       
       const response = await apiClient.post('/user/addresses', addressPayload);
       if (response.success) {
-        await fetchProfile();
-        setShowAddAddress(false);
-        setAddressForm({
-          name: '',
-          phone: '',
-          pincode: '',
-          addressLine1: '',
-          addressLine2: '',
-          landmark: '',
-          city: '',
-          state: '',
-          isDefault: false,
-          addressType: 'Home'
-        });
-        toast({
-          title: "Success",
-          description: "Address added successfully"
-        });
+        // Don't navigate away or reload the page
+        try {
+          await fetchProfile();
+          setShowAddAddress(false);
+          setAddressForm({
+            name: '',
+            phone: '',
+            pincode: '',
+            addressLine1: '',
+            addressLine2: '',
+            landmark: '',
+            city: '',
+            state: '',
+            isDefault: false,
+            addressType: 'Home'
+          });
+          toast({
+            title: "Success",
+            description: "Address added successfully"
+          });
+        } catch (error) {
+          console.error('Error refreshing profile after address add:', error);
+          toast({
+            title: "Address Added",
+            description: "Address added successfully. Please refresh to see changes."
+          });
+        }
       }
     } catch (error) {
       console.error('Failed to add address:', error);

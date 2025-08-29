@@ -1065,10 +1065,10 @@ const AdminDashboard = () => {
                             onClick={handleBulkUpload} 
                             disabled={bulkUploading || !bulkFile || isUploadingImages} 
                             className="w-full"
-                            variant={bulkMode === 'add' ? "destructive" : "default"}
+                            variant="default"
                           >
                             <Upload className="h-4 w-5 mr-2" />
-                            {bulkUploading ? 'Uploading...' : bulkMode === 'add' ? 'Delete' : 'Upload'}
+                            {bulkUploading ? 'Uploading...' : 'Upload'}
                           </Button>
                         </div>
                       </div>
