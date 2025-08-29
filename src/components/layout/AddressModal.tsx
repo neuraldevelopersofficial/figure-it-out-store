@@ -46,27 +46,37 @@ export const AddressModal: React.FC<AddressModalProps> = ({ isOpen, onClose, add
           }}
         >
           <div className="space-y-4 max-h-80 overflow-y-auto p-1">
-            {addresses.map((address) => (
-              <Label
-                key={address.id}
-                htmlFor={address.id}
-                className="flex items-start gap-4 rounded-md border p-4 hover:bg-gray-50 cursor-pointer"
-              >
-                <RadioGroupItem value={address.id} id={address.id} />
-                <div className="text-sm">
-                  <p className="font-medium">{address.name} <span className="font-normal text-gray-500">({address.addressType})</span></p>
-                  <p className="text-gray-600">{address.addressLine1}, {address.addressLine2}, {address.landmark}</p>
-                  <p className="text-gray-600">{address.city}, {address.state} - {address.pincode}</p>
-                  <p className="text-gray-600">Mobile: {address.phone}</p>
-                </div>
-              </Label>
-            ))}
+            {addresses.length === 0 ? (
+              <div className="text-center py-4">
+                <p className="text-muted-foreground">No addresses found. Add a new address to continue.</p>
+              </div>
+            ) : (
+              addresses.map((address) => (
+                <Label
+                  key={address.id}
+                  htmlFor={address.id}
+                  className="flex items-start gap-4 rounded-md border p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+                >
+                  <RadioGroupItem value={address.id} id={address.id} />
+                  <div className="text-sm">
+                    <p className="font-medium text-foreground">{address.name} <span className="font-normal text-muted-foreground">({address.addressType})</span></p>
+                    <p className="text-muted-foreground">{address.addressLine1}, {address.addressLine2}, {address.landmark}</p>
+                    <p className="text-muted-foreground">{address.city}, {address.state} - {address.pincode}</p>
+                    <p className="text-muted-foreground">Mobile: {address.phone}</p>
+                  </div>
+                </Label>
+              ))
+            )}
           </div>
         </RadioGroup>
         <div className="mt-4">
-          {/* TODO: Link to profile page to add new address */}
-          <Button variant="outline" className="w-full">+ Add a new address</Button>
+          <Link to="/profile">
+            <Button variant="outline" className="w-full hover:bg-brand-red hover:text-white transition-colors">+ Add a new address</Button>
+          </Link>
         </div>
+        <Button variant="ghost" size="sm" className="absolute right-4 top-4" onClick={onClose}>
+          ✕
+        </Button>
       </DialogContent>
     </Dialog>
   );

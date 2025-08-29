@@ -60,30 +60,30 @@ const CategorySection = () => {
             <div key={category.id} className="group">
               {category.disabled ? (
                 // Disabled category card
-                <div className="relative bg-gray-100 border border-gray-200 rounded-xl p-6 text-center transition-all duration-300 cursor-not-allowed">
+                <div className="relative bg-muted/50 border border-border rounded-xl p-6 text-center transition-all duration-300 cursor-not-allowed hover:bg-muted/70">
                   <div className="text-4xl mb-4 opacity-50">{category.image}</div>
-                  <h3 className="text-xl font-semibold text-gray-500 mb-2">
+                  <h3 className="text-xl font-semibold text-muted-foreground mb-2">
                     {category.name}
                   </h3>
-                  <p className="text-gray-400 text-sm mb-4">
+                  <p className="text-muted-foreground/80 text-sm mb-4">
                     {category.description}
                   </p>
-                  <div className="text-xs text-gray-400 bg-gray-200 px-2 py-1 rounded-full inline-block">
+                  <div className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full inline-block">
                     {category.count}
                   </div>
                 </div>
               ) : (
                 // Active category card
                 <Link to={`/${category.id}`}>
-                  <div className={`relative bg-gradient-to-br ${category.color} rounded-xl p-6 text-center text-white transition-all duration-300 group-hover:scale-105 group-hover:shadow-xl cursor-pointer`}>
+                  <div className="relative bg-card border border-border hover:border-brand-red rounded-xl p-6 text-center transition-all duration-300 group-hover:shadow-lg cursor-pointer">
                     <div className="text-4xl mb-4">{category.image}</div>
-                    <h3 className="text-xl font-semibold mb-2">
+                    <h3 className="text-xl font-semibold text-foreground mb-2">
                       {category.name}
                     </h3>
-                    <p className="text-white/90 text-sm mb-4">
+                    <p className="text-muted-foreground text-sm mb-4">
                       {category.description}
                     </p>
-                    <div className="flex items-center justify-center gap-2 text-sm">
+                    <div className="flex items-center justify-center gap-2 text-sm text-brand-red font-medium">
                       <span>{category.count}</span>
                       <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                     </div>

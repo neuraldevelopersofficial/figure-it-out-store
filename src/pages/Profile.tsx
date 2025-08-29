@@ -70,6 +70,12 @@ interface UserProfile {
 }
 
 const Profile = () => {
+  const LoadingSpinner = () => (
+    <div className="flex items-center justify-center h-[60vh]">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-red"></div>
+    </div>
+  );
+
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { toast } = useToast();
@@ -104,8 +110,23 @@ const Profile = () => {
       navigate('/login');
       return;
     }
-    fetchProfile();
-  }, [user, navigate, fetchProfile]);
+    const loadProfile = async () => {
+      setLoading(true);
+      try {
+        await fetchProfile();
+      } catch (error) {
+        console.error('Failed to load profile:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load profile. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadProfile();
+  }, [user, navigate]);
 
   useEffect(() => {
     const handlePincodeChange = async () => {
@@ -131,40 +152,23 @@ const Profile = () => {
   }, [addressForm.pincode]);
 
   const fetchProfile = async () => {
-    try {
-      const response = await apiClient.get('/user/profile');
-      if (response.success) {
-        // Ensure addresses is always an array
-        const userData = {
-          ...response.user,
-          addresses: Array.isArray(response.user.addresses) ? response.user.addresses : [],
-          wishlist: Array.isArray(response.user.wishlist) ? response.user.wishlist : []
-        };
-        
-        setProfile(userData);
-        setProfileForm({
-          name: userData.name || '',
-          email: userData.email || '',
-          phone: userData.phone || ''
-        });
-        
-        console.log('Profile data:', userData);
-      }
-    } catch (error) {
-      console.error('Failed to fetch profile:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch profile",
-        variant: "destructive"
+    const response = await apiClient.get('/user/profile');
+    if (response.success) {
+      // Ensure addresses is always an array
+      const userData = {
+        ...response.user,
+        addresses: Array.isArray(response.user.addresses) ? response.user.addresses : [],
+        wishlist: Array.isArray(response.user.wishlist) ? response.user.wishlist : []
+      };
+      
+      setProfile(userData);
+      setProfileForm({
+        name: userData.name || '',
+        email: userData.email || '',
+        phone: userData.phone || ''
       });
-      // Set default empty profile with empty arrays to prevent undefined errors
-      setProfile(prev => ({
-        ...prev || {},
-        addresses: [],
-        wishlist: []
-      }) as UserProfile);
-    } finally {
-      setLoading(false);
+    } else {
+      throw new Error('Failed to fetch profile data');
     }
   };
 
@@ -340,7 +344,24 @@ const Profile = () => {
   };
 
   if (loading) {
+    if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  if (!profile) {
     return (
+      <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
+        <User className="h-12 w-12 text-muted-foreground" />
+        <h2 className="text-xl font-semibold text-foreground">Profile Not Found</h2>
+        <p className="text-muted-foreground">There was an error loading your profile.</p>
+        <Button onClick={() => window.location.reload()} variant="outline">
+          Retry
+        </Button>
+      </div>
+    );
+  }
+
+  return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>

@@ -950,6 +950,33 @@ const AdminDashboard = () => {
                       <Plus className="h-4 w-4 mr-2" />
                       Add Product
                     </Button>
+                    <Button 
+                      variant="destructive" 
+                      onClick={async () => {
+                        if (window.confirm('Are you sure you want to delete ALL products? This action cannot be undone.')) {
+                          try {
+                            const response = await apiClient.deleteAllProducts();
+                            if (response.success) {
+                              toast({
+                                title: "Success",
+                                description: "All products have been deleted."
+                              });
+                              fetchAdminData();
+                              setBulkMode('add'); // Set bulk mode to add after deleting all
+                            }
+                          } catch (error) {
+                            toast({
+                              title: "Error",
+                              description: "Failed to delete all products.",
+                              variant: "destructive"
+                            });
+                          }
+                        }
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete All
+                    </Button>
                   </div>
                 </div>
               </CardHeader>
@@ -1038,9 +1065,10 @@ const AdminDashboard = () => {
                             onClick={handleBulkUpload} 
                             disabled={bulkUploading || !bulkFile || isUploadingImages} 
                             className="w-full"
+                            variant={bulkMode === 'add' ? "destructive" : "default"}
                           >
                             <Upload className="h-4 w-5 mr-2" />
-                            {bulkUploading ? 'Uploading...' : 'Upload'}
+                            {bulkUploading ? 'Uploading...' : bulkMode === 'add' ? 'Delete' : 'Upload'}
                           </Button>
                         </div>
                       </div>

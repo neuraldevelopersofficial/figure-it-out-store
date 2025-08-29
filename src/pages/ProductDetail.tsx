@@ -131,6 +131,11 @@ const ProductDetail = () => {
 
   const handleAddToCart = () => {
     addToCart(product);
+    toast({
+      title: "Added to Cart",
+      description: `${product.name} has been added to your cart.`,
+      variant: "default"
+    });
   };
 
   const handleQuantityChange = (newQuantity: number) => {

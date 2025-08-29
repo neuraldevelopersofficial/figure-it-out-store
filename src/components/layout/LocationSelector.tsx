@@ -31,13 +31,15 @@ export const LocationSelector: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center gap-2 cursor-pointer" onClick={() => setIsModalOpen(true)}>
-      <MapPin className="h-5 w-5 text-gray-600" />
-      <div className="text-sm">
-        <p className="text-gray-500">Deliver to {user?.full_name || 'You'}</p>
-        <p className="font-medium text-gray-800">
-          {displayAddress ? `${displayAddress.city} ${displayAddress.pincode}` : 'Select Address'}
-        </p>
+    <div>
+      <div className="flex items-center gap-2 cursor-pointer hover:text-brand-red transition-colors" onClick={() => setIsModalOpen(true)}>
+        <MapPin className="h-5 w-5 text-foreground" />
+        <div className="text-sm">
+          <p className="text-muted-foreground">Deliver to {user?.full_name || 'You'}</p>
+          <p className="font-medium text-foreground">
+            {displayAddress ? `${displayAddress.city} ${displayAddress.pincode}` : 'Select Address'}
+          </p>
+        </div>
       </div>
       <AddressModal
         isOpen={isModalOpen}

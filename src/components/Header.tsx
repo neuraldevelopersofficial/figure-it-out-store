@@ -103,28 +103,26 @@ const Header = () => {
             {/* Wishlist */}
             <Link to="/wishlist">
               <Button variant="ghost" size="sm" className="relative">
-                <Heart className="h-5 w-5" />
-                {state.wishlist.length > 0 && (
-                  <Badge 
-                    className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center text-xs bg-brand-red"
-                  >
-                    {state.wishlist.length}
-                  </Badge>
-                )}
+                <Heart className="h-5 w-5 text-foreground" />
+                <Badge 
+                  className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center text-xs bg-brand-red transition-opacity"
+                  style={{ opacity: state.wishlist.length > 0 ? 1 : 0 }}
+                >
+                  {state.wishlist.length}
+                </Badge>
               </Button>
             </Link>
 
             {/* Cart */}
             <Link to="/cart">
               <Button variant="ghost" size="sm" className="relative">
-                <ShoppingCart className="h-5 w-5" />
-                {getCartItemCount() > 0 && (
-                  <Badge 
-                    className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center text-xs bg-brand-red"
-                  >
-                    {getCartItemCount()}
-                  </Badge>
-                )}
+                <ShoppingCart className="h-5 w-5 text-foreground" />
+                <Badge 
+                  className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center text-xs bg-brand-red transition-opacity"
+                  style={{ opacity: getCartItemCount() > 0 ? 1 : 0 }}
+                >
+                  {getCartItemCount()}
+                </Badge>
               </Button>
             </Link>
 

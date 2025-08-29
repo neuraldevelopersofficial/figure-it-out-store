@@ -184,6 +184,12 @@ class ApiClient {
     });
   }
 
+  async deleteAllProducts() {
+    return this.request('/admin/products/all', {
+      method: 'DELETE'
+    });
+  }
+
   async deleteProduct(id: string) {
     return this.request(`/admin/products/${id}`, {
       method: 'DELETE',
