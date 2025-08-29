@@ -21,7 +21,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   signUp: (email: string, password: string, userData: Partial<User>) => Promise<{ success: boolean; error?: string }>;
-  signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string; user?: User }>;
   signOut: () => Promise<void>;
   updateUserProfile: (updates: Partial<User>) => Promise<{ success: boolean; error?: string }>;
   isAdmin: boolean;
@@ -104,7 +104,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const signIn = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+  const signIn = async (email: string, password: string): Promise<{ success: boolean; error?: string; user?: User }> => {
     try {
       const response = await apiClient.login({ email, password });
 
@@ -118,7 +118,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           description: "You have successfully signed in.",
         });
         
-        return { success: true };
+        return { success: true, user: response.user };
       } else {
         return { success: false, error: response.error || 'Failed to sign in' };
       }

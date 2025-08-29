@@ -198,6 +198,12 @@ const Profile = () => {
         });
       } else {
         console.error('Failed profile response:', response);
+        // Initialize with empty arrays to prevent undefined errors
+        setProfile(prev => ({
+          ...prev,
+          addresses: [],
+          wishlist: []
+        }));
         throw new Error('Failed to fetch profile data');
       }
     } catch (error) {
@@ -208,7 +214,7 @@ const Profile = () => {
         addresses: [],
         wishlist: []
       }));
-      throw error;
+      // Don't rethrow the error to prevent component from crashing
     }
   };
 

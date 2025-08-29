@@ -40,8 +40,11 @@ const Login = () => {
           description: "You have been signed in successfully.",
         });
         
+        // Get the latest user data from the result or context
+        const currentUser = result.user || user;
+        
         // Redirect based on user role
-        if (user?.role === 'admin') {
+        if (currentUser?.role === 'admin') {
           navigate('/admin');
         } else {
           navigate('/');
