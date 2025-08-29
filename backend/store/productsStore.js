@@ -195,6 +195,12 @@ function toAdminList() {
   }));
 }
 
+function clearAll() {
+  const previousCount = products.length;
+  products = [];
+  return previousCount;
+}
+
 module.exports = {
   getAll,
   getById,
@@ -204,7 +210,8 @@ module.exports = {
   update,
   remove,
   upsertMany,
-  toAdminList
+  toAdminList,
+  clearAll
 };
 
 

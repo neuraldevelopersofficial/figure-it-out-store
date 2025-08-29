@@ -385,6 +385,30 @@ router.delete('/products/:id', authenticateToken, requireAdmin, async (req, res)
   }
 });
 
+// Clear all products
+router.delete('/products/all', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const store = require('../store/productsStore');
+    const col = await getProductsCollection();
+    let deletedCount = 0;
+    
+    if (col) {
+      const result = await col.deleteMany({});
+      deletedCount = result.deletedCount;
+    } else {
+      deletedCount = store.clearAll();
+    }
+    
+    return res.json({
+      success: true,
+      message: `Successfully deleted all products (${deletedCount} items removed)`
+    });
+  } catch (error) {
+    console.error('Clear all products error:', error);
+    res.status(500).json({ error: 'Failed to clear all products' });
+  }
+});
+
 // Bulk upsert products via CSV/Excel upload
 router.post('/products/bulk', authenticateToken, requireAdmin, bulkUploadLimiter, upload.single('file'), async (req, res) => {
   try {
@@ -421,7 +445,20 @@ router.post('/products/bulk', authenticateToken, requireAdmin, bulkUploadLimiter
     const mapCamelToSnake = (p, imageMap = {}) => {
       // Process image filenames to URLs if imageMap is provided
       let mainImage = p.image || '';
-      let imagesList = p.allImages ? p.allImages.split(',').map(img => img.trim()).filter(img => img) : [];
+      // Handle both comma-separated string and array formats for allImages
+      let imagesList = [];
+      if (p.allImages) {
+        if (typeof p.allImages === 'string') {
+          imagesList = p.allImages.split(',').map(img => img.trim()).filter(img => img);
+        } else if (Array.isArray(p.allImages)) {
+          imagesList = p.allImages.filter(img => img);
+        }
+      }
+      
+      // If no images in the list but we have a main image, include it in the list
+      if (imagesList.length === 0 && mainImage) {
+        imagesList = [mainImage];
+      }
       
       // If imageMap is provided, map filenames to URLs
       if (Object.keys(imageMap).length > 0) {
@@ -562,6 +599,8 @@ router.post('/products/bulk', authenticateToken, requireAdmin, bulkUploadLimiter
     if (col) {
       for (const p of valid) {
         const id = p.id && String(p.id).trim().length ? String(p.id) : null;
+        const name = p.name && String(p.name).trim();
+        
         if (mode === 'add') {
           if (!id) {
             const doc = require('../store/productsStore').add(p);
@@ -569,15 +608,46 @@ router.post('/products/bulk', authenticateToken, requireAdmin, bulkUploadLimiter
             created++;
           }
         } else if (mode === 'update') {
+          // Try to find by ID or name for update
           if (id) {
             const r = await col.updateOne({ id }, { $set: { ...p, updated_at: new Date().toISOString() } });
             if (r.matchedCount) updated++;
+          } else if (name) {
+            // If no ID but name exists, try to update by name
+            const r = await col.updateOne({ name }, { $set: { ...p, updated_at: new Date().toISOString() } });
+            if (r.matchedCount) updated++;
+            else {
+              // If no match by name, create new
+              const doc = require('../store/productsStore').add(p);
+              await col.insertOne({ ...doc });
+              created++;
+            }
           }
         } else {
-          // upsert
-          const doc = id ? { ...p } : require('../store/productsStore').add(p);
-          await col.updateOne({ id: doc.id }, { $set: { ...doc, updated_at: new Date().toISOString() } }, { upsert: true });
-          if (id) updated++; else created++;
+          // upsert - try by ID first, then by name
+          if (id) {
+            const doc = { ...p, updated_at: new Date().toISOString() };
+            await col.updateOne({ id }, { $set: doc }, { upsert: true });
+            updated++;
+          } else if (name) {
+            // Check if product with this name already exists
+            const existing = await col.findOne({ name });
+            if (existing) {
+              // Update existing product by name
+              await col.updateOne({ name }, { $set: { ...p, updated_at: new Date().toISOString() } });
+              updated++;
+            } else {
+              // Create new product
+              const doc = require('../store/productsStore').add(p);
+              await col.insertOne({ ...doc });
+              created++;
+            }
+          } else {
+            // No ID or name, just create new
+            const doc = require('../store/productsStore').add(p);
+            await col.insertOne({ ...doc });
+            created++;
+          }
         }
       }
     } else {

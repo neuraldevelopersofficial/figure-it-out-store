@@ -10,6 +10,7 @@ import { Product } from "@/context/StoreContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Carousel from "@/components/Carousel";
+import LoadingState from "@/components/ui/LoadingState";
 
 const AnimeFigures = () => {
   const [sortBy, setSortBy] = useState("featured");
@@ -18,8 +19,10 @@ const AnimeFigures = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const [allFigures, setAllFigures] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    setIsLoading(true);
     (async () => {
       try {
         const resp = await apiClient.getProductsByCategory('Anime Figures');
@@ -28,6 +31,8 @@ const AnimeFigures = () => {
         }
       } catch (e) {
         console.error('Failed to load anime figures', e);
+      } finally {
+        setIsLoading(false);
       }
     })();
   }, []);
@@ -109,6 +114,53 @@ const AnimeFigures = () => {
       // Featured - keep original order
       break;
   }
+  
+  // Render loading state if data is being fetched
+  const renderProductsSection = () => {
+    if (isLoading) {
+      return <LoadingState message="Loading anime figures..." />;
+    }
+    
+    if (filteredProducts.length === 0) {
+      return (
+        <div className="text-center py-16">
+          <div className="text-6xl mb-4">🔍</div>
+          <h3 className="text-xl font-semibold text-foreground mb-2">
+            No figures found
+          </h3>
+          <p className="text-muted-foreground mb-6">
+            Try adjusting your search or filters to find what you're looking for.
+          </p>
+          <Button 
+            onClick={() => {
+              setSearchQuery("");
+              setPriceRange("all");
+              setSortBy("featured");
+            }}
+            variant="outline"
+          >
+            Clear Filters
+          </Button>
+        </div>
+      );
+    }
+    
+    return (
+      <div className={
+        viewMode === "grid" 
+          ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+          : "space-y-4"
+      }>
+        {filteredProducts.map((product) => (
+          <ProductCard 
+            key={product.id} 
+            product={product}
+            showQuickView={viewMode === "grid"}
+          />
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -209,41 +261,7 @@ const AnimeFigures = () => {
           </div>
 
           {/* Products Grid/List */}
-          {filteredProducts.length > 0 ? (
-            <div className={
-              viewMode === "grid" 
-                ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-                : "space-y-4"
-            }>
-              {filteredProducts.map((product) => (
-                <ProductCard 
-                  key={product.id} 
-                  product={product}
-                  showQuickView={viewMode === "grid"}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-16">
-              <div className="text-6xl mb-4">🔍</div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">
-                No figures found
-              </h3>
-              <p className="text-muted-foreground mb-6">
-                Try adjusting your search or filters to find what you're looking for.
-              </p>
-              <Button 
-                onClick={() => {
-                  setSearchQuery("");
-                  setPriceRange("all");
-                  setSortBy("featured");
-                }}
-                variant="outline"
-              >
-                Clear Filters
-              </Button>
-            </div>
-          )}
+          {renderProductsSection()}
         </div>
       </section>
       <Footer />

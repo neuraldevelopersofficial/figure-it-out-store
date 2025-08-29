@@ -11,6 +11,7 @@ import ProductCard from "@/components/ProductCard";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { FallbackImage } from "@/components/ui/fallback-image";
+import LoadingState from "@/components/ui/LoadingState";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -42,13 +43,23 @@ const ProductDetail = () => {
   
   const [product, setProduct] = useState<any | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [notFound, setNotFound] = useState<boolean>(false);
   const isWishlisted = product ? isInWishlist(product.id) : false;
 
   // Scroll to top when component mounts
   useEffect(() => {
     window.scrollTo(0, 0);
+    setIsLoading(true);
+    setNotFound(false);
+    
     (async () => {
-      if (!id) return;
+      if (!id) {
+        setIsLoading(false);
+        setNotFound(true);
+        return;
+      }
+      
       try {
         const resp = await apiClient.getProduct(id);
         if (resp && resp.success) {
@@ -62,33 +73,51 @@ const ProductDetail = () => {
               setRelatedProducts(relMapped);
             }
           }
+          setNotFound(false);
+        } else {
+          setNotFound(true);
         }
       } catch (e) {
         console.error('Failed to load product', e);
         setProduct(null);
+        setNotFound(true);
+      } finally {
+        setIsLoading(false);
       }
     })();
   }, [id]);
 
-  if (!product) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <>
         <Header />
-        <div className="text-center">
-          <div className="text-6xl mb-4">❌</div>
-          <h1 className="text-2xl font-bold text-foreground mb-4">Product Not Found</h1>
-          <p className="text-muted-foreground mb-6">
-            The product you're looking for doesn't exist or has been removed.
-          </p>
-          <Link to="/">
-            <Button>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Home
-            </Button>
-          </Link>
+        <LoadingState message="Loading product details..." fullScreen={true} />
+        <Footer />
+      </>
+    );
+  }
+  
+  if (notFound || !product) {
+    return (
+      <>
+        <Header />
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-6xl mb-4">❌</div>
+            <h1 className="text-2xl font-bold text-foreground mb-4">Product Not Found</h1>
+            <p className="text-muted-foreground mb-6">
+              The product you're looking for doesn't exist or has been removed.
+            </p>
+            <Link to="/">
+              <Button>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Home
+              </Button>
+            </Link>
+          </div>
         </div>
         <Footer />
-      </div>
+      </>
     );
   }
 
