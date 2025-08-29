@@ -153,11 +153,13 @@ const Profile = () => {
 
   const fetchProfile = async () => {
     const response = await apiClient.get('/user/profile');
-    if (response.success) {
+    if (response.success && response.user) {
+      console.log('Raw user data:', response.user);
+      
       // Ensure addresses is always an array and map backend fields to frontend fields
-      const addresses = Array.isArray(response.user.addresses) 
+      const addresses = response.user.addresses && Array.isArray(response.user.addresses) 
         ? response.user.addresses.map(addr => ({
-            id: addr.id,
+            id: addr.id || '',
             name: addr.name || '',
             addressLine1: addr.address || '',
             addressLine2: addr.address_line2 || '',
@@ -171,13 +173,13 @@ const Profile = () => {
           }))
         : [];
       
-      console.log('Fetched addresses:', response.user.addresses);
+      console.log('Fetched addresses:', response.user.addresses || 'No addresses found');
       console.log('Mapped addresses:', addresses);
       
       const userData = {
         ...response.user,
         addresses: addresses,
-        wishlist: Array.isArray(response.user.wishlist) ? response.user.wishlist : []
+        wishlist: response.user.wishlist && Array.isArray(response.user.wishlist) ? response.user.wishlist : []
       };
       
       setProfile(userData);
@@ -187,6 +189,7 @@ const Profile = () => {
         phone: userData.phone || ''
       });
     } else {
+      console.error('Failed profile response:', response);
       throw new Error('Failed to fetch profile data');
     }
   };

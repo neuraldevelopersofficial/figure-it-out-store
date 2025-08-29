@@ -33,6 +33,12 @@ class ApiClient {
     if (this.token) {
       headers.Authorization = `Bearer ${this.token}`;
     }
+    
+    // Add CORS headers for cross-origin requests
+    headers['Access-Control-Allow-Origin'] = '*';
+    headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS';
+    headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
+    headers['Access-Control-Allow-Credentials'] = 'true';
 
     const config: RequestInit = {
       ...options,
