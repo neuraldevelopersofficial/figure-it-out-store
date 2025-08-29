@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 interface CarouselSlide {
   id: string;
@@ -95,9 +96,9 @@ const Carousel = ({
                     className="bg-brand-red hover:bg-brand-red-dark text-white text-lg px-8 py-3"
                     asChild
                   >
-                    <a href={slide.ctaLink}>
+                    <Link to={slide.ctaLink}>
                       {slide.ctaText}
-                    </a>
+                    </Link>
                   </Button>
                 )}
               </div>

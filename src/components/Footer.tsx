@@ -53,11 +53,11 @@ const Footer = () => {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Customer Service</h3>
             <div className="space-y-2">
-              <a href="#" className="block text-gray-300 hover:text-brand-red transition-colors text-sm">Track Your Order</a>
-              <a href="#" className="block text-gray-300 hover:text-brand-red transition-colors text-sm">Returns & Exchanges</a>
-              <a href="#" className="block text-gray-300 hover:text-brand-red transition-colors text-sm">Shipping Info</a>
-              <a href="#" className="block text-gray-300 hover:text-brand-red transition-colors text-sm">Size Guide</a>
-              <a href="#" className="block text-gray-300 hover:text-brand-red transition-colors text-sm">FAQs</a>
+              <Link to="/orders" className="block text-gray-300 hover:text-brand-red transition-colors text-sm">Track Your Order</Link>
+            <Link to="/" className="block text-gray-300 hover:text-brand-red transition-colors text-sm">Returns & Exchanges</Link>
+            <Link to="/" className="block text-gray-300 hover:text-brand-red transition-colors text-sm">Shipping Info</Link>
+            <Link to="/" className="block text-gray-300 hover:text-brand-red transition-colors text-sm">Size Guide</Link>
+            <Link to="/" className="block text-gray-300 hover:text-brand-red transition-colors text-sm">FAQs</Link>
             </div>
           </div>
 
@@ -106,9 +106,9 @@ const Footer = () => {
               © 2024 FIGUREITOUT. All rights reserved.
             </div>
             <div className="flex items-center space-x-6 text-sm text-gray-400">
-              <a href="#" className="hover:text-brand-red transition-colors">Privacy Policy</a>
-              <a href="#" className="hover:text-brand-red transition-colors">Terms of Service</a>
-              <a href="#" className="hover:text-brand-red transition-colors">Refund Policy</a>
+              <Link to="/" className="hover:text-brand-red transition-colors">Privacy Policy</Link>
+            <Link to="/" className="hover:text-brand-red transition-colors">Terms of Service</Link>
+            <Link to="/" className="hover:text-brand-red transition-colors">Refund Policy</Link>
             </div>
           </div>
         </div>

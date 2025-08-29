@@ -152,45 +152,63 @@ const Profile = () => {
   }, [addressForm.pincode]);
 
   const fetchProfile = async () => {
-    const response = await apiClient.get('/user/profile');
-    if (response.success && response.user) {
-      console.log('Raw user data:', response.user);
-      
-      // Ensure addresses is always an array and map backend fields to frontend fields
-      const addresses = response.user.addresses && Array.isArray(response.user.addresses) 
-        ? response.user.addresses.map(addr => ({
-            id: addr.id || '',
-            name: addr.name || '',
-            addressLine1: addr.address || '',
-            addressLine2: addr.address_line2 || '',
-            landmark: addr.landmark || '',
-            city: addr.city || '',
-            state: addr.state || '',
-            pincode: addr.pincode || '',
-            phone: addr.phone || '',
-            isDefault: addr.is_default || false,
-            addressType: addr.address_type || 'Home'
-          }))
-        : [];
-      
-      console.log('Fetched addresses:', response.user.addresses || 'No addresses found');
-      console.log('Mapped addresses:', addresses);
-      
-      const userData = {
-        ...response.user,
-        addresses: addresses,
-        wishlist: response.user.wishlist && Array.isArray(response.user.wishlist) ? response.user.wishlist : []
-      };
-      
-      setProfile(userData);
-      setProfileForm({
-        name: userData.name || '',
-        email: userData.email || '',
-        phone: userData.phone || ''
-      });
-    } else {
-      console.error('Failed profile response:', response);
-      throw new Error('Failed to fetch profile data');
+    try {
+      const response = await apiClient.get('/user/profile');
+      if (response.success && response.user) {
+        console.log('Raw user data:', response.user);
+        
+        // Ensure addresses is always an array and map backend fields to frontend fields
+        const addresses = [];
+        
+        // Safely process addresses with proper error handling
+        if (response.user.addresses && Array.isArray(response.user.addresses)) {
+          response.user.addresses.forEach(addr => {
+            if (addr) {
+              addresses.push({
+                id: addr.id || '',
+                name: addr.name || '',
+                addressLine1: addr.address || '',
+                addressLine2: addr.address_line2 || '',
+                landmark: addr.landmark || '',
+                city: addr.city || '',
+                state: addr.state || '',
+                pincode: addr.pincode || '',
+                phone: addr.phone || '',
+                isDefault: addr.is_default || false,
+                addressType: addr.address_type || 'Home'
+              });
+            }
+          });
+        }
+        
+        console.log('Fetched addresses:', response.user.addresses || 'No addresses found');
+        console.log('Mapped addresses:', addresses);
+        
+        const userData = {
+          ...response.user,
+          addresses: addresses,
+          wishlist: response.user.wishlist && Array.isArray(response.user.wishlist) ? response.user.wishlist : []
+        };
+        
+        setProfile(userData);
+        setProfileForm({
+          name: userData.name || '',
+          email: userData.email || '',
+          phone: userData.phone || ''
+        });
+      } else {
+        console.error('Failed profile response:', response);
+        throw new Error('Failed to fetch profile data');
+      }
+    } catch (error) {
+      console.error('Failed to fetch user addresses:', error);
+      // Set default empty profile with empty arrays to prevent undefined errors
+      setProfile(prev => ({
+        ...prev,
+        addresses: [],
+        wishlist: []
+      }));
+      throw error;
     }
   };
 
