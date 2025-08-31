@@ -270,13 +270,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (state.currentUserId) {
         try {
           const response = await apiClient.get('/user/profile');
-          if (response.success && response.data.addresses) {
+          // Check if response.data exists before accessing addresses
+          if (response.success && response.data && response.data.addresses) {
             const addresses = response.data.addresses;
             dispatch({ type: 'SET_ADDRESSES', payload: addresses });
             const defaultAddress = addresses.find((a: Address) => a.isDefault) || addresses[0];
             if (defaultAddress) {
               dispatch({ type: 'SET_SELECTED_ADDRESS', payload: defaultAddress });
             }
+          } else {
+            // If no addresses found, set empty array
+            dispatch({ type: 'SET_ADDRESSES', payload: [] });
           }
         } catch (error) {
           console.error("Failed to fetch user addresses", error);

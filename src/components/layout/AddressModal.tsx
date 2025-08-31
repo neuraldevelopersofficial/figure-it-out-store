@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -46,7 +47,7 @@ export const AddressModal: React.FC<AddressModalProps> = ({ isOpen, onClose, add
           }}
         >
           <div className="space-y-4 max-h-80 overflow-y-auto p-1">
-            {addresses.length === 0 ? (
+            {!addresses || addresses.length === 0 ? (
               <div className="text-center py-4">
                 <p className="text-muted-foreground">No addresses found. Add a new address to continue.</p>
               </div>

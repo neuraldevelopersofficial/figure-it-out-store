@@ -20,9 +20,12 @@ interface Address {
 
 export const LocationSelector: React.FC = () => {
   const { user } = useAuth();
-  const { state: { addresses, selectedAddress }, setSelectedAddress } = useStore();
+  const { state, setSelectedAddress } = useStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Safely access addresses and selectedAddress with fallbacks
+  const addresses = state.addresses || [];
+  const selectedAddress = state.selectedAddress;
   const displayAddress = selectedAddress || addresses.find(a => a.isDefault);
 
   const handleSelectAddress = (address: Address) => {
