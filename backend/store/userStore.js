@@ -122,6 +122,11 @@ function addAddress(userId, addressData) {
   const user = getUserById(userId);
   if (!user) return null;
 
+  // Initialize addresses array if it doesn't exist
+  if (!user.addresses) {
+    user.addresses = [];
+  }
+
   const addressId = uuidv4();
   const newAddress = {
     id: addressId,
@@ -134,7 +139,9 @@ function addAddress(userId, addressData) {
     state: addressData.state,
     pincode: addressData.pincode,
     phone: addressData.phone,
-    isDefault: addressData.isDefault || false
+    isDefault: addressData.isDefault || false,
+    userId: userId, // Associate address with user ID
+    created_at: nowIso()
   };
 
   // If this is set as default, make others non-default
@@ -152,6 +159,12 @@ function updateAddress(userId, addressId, updates) {
   const user = getUserById(userId);
   if (!user) return null;
 
+  // Initialize addresses array if it doesn't exist
+  if (!user.addresses) {
+    user.addresses = [];
+    return null; // No addresses to update
+  }
+
   const addressIndex = user.addresses.findIndex(addr => addr.id === addressId);
   if (addressIndex === -1) return null;
 
@@ -160,9 +173,14 @@ function updateAddress(userId, addressId, updates) {
     user.addresses.forEach(addr => addr.isDefault = false);
   }
 
+  // Preserve the ID and created_at when updating
+  const existingAddress = user.addresses[addressIndex];
   user.addresses[addressIndex] = {
-    ...user.addresses[addressIndex],
-    ...updates
+    ...existingAddress,
+    ...updates,
+    id: addressId, // Ensure ID is preserved
+    userId: userId, // Ensure user association is preserved
+    created_at: existingAddress.created_at || nowIso() // Preserve creation date
   };
 
   user.updated_at = nowIso();

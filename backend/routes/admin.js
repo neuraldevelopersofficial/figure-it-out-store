@@ -682,10 +682,11 @@ router.post('/products/bulk', authenticateToken, requireAdmin, bulkUploadLimiter
 });
 
 // Get all customers for admin
-router.get('/customers', authenticateToken, requireAdmin, (req, res) => {
+router.get('/customers', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const usersStore = require('../store/usersStore');
-    const customers = usersStore.getCustomers();
+    // Ensure usersStore is synced with userStore before returning customers
+    const customers = await usersStore.getCustomers();
 
     res.json({
       success: true,

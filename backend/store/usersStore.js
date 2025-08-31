@@ -1,5 +1,8 @@
 const { v4: uuidv4 } = require('uuid');
 
+// Import userStore to sync data
+const userStore = require('./userStore');
+
 // In-memory users store. Replace with DB in production.
 let users = [];
 
@@ -32,11 +35,40 @@ const initializeSampleUsers = () => {
 // Initialize sample users on startup
 initializeSampleUsers();
 
+// Sync with userStore
+const syncWithUserStore = () => {
+  const userStoreUsers = userStore.getAllUsers();
+  if (userStoreUsers && userStoreUsers.length > 0) {
+    // Map userStore users to usersStore format
+    userStoreUsers.forEach(user => {
+      if (!users.some(u => u.id === user.id)) {
+        users.push({
+          id: user.id,
+          email: user.email,
+          full_name: user.name || '',
+          phone: user.phone || '',
+          pincode: user.pincode || '',
+          address: user.address || '',
+          city: user.city || '',
+          state: user.state || '',
+          role: user.role || 'customer',
+          total_orders: user.total_orders || 0,
+          total_spent: user.total_spent || 0,
+          created_at: user.created_at,
+          updated_at: user.updated_at
+        });
+      }
+    });
+  }
+};
+
 function nowIso() {
   return new Date().toISOString();
 }
 
 function getAll() {
+  // Sync with userStore before returning all users
+  syncWithUserStore();
   return users;
 }
 
@@ -49,6 +81,8 @@ function getByEmail(email) {
 }
 
 function getCustomers() {
+  // Sync with userStore before returning customers
+  syncWithUserStore();
   return users.filter(u => u.role === 'customer');
 }
 

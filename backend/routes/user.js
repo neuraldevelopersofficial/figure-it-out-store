@@ -328,11 +328,27 @@ router.put('/addresses/:addressId', authenticateToken, async (req, res) => {
     
     const col = await getUsersCollection();
     if (col) {
+      // First check if the user and address exist
+      const user = await col.findOne({ id: req.user.id });
+      if (!user) return res.status(404).json({ error: 'User not found' });
+      
+      const addressExists = user.addresses && user.addresses.some(a => a.id === addressId);
+      if (!addressExists) return res.status(404).json({ error: 'Address not found' });
+      
+      // Preserve the address ID and created_at when updating
+      const existingAddress = user.addresses.find(a => a.id === addressId);
+      const updatedAddress = {
+        ...existingAddress,
+        ...mappedUpdates,
+        id: addressId // Ensure ID is preserved
+      };
+      
       const r = await col.findOneAndUpdate(
         { id: req.user.id, 'addresses.id': addressId },
-        { $set: { 'addresses.$': { id: addressId, ...mappedUpdates }, updated_at: new Date().toISOString() } },
+        { $set: { 'addresses.$': updatedAddress, updated_at: new Date().toISOString() } },
         { returnDocument: 'after' }
       );
+      
       if (!r.value) return res.status(404).json({ error: 'Address not found' });
       const updated = (r.value.addresses || []).find(a => a.id === addressId);
       return res.json({ success: true, message: 'Address updated successfully', address: updated });

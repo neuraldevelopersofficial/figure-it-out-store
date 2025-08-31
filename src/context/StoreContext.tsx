@@ -33,6 +33,9 @@ export interface Address {
   phone: string;
   isDefault: boolean;
   addressType: string;
+  userId?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface StoreState {
@@ -271,8 +274,31 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         try {
           const response = await apiClient.get('/user/profile');
           // Check if response.data exists before accessing addresses
-          if (response.success && response.data && response.data.addresses) {
-            const addresses = response.data.addresses;
+          if (response.success && response.user) {
+            // Map backend address fields to frontend fields
+            const addresses = [];
+            
+            if (response.user.addresses && Array.isArray(response.user.addresses)) {
+              response.user.addresses.forEach((addr: any) => {
+                if (addr) {
+                  addresses.push({
+                    id: addr.id || '',
+                    name: addr.name || '',
+                    addressLine1: addr.address || '',
+                    addressLine2: addr.address_line2 || '',
+                    landmark: addr.landmark || '',
+                    city: addr.city || '',
+                    state: addr.state || '',
+                    pincode: addr.pincode || '',
+                    phone: addr.phone || '',
+                    isDefault: addr.is_default || false,
+                    addressType: addr.address_type || 'Home'
+                  });
+                }
+              });
+            }
+            
+            console.log('StoreContext - Fetched addresses:', addresses);
             dispatch({ type: 'SET_ADDRESSES', payload: addresses });
             const defaultAddress = addresses.find((a: Address) => a.isDefault) || addresses[0];
             if (defaultAddress) {
