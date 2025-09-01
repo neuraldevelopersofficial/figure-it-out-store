@@ -302,18 +302,24 @@ const AdminDashboard = () => {
         fetchAdminData(); // Refresh products list
       } else {
         toast({
-          title: "Error",
+          title: "Operation Failed",
           description: response.message || "Failed to delete all products.",
           variant: "destructive"
         });
+        // If the operation failed due to server configuration, revert to add mode
+        if (response.message && response.message.includes('not available on this server')) {
+          setBulkMode('add');
+        }
       }
     } catch (error) {
       console.error('Error deleting all products:', error);
       toast({
         title: "Error",
-        description: "Failed to delete all products.",
+        description: "Failed to delete all products. Please try again later.",
         variant: "destructive"
       });
+      // Revert to add mode on error
+      setBulkMode('add');
     } finally {
       setBulkUploading(false);
     }

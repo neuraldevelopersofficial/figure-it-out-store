@@ -188,9 +188,19 @@ class ApiClient {
   }
 
   async deleteAllProducts() {
-    return this.request('/admin/products/all', {
-      method: 'DELETE'
-    });
+    try {
+      return await this.request('/admin/products/all', {
+        method: 'DELETE'
+      });
+    } catch (error) {
+      console.error('Error in deleteAllProducts:', error);
+      // If the endpoint returns 404, it might not be deployed on production
+      // Return a friendly error message
+      return {
+        success: false,
+        message: 'Delete all products feature is not available on this server. Please contact your administrator.'
+      };
+    }
   }
 
   async deleteProduct(id: string) {

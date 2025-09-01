@@ -39,7 +39,7 @@ const Keychains = () => {
   const keychainSlides = [
     {
       id: "1",
-      image: "/src/assets/keychain-slide1.jpg", // Replace with actual images
+      image: "/keychain-slide1.jpg", // Replace with actual images
       title: "Anime Keychains",
       subtitle: "Express your fandom with unique accessories",
       ctaText: "Shop All Keychains",
@@ -48,7 +48,7 @@ const Keychains = () => {
     },
     {
       id: "2",
-      image: "/src/assets/keychain-slide2.jpg",
+      image: "/keychain-slide2.jpg",
       title: "Limited Edition Designs",
       subtitle: "Exclusive keychains from your favorite series",
       ctaText: "View Limited Editions",
@@ -57,7 +57,7 @@ const Keychains = () => {
     },
     {
       id: "3",
-      image: "/src/assets/keychain-slide3.jpg",
+      image: "/keychain-slide3.jpg",
       title: "Perfect Gifts",
       subtitle: "Find the perfect present for anime lovers",
       ctaText: "Shop Gifts",

@@ -30,7 +30,7 @@ let carousels = [
     slides: [
       {
         id: "1",
-        image: "/anime-banner3.jpg",
+        image: "/anime-banner3.jpeg",
         title: "Summer Sale",
         subtitle: "Up to 50% off on selected anime figures",
         overlay: true,
@@ -51,7 +51,7 @@ let carousels = [
     slides: [
       {
         id: "1",
-        image: "/hero-figures.jpg",
+        image: "/anime-banner3.jpg",
         title: "Premium Anime Figures",
         subtitle: "High-quality collectibles from your favorite series",
         overlay: true,
