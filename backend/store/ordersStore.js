@@ -12,7 +12,7 @@ let orders = [
         id: "1",
         productId: "prod-1",
         name: "Edward Elric Figure",
-        image: "/src/assets/Edward-figure.jpg",
+        image: "/Edward-figure.jpg",
         price: 2999,
         quantity: 1,
         category: "anime-figures"
@@ -48,7 +48,7 @@ let orders = [
         id: "2",
         productId: "prod-2",
         name: "Naruto Keychain Set",
-        image: "/src/assets/naruto-keychain.jpg",
+        image: "/naruto-keychain.jpg",
         price: 599,
         quantity: 2,
         category: "keychains"
@@ -57,7 +57,7 @@ let orders = [
         id: "3",
         productId: "prod-3",
         name: "Attack on Titan Figure",
-        image: "/src/assets/aot-figure.jpg",
+        image: "/aot-figure.jpg",
         price: 3499,
         quantity: 1,
         category: "anime-figures"

@@ -26,7 +26,7 @@ let users = [
       {
         productId: "prod-4",
         name: "One Piece Luffy Figure",
-        image: "/src/assets/luffy-figure.jpg",
+        image: "/luffy-figure.jpg",
         price: 3299,
         category: "anime-figures",
         added_at: "2024-01-15T10:30:00.000Z"
@@ -34,7 +34,7 @@ let users = [
       {
         productId: "prod-5",
         name: "Dragon Ball Z Keychain",
-        image: "/src/assets/dbz-keychain.jpg",
+        image: "/dbz-keychain.jpg",
         price: 399,
         category: "keychains",
         added_at: "2024-01-18T14:20:00.000Z"

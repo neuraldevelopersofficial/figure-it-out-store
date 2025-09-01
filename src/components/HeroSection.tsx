@@ -47,7 +47,7 @@ const HeroSection = () => {
           slides: [
             {
               id: "1",
-              image: "/src/assets/hero-figures.jpg",
+              image: "/hero-figures.jpg",
               title: "Discover Amazing Anime Collectibles",
               subtitle: "From iconic figures to unique keychains, find your perfect piece",
               ctaText: "Shop Now",
@@ -57,7 +57,7 @@ const HeroSection = () => {
             },
             {
               id: "2", 
-              image: "/src/assets/anime-banner2.jpeg",
+              image: "/anime-banner2.jpeg",
               title: "Premium Quality Figures",
               subtitle: "Handcrafted with attention to every detail",
               ctaText: "Explore Anime Figures",
@@ -67,7 +67,7 @@ const HeroSection = () => {
             },
             {
               id: "3",
-              image: "/src/assets/keychain-slide1.jpg", 
+              image: "/keychain-slide1.jpg", 
               title: "Express Your Fandom",
               subtitle: "Show off your love for anime with our exclusive collection",
               ctaText: "Browse Keychains",

@@ -41,7 +41,7 @@ const AnimeFigures = () => {
   const animeFigureSlides = [
     {
       id: "1",
-      image: "/src/assets/anime-banner2.jpeg", // Replace with actual images
+      image: "/anime-banner2.jpeg", // Replace with actual images
       title: "Premium Anime Figures",
       subtitle: "From Naruto to Dragon Ball, discover iconic characters",
       ctaText: "Shop All Figures",
@@ -50,7 +50,7 @@ const AnimeFigures = () => {
     },
     {
       id: "2",
-      image: "/src/assets/hero-figures.jpg",
+      image: "/hero-figures.jpg",
       title: "Limited Edition Collectibles",
       subtitle: "Exclusive figures you won't find anywhere else",
       ctaText: "View Limited Editions",
@@ -59,7 +59,7 @@ const AnimeFigures = () => {
     },
     {
       id: "3",
-      image: "/src/assets/anime-banner3.jpg",
+      image: "/anime-banner3.jpg",
       title: "New Arrivals",
       subtitle: "Fresh additions to our collection every week",
       ctaText: "See What's New",
