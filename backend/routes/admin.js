@@ -319,12 +319,23 @@ router.put('/products/:id', authenticateToken, requireAdmin, async (req, res) =>
         ]
       };
       
+      // Log the filter and ID for debugging
+      console.log('Updating product with filter:', filter, 'ID:', id);
+      
       let result = await col.findOneAndUpdate(filter, { $set: { ...updates, updated_at: new Date().toISOString() } }, { returnDocument: 'after' });
       
       // If not found by ID, try to find by name
       if (!result || !result.value) {
-        filter = { name: { $regex: new RegExp(`^${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } };
+        console.log('Product not found by ID, trying by name');
+        // Try exact name match first
+        filter = { name: id };
         result = await col.findOneAndUpdate(filter, { $set: { ...updates, updated_at: new Date().toISOString() } }, { returnDocument: 'after' });
+        
+        // If still not found, try case-insensitive regex match
+        if (!result || !result.value) {
+          filter = { name: { $regex: new RegExp(`^${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } };
+          result = await col.findOneAndUpdate(filter, { $set: { ...updates, updated_at: new Date().toISOString() } }, { returnDocument: 'after' });
+        }
       }
       
       if (!result || !result.value) return res.status(404).json({ error: 'Product not found' });

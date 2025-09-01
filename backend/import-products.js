@@ -46,20 +46,35 @@ function formatProductData(excelData) {
   return excelData.map(item => {
     const price = Number(item.Price) || 0;
     const originalPrice = Number(item.OriginalPrice || item.Price) || price;
-    const stockQuantity = Number(item.StockQuantity || 0);
+    const stockQuantity = Number(item.StockQuantity || item.Stock) || 0;
     
     // Handle image paths - if they're filenames, prepend /uploads/ path
-    const mainImage = item.ImageLink || '';
+    // Check for both ImageLink and "Image " (with space) fields
+    const mainImage = item.ImageLink || item["Image "] || '';
     const formattedMainImage = mainImage.includes('http') ? mainImage : 
                               (mainImage ? `/uploads/${mainImage}` : '');
     
     // Process additional images
-    const additionalImages = item.AllImages ? 
-      String(item.AllImages).split(',').map(img => {
+    // First check if we have AllImages field
+    let additionalImages = [];
+    if (item.AllImages) {
+      additionalImages = String(item.AllImages).split(',').map(img => {
         const trimmed = img.trim();
         // If it's a URL, keep as is; if it's a filename, prepend /uploads/
         return trimmed.includes('http') ? trimmed : `/uploads/${trimmed}`;
-      }).filter(Boolean) : [];
+      }).filter(Boolean);
+    } 
+    // If no AllImages field but we have "Image " field with multiple URLs
+    else if (item["Image "] && item["Image "].includes(',')) {
+      additionalImages = String(item["Image "]).split(',').map(img => {
+        const trimmed = img.trim();
+        return trimmed.includes('http') ? trimmed : `/uploads/${trimmed}`;
+      }).filter(Boolean);
+      // Remove the first image as it's already used as the main image
+      if (additionalImages.length > 1) {
+        additionalImages = additionalImages.slice(1);
+      }
+    }
     
     // If no additional images but we have a main image, use that
     const allImages = additionalImages.length > 0 ? 
@@ -68,7 +83,7 @@ function formatProductData(excelData) {
     
     return {
       id: uuidv4(),
-      name: item.ProductName || '',
+      name: item.ProductName || item.name || '',
       price: price,
       original_price: originalPrice,
       image: formattedMainImage,
