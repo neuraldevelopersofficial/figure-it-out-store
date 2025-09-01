@@ -17,9 +17,11 @@ const Keychains = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const [allKeychains, setAllKeychains] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     (async () => {
+      setLoading(true);
       try {
         const resp = await apiClient.getProductsByCategory('Keychains');
         if (resp && resp.success) {
@@ -27,6 +29,8 @@ const Keychains = () => {
         }
       } catch (e) {
         console.error('Failed to load keychains', e);
+      } finally {
+        setLoading(false);
       }
     })();
   }, []);
@@ -205,7 +209,12 @@ const Keychains = () => {
           </div>
 
           {/* Products Grid/List */}
-          {filteredProducts.length > 0 ? (
+          {loading ? (
+            <div className="text-center py-16">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mb-4"></div>
+              <p className="text-xl text-gray-500">Loading keychains...</p>
+            </div>
+          ) : filteredProducts.length > 0 ? (
             <div className={
               viewMode === "grid" 
                 ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"

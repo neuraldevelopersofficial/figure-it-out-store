@@ -114,7 +114,7 @@ const AdminDashboard = () => {
   const [showAddProduct, setShowAddProduct] = useState(false); // New state for add product form
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null); // New state for editing product
   const [bulkFile, setBulkFile] = useState<File | null>(null);
-  const [bulkMode, setBulkMode] = useState<'add' | 'update' | 'upsert'>('upsert');
+  const [bulkMode, setBulkMode] = useState<'add' | 'update' | 'upsert' | 'deleteall'>('upsert');
   const [bulkUploading, setBulkUploading] = useState(false);
   const [bulkSummary, setBulkSummary] = useState<string | null>(null);
   const [imageMap, setImageMap] = useState<Record<string, string>>({});
@@ -283,6 +283,39 @@ const AdminDashboard = () => {
         description: "Failed to delete product.",
         variant: "destructive"
       });
+    }
+  };
+
+  const handleDeleteAllProducts = async () => {
+    if (!window.confirm('Are you sure you want to delete ALL products? This action cannot be undone.')) {
+      return;
+    }
+    try {
+      setBulkUploading(true);
+      const response = await apiClient.deleteAllProducts();
+      if (response.success) {
+        toast({
+          title: "All Products Deleted",
+          description: `All products have been deleted successfully.`,
+        });
+        setBulkMode('add'); // Set bulk mode to add after deleting all
+        fetchAdminData(); // Refresh products list
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || "Failed to delete all products.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting all products:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete all products.",
+        variant: "destructive"
+      });
+    } finally {
+      setBulkUploading(false);
     }
   };
 
@@ -1057,18 +1090,28 @@ const AdminDashboard = () => {
                               <SelectItem value="add">Add (ignore rows with id)</SelectItem>
                               <SelectItem value="update">Update (only rows with id)</SelectItem>
                               <SelectItem value="upsert">Upsert (default)</SelectItem>
+                              <SelectItem value="deleteall">Delete All Products</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                         <div className="md:col-span-1">
                           <Button 
-                            onClick={handleBulkUpload} 
-                            disabled={bulkUploading || !bulkFile || isUploadingImages} 
+                            onClick={bulkMode === 'deleteall' ? handleDeleteAllProducts : handleBulkUpload} 
+                            disabled={bulkUploading || (bulkMode !== 'deleteall' && (!bulkFile || isUploadingImages))} 
                             className="w-full"
-                            variant="default"
+                            variant={bulkMode === 'deleteall' ? "destructive" : "default"}
                           >
-                            <Upload className="h-4 w-5 mr-2" />
-                            {bulkUploading ? 'Uploading...' : 'Upload'}
+                            {bulkMode === 'deleteall' ? (
+                              <>
+                                <Trash2 className="h-4 w-5 mr-2" />
+                                {bulkUploading ? 'Deleting...' : 'Delete All Products'}
+                              </>
+                            ) : (
+                              <>
+                                <Upload className="h-4 w-5 mr-2" />
+                                {bulkUploading ? 'Uploading...' : 'Upload'}
+                              </>
+                            )}
                           </Button>
                         </div>
                       </div>
