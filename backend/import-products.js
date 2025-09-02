@@ -70,10 +70,7 @@ function formatProductData(excelData) {
         const trimmed = img.trim();
         return trimmed.includes('http') ? trimmed : `/uploads/${trimmed}`;
       }).filter(Boolean);
-      // Remove the first image as it's already used as the main image
-      if (additionalImages.length > 1) {
-        additionalImages = additionalImages.slice(1);
-      }
+      // Keep all images including the first one
     }
     
     // If no additional images but we have a main image, use that

@@ -55,7 +55,8 @@ interface Product {
   category: string;
   stock: number;
   price: number;
-  image?: string; // Added image field
+  image?: string; // Main image field
+  images?: string[]; // Additional images array
 }
 
 interface Customer {
@@ -1135,6 +1136,7 @@ const AdminDashboard = () => {
                     <table className="w-full">
                       <thead>
                         <tr className="border-b">
+                          <th className="text-left p-2">#</th>
                           <th className="text-left p-2">Image</th>
                           <th className="text-left p-2">Name</th>
                           <th className="text-left p-2">Category</th>
@@ -1145,14 +1147,27 @@ const AdminDashboard = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {allProducts.map((product) => (
+                        {allProducts.map((product, index) => (
                           <tr key={product.id} className="border-b hover:bg-gray-50">
+                            <td className="p-2 font-medium text-gray-500">{index + 1}</td>
                             <td className="p-2">
-                              <img 
-                                src={product.image || '/placeholder-product.jpg'} 
-                                alt={product.name}
-                                className="w-12 h-12 object-cover rounded"
-                              />
+                              <div className="relative group">
+                                <img 
+                                  src={product.image || '/placeholder-product.jpg'} 
+                                  alt={product.name}
+                                  className="w-12 h-12 object-cover rounded"
+                                />
+                                {product.images && product.images.length > 0 && (
+                                  <div className="absolute top-0 right-0 bg-gray-800 text-white text-xs px-1 rounded-bl">
+                                    +{product.images.length}
+                                  </div>
+                                )}
+                                {product.images && product.images.length > 0 && (
+                                  <div className="absolute hidden group-hover:flex bottom-0 left-0 right-0 justify-center p-1 bg-black bg-opacity-70 rounded-b">
+                                    <span className="text-white text-xs">Multiple images</span>
+                                  </div>
+                                )}
+                              </div>
                             </td>
                             <td className="p-2 font-medium">{product.name}</td>
                             <td className="p-2 text-sm text-gray-600">{product.category}</td>

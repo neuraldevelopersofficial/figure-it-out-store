@@ -223,7 +223,8 @@ router.get('/products', authenticateToken, requireAdmin, async (req, res) => {
         category: p.category || p.Category || '',
         price: p.price ?? p.Price ?? 0,
         stock: p.stock_quantity ?? p.StockQuantity ?? 0,
-        image: p.image || p.Image || ''
+        image: p.image || p.Image || '',
+        images: p.images || []
       }));
       return res.json({ success: true, products });
     }
@@ -238,7 +239,8 @@ router.get('/products', authenticateToken, requireAdmin, async (req, res) => {
       category: p.category,
       price: p.price,
       stock: p.stock_quantity,
-      image: p.image
+      image: p.image,
+      images: p.images || []
     }));
     res.json({ success: true, products: adminList });
   } catch (error) {
