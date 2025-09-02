@@ -142,36 +142,56 @@ const AdminDashboard = () => {
       try {
         const carouselResponse = await apiClient.get('/carousels/admin/all');
         if (carouselResponse.success) {
-          setCarousels(carouselResponse.carousels);
+          setCarousels(carouselResponse.carousels || []);
         }
       } catch (error) {
         console.error('Failed to fetch carousels:', error);
+        setCarousels([]);
       }
       
       // Fetch admin statistics
       const statsResponse = await apiClient.getAdminStats();
       if (statsResponse.success) {
         setStats(statsResponse.stats);
+      } else {
+        // Set default stats if API fails
+        setStats({
+          totalProducts: 0,
+          totalOrders: 0,
+          totalRevenue: 0,
+          totalCustomers: 0,
+          pendingOrders: 0,
+          lowStockProducts: 0
+        });
       }
 
       // Fetch recent orders
       const ordersResponse = await apiClient.getAdminOrders();
-      if (ordersResponse.success) {
+      if (ordersResponse.success && Array.isArray(ordersResponse.orders)) {
         setRecentOrders(ordersResponse.orders.slice(0, 5)); // Get latest 5 orders for overview
         setAllOrders(ordersResponse.orders); // Store all orders
+      } else {
+        setRecentOrders([]);
+        setAllOrders([]);
       }
 
       // Fetch recent products
       const productsResponse = await apiClient.getAdminProducts();
-      if (productsResponse.success) {
-        setRecentProducts(productsResponse.products.slice(0, 5)); // Get latest 5 products for overview
-        setAllProducts(productsResponse.products); // Store all products
+      if (productsResponse.success && Array.isArray(productsResponse.products)) {
+        const validProducts = productsResponse.products.filter(product => product && typeof product === 'object');
+        setRecentProducts(validProducts.slice(0, 5)); // Get latest 5 products for overview
+        setAllProducts(validProducts); // Store all products
+      } else {
+        setRecentProducts([]);
+        setAllProducts([]);
       }
 
       // Fetch customers
       const customersResponse = await apiClient.getAdminCustomers();
-      if (customersResponse.success) {
+      if (customersResponse.success && Array.isArray(customersResponse.customers)) {
         setCustomers(customersResponse.customers);
+      } else {
+        setCustomers([]);
       }
 
     } catch (error) {

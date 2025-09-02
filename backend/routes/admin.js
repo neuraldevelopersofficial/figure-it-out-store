@@ -312,7 +312,28 @@ router.put('/products/:id', authenticateToken, requireAdmin, async (req, res) =>
 
     // Convert Google Drive URL if image is being updated
     if (updates.image) {
-      updates.image = convertGoogleDriveUrl(updates.image);
+      try {
+        updates.image = convertGoogleDriveUrl(updates.image);
+      } catch (error) {
+        console.error('Error converting Google Drive URL:', error);
+        // Continue with the original URL if conversion fails
+      }
+    }
+    
+    // Process additional images if present
+    if (updates.images && Array.isArray(updates.images)) {
+      try {
+        updates.images = updates.images.map(img => {
+          try {
+            return img.includes('drive.google.com') ? convertGoogleDriveUrl(img) : img;
+          } catch (e) {
+            console.error('Error converting image URL in array:', e);
+            return img; // Return original URL if conversion fails
+          }
+        });
+      } catch (error) {
+        console.error('Error processing image array:', error);
+      }
     }
 
     const col = await getProductsCollection();
