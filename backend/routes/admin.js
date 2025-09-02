@@ -230,7 +230,7 @@ router.get('/products', authenticateToken, requireAdmin, async (req, res) => {
     
     // If database is not available, use in-memory store as fallback
     const store = require('../store/productsStore');
-    await store.init(); // Ensure store is initialized
+    // Note: productsStore doesn't need initialization like ordersStore does
     const products = await store.getAll();
     const adminList = products.map(p => ({
       id: p.id,

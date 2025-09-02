@@ -824,7 +824,7 @@ const AdminDashboard = () => {
                   <BarChart3 className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">₹{stats.totalRevenue.toLocaleString()}</div>
+                  <div className="text-2xl font-bold">₹{stats.totalRevenue ? stats.totalRevenue.toLocaleString() : '0'}</div>
                   <p className="text-xs text-muted-foreground">
                     All time revenue
                   </p>
@@ -912,7 +912,7 @@ const AdminDashboard = () => {
                           <div>
                             <p className="font-medium">{order.customer_name}</p>
                             <p className="text-sm text-muted-foreground">
-                              ₹{order.total_amount.toLocaleString()} • {formatDate(order.created_at)}
+                              ₹{order.total_amount ? order.total_amount.toLocaleString() : '0'} • {formatDate(order.created_at)}
                             </p>
                           </div>
                           <div className="flex items-center space-x-2">
@@ -1228,7 +1228,7 @@ const AdminDashboard = () => {
                                 <p className="text-xs text-gray-500">{order.customer_email}</p>
                               </div>
                             </td>
-                            <td className="p-2 font-medium">₹{order.total_amount.toLocaleString()}</td>
+                            <td className="p-2 font-medium">₹{order.total_amount ? order.total_amount.toLocaleString() : '0'}</td>
                             <td className="p-2">
                               <Badge className={getStatusColor(order.status)}>
                                 {order.status}
