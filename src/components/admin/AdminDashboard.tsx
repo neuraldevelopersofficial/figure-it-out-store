@@ -340,7 +340,7 @@ const AdminDashboard = () => {
         setBulkUploading(true);
         
         // Use the updated bulkUpsertProducts method with imageMap
-        const response = await apiClient.bulkUpsertProducts(bulkFile, bulkMode, imageMap);
+        const response = await apiClient.bulkUpsertProducts(bulkFile, bulkMode as 'add' | 'update' | 'upsert', imageMap);
         
         if (response.success) {
           const summary = `Mode: ${response.mode} | Processed: ${response.processed}/${response.total} | Created: ${response.created} | Updated: ${response.updated}${response.errors && response.errors.length ? ` | Errors: ${response.errors.length}` : ''}`;

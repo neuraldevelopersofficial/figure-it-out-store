@@ -12,6 +12,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { FallbackImage } from "@/components/ui/fallback-image";
 import LoadingState from "@/components/ui/LoadingState";
+import { useToast } from "@/hooks/use-toast";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -131,6 +132,7 @@ const ProductDetail = () => {
 
   const handleAddToCart = () => {
     addToCart(product);
+    const { toast } = useToast();
     toast({
       title: "Added to Cart",
       description: `${product.name} has been added to your cart.`,

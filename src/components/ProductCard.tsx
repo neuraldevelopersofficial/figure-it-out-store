@@ -22,7 +22,7 @@ const ProductCard = ({ product, showQuickView = true }: ProductCardProps) => {
   const isWishlisted = isInWishlist(product.id);
 
   // Combine all images for cycling
-  const allImages = [product.image, ...(product.images || [])].filter(Boolean);
+const allImages = [product.image].filter(Boolean);
 
   const handleWishlistToggle = (e: React.MouseEvent) => {
     e.preventDefault();
