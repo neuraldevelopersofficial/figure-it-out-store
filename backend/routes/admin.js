@@ -372,6 +372,39 @@ router.put('/products/:id', authenticateToken, requireAdmin, async (req, res) =>
   }
 });
 
+// Delete all products (admin only) - MUST be defined BEFORE the :id route to avoid route conflicts
+// Delete all products
+router.delete('/products/all', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    // Try to use database first
+    const productsCollection = await getCollection(COLLECTIONS.PRODUCTS);
+    if (productsCollection) {
+      const result = await productsCollection.deleteMany({});
+      const deletedCount = result.deletedCount;
+      
+      console.log(`Deleted ${deletedCount} products from database`);
+      return res.json({
+        success: true,
+        message: `Successfully deleted all products (${deletedCount} items removed)`
+      });
+    }
+    
+    // Fallback to in-memory store if database is not available
+    const store = require('../store/productsStore');
+    await store.init(); // Ensure store is initialized
+    const deletedCount = store.clearAll();
+    
+    console.log(`Cleared ${deletedCount} products from in-memory store`);
+     return res.json({
+       success: true,
+       message: `Successfully deleted all products from in-memory store (${deletedCount} items removed)`
+     });
+  } catch (error) {
+    console.error('Delete all products error:', error);
+    res.status(500).json({ error: 'Failed to delete all products' });
+  }
+});
+
 // Delete product
 router.delete('/products/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
@@ -399,36 +432,9 @@ router.delete('/products/:id', authenticateToken, requireAdmin, async (req, res)
     if (!removed) return res.status(404).json({ error: 'Product not found' });
 
     res.json({ success: true, message: 'Product deleted successfully' });
-
   } catch (error) {
     console.error('Product deletion error:', error);
     res.status(500).json({ error: 'Failed to delete product' });
-  }
-});
-
-// Delete all products (admin only)
-router.delete('/products/all', authenticateToken, requireAdmin, async (req, res) => {
-  try {
-    const db = getDatabase();
-    if (!db) {
-      return res.status(500).json({ error: 'Database connection not available' });
-    }
-    
-    const productsCollection = await getCollection(COLLECTIONS.PRODUCTS);
-    if (!productsCollection) {
-      return res.status(500).json({ error: 'Products collection not available' });
-    }
-    
-    const result = await productsCollection.deleteMany({});
-    const deletedCount = result.deletedCount;
-    
-    return res.json({
-      success: true,
-      message: `Successfully deleted all products (${deletedCount} items removed)`
-    });
-  } catch (error) {
-    console.error('Delete all products error:', error);
-    res.status(500).json({ error: 'Failed to delete all products' });
   }
 });
 

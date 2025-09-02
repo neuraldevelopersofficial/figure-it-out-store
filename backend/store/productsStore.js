@@ -331,7 +331,14 @@ function clearAll() {
   return previousCount;
 }
 
+// Initialize the store
+async function init() {
+  // Nothing to initialize for in-memory store
+  return true;
+}
+
 module.exports = {
+  init,
   getAll,
   getById,
   search,
