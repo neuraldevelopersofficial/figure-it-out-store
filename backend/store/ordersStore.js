@@ -16,6 +16,12 @@ async function init() {
 // Initialize the orders and reviews collections if needed
 const initializeOrdersCollections = async () => {
   try {
+    // Check if REVIEWS collection exists in COLLECTIONS
+    if (!COLLECTIONS.REVIEWS) {
+      // Add REVIEWS to COLLECTIONS if it doesn't exist
+      COLLECTIONS.REVIEWS = 'reviews';
+    }
+    
     const ordersCollection = await getCollection(COLLECTIONS.ORDERS);
     const reviewsCollection = await getCollection(COLLECTIONS.REVIEWS);
     

@@ -11,6 +11,7 @@ const COLLECTIONS = {
   USERS: 'users',
   PRODUCTS: 'products',
   ORDERS: 'orders',
+  REVIEWS: 'reviews',
   CAROUSELS: 'carousels',
   CATEGORIES: 'categories'
 };
@@ -96,6 +97,13 @@ async function initializeCollections() {
     await ordersCollection.createIndex({ status: 1 });
     await ordersCollection.createIndex({ created_at: -1 });
     
+    // Reviews collection
+    const reviewsCollection = db.collection(COLLECTIONS.REVIEWS);
+    await reviewsCollection.createIndex({ orderId: 1 });
+    await reviewsCollection.createIndex({ productId: 1 });
+    await reviewsCollection.createIndex({ userId: 1 });
+    await reviewsCollection.createIndex({ created_at: -1 });
+    
     // Carousels collection
     const carouselsCollection = db.collection(COLLECTIONS.CAROUSELS);
     await carouselsCollection.createIndex({ name: 1 }, { unique: true });
@@ -118,6 +126,10 @@ async function getDatabase() {
 // Get collection
 async function getCollection(collectionName) {
   const database = await getDatabase();
+  if (!database) {
+    console.log(`⚠️ Database not available, cannot access collection: ${collectionName}`);
+    return null;
+  }
   return database.collection(collectionName);
 }
 
