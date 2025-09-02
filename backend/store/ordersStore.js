@@ -7,6 +7,12 @@ const { getDatabase, getCollection, COLLECTIONS } = require('../config/database'
 let orders = [];
 let reviews = [];
 
+// Initialize function that will be exported
+async function init() {
+  await initializeOrdersCollections();
+  return true;
+}
+
 // Initialize the orders and reviews collections if needed
 const initializeOrdersCollections = async () => {
   try {
