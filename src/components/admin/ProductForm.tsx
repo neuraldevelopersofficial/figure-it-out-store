@@ -78,6 +78,19 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
       .map(url => url.trim())
       .filter(url => url.length > 0);
 
+    // Validate image URLs
+    let hasInvalidImages = false;
+    allImages.forEach(url => {
+      if (url && !isValidImageUrl(url)) {
+        hasInvalidImages = true;
+      }
+    });
+
+    if (hasInvalidImages) {
+      alert('One or more image URLs are invalid. Please check your image URLs and try again.');
+      return;
+    }
+
     const productData = {
       name: formData.name,
       price: parseFloat(formData.price),

@@ -24,7 +24,10 @@ const ProductCard = ({ product, showQuickView = true, delay = 0 }: ProductCardPr
   const isWishlisted = isInWishlist(product.id);
 
   // Combine all images for cycling
-const allImages = [product.image].filter(Boolean);
+const allImages = [
+  product.image,
+  ...(product.images || [])
+].filter(Boolean);
 
   const handleWishlistToggle = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -64,18 +67,22 @@ const allImages = [product.image].filter(Boolean);
         if (allImages.length > 1) {
           const interval = setInterval(() => {
             setCurrentImageIndex(prev => (prev + 1) % allImages.length);
-          }, 1000); // Change image every second
+          }, 800); // Change image every 800ms for smoother transitions
           
           // Store interval ID to clear it on mouse leave
-          (window as any).imageCycleInterval = interval;
+          // Use a unique property name based on product ID to avoid conflicts
+          const intervalKey = `imageCycleInterval_${product.id}`;
+          (window as any)[intervalKey] = interval;
         }
       }}
       onMouseLeave={() => {
         setIsHovered(false);
         setCurrentImageIndex(0); // Reset to first image
-        // Clear the interval
-        if ((window as any).imageCycleInterval) {
-          clearInterval((window as any).imageCycleInterval);
+        // Clear the interval using the unique key
+        const intervalKey = `imageCycleInterval_${product.id}`;
+        if ((window as any)[intervalKey]) {
+          clearInterval((window as any)[intervalKey]);
+          delete (window as any)[intervalKey];
         }
       }}
     >
@@ -89,10 +96,20 @@ const allImages = [product.image].filter(Boolean);
             fallbackSrc="/placeholder-image.png"
           />
           
-          {/* Image counter indicator */}
+          {/* Image carousel indicators */}
           {allImages.length > 1 && (
-            <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-              {currentImageIndex + 1} / {allImages.length}
+            <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5">
+              {allImages.map((_, index) => (
+                <div 
+                  key={index}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setCurrentImageIndex(index);
+                  }}
+                  className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${currentImageIndex === index ? 'w-4 bg-white' : 'w-1.5 bg-white/60 hover:bg-white/80'}`}
+                />
+              ))}
             </div>
           )}
           

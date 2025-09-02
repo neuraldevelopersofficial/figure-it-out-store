@@ -944,9 +944,14 @@ const AdminDashboard = () => {
                               <Eye className="h-4 w-4" />
                             </Button>
                           </div>
-                        </div>
-                      ))}
+                      </div>
+                    )))
+                  ) : (
+                    <div className="text-center p-6 border rounded-lg">
+                      <p className="text-gray-500">No carousels found. Add a carousel to get started.</p>
                     </div>
+                  )}
+                  </div>
                   ) : (
                     <p className="text-center text-muted-foreground py-8">
                       No recent orders
@@ -1167,37 +1172,42 @@ const AdminDashboard = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {allProducts.map((product, index) => (
-                          <tr key={product.id} className="border-b hover:bg-gray-50">
-                            <td className="p-2 font-medium text-gray-500">{index + 1}</td>
-                            <td className="p-2">
-                              <div className="relative group">
-                                <img 
-                                  src={product.image || '/placeholder-product.jpg'} 
-                                  alt={product.name}
-                                  className="w-12 h-12 object-cover rounded"
-                                />
-                                {product.images && product.images.length > 0 && (
-                                  <div className="absolute top-0 right-0 bg-gray-800 text-white text-xs px-1 rounded-bl">
-                                    +{product.images.length}
-                                  </div>
-                                )}
-                                {product.images && product.images.length > 0 && (
-                                  <div className="absolute hidden group-hover:flex bottom-0 left-0 right-0 justify-center p-1 bg-black bg-opacity-70 rounded-b">
-                                    <span className="text-white text-xs">Multiple images</span>
-                                  </div>
-                                )}
-                              </div>
-                            </td>
-                            <td className="p-2 font-medium">{product.name}</td>
-                            <td className="p-2 text-sm text-gray-600">{product.category}</td>
-                            <td className="p-2">₹{product.price ? product.price.toLocaleString() : '0'}</td>
-                            <td className="p-2">
-                              <Badge variant={product.stock < 10 ? "destructive" : "secondary"}>
-                                {product.stock}
-                              </Badge>
-                            </td>
-                            <td className="p-2">
+                        {allProducts.length > 0 ? (
+                          allProducts.map((product, index) => (
+                            <tr key={product.id} className="border-b hover:bg-gray-50">
+                              <td className="p-2 font-medium text-gray-500">{index + 1}</td>
+                              <td className="p-2">
+                                <div className="relative group">
+                                  <img 
+                                    src={product.image || '/placeholder-product.jpg'} 
+                                    alt={product.name}
+                                    className="w-12 h-12 object-cover rounded"
+                                    onError={(e) => {
+                                      const target = e.currentTarget as HTMLImageElement;
+                                      target.src = '/placeholder-product.jpg';
+                                    }}
+                                  />
+                                  {product.images && product.images.length > 0 && (
+                                    <div className="absolute top-0 right-0 bg-gray-800 text-white text-xs px-1 rounded-bl">
+                                      +{product.images.length}
+                                    </div>
+                                  )}
+                                  {product.images && product.images.length > 0 && (
+                                    <div className="absolute hidden group-hover:flex bottom-0 left-0 right-0 justify-center p-1 bg-black bg-opacity-70 rounded-b">
+                                      <span className="text-white text-xs">Multiple images</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="p-2 font-medium">{product.name}</td>
+                              <td className="p-2 text-sm text-gray-600">{product.category}</td>
+                              <td className="p-2">₹{product.price ? product.price.toLocaleString() : '0'}</td>
+                              <td className="p-2">
+                                <Badge variant={product.stock < 10 ? "destructive" : "secondary"}>
+                                  {product.stock}
+                                </Badge>
+                              </td>
+                              <td className="p-2">
                               <Badge variant={product.stock > 0 ? "default" : "destructive"}>
                                 {product.stock > 0 ? "In Stock" : "Out of Stock"}
                               </Badge>
@@ -1222,7 +1232,14 @@ const AdminDashboard = () => {
                               </div>
                             </td>
                           </tr>
-                        ))}
+                        )))
+                        : (
+                          <tr>
+                            <td colSpan={8} className="p-4 text-center text-gray-500">
+                              No products found. Add a product to get started.
+                            </td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -1254,52 +1271,60 @@ const AdminDashboard = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {allOrders.map((order) => (
-                          <tr key={order.id} className="border-b hover:bg-gray-50">
-                            <td className="p-2 font-mono text-sm">#{order.id}</td>
-                            <td className="p-2">
-                              <div>
-                                <p className="font-medium">{order.customer_name}</p>
-                                <p className="text-xs text-gray-500">{order.customer_email}</p>
-                              </div>
-                            </td>
-                            <td className="p-2 font-medium">₹{order.total_amount ? order.total_amount.toLocaleString() : '0'}</td>
-                            <td className="p-2">
-                              <Badge className={getStatusColor(order.status)}>
-                                {order.status}
-                              </Badge>
-                            </td>
-                            <td className="p-2 text-sm text-gray-600">
-                              {formatDate(order.created_at)}
-                            </td>
-                            <td className="p-2">
-                              <div className="flex space-x-2">
-                                <Button 
-                                  size="sm" 
-                                  variant="ghost"
-                                  onClick={() => handleViewOrder(order.id)}
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                                <Select 
-                                  value={order.status} 
-                                  onValueChange={(value) => handleUpdateOrderStatus(order.id, value)}
-                                >
-                                  <SelectTrigger className="w-32">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="pending">Pending</SelectItem>
-                                    <SelectItem value="confirmed">Confirmed</SelectItem>
-                                    <SelectItem value="shipped">Shipped</SelectItem>
-                                    <SelectItem value="delivered">Delivered</SelectItem>
-                                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
+                        {allOrders.length > 0 ? (
+                          allOrders.map((order) => (
+                            <tr key={order.id} className="border-b hover:bg-gray-50">
+                              <td className="p-2 font-mono text-sm">#{order.id}</td>
+                              <td className="p-2">
+                                <div>
+                                  <p className="font-medium">{order.customer_name}</p>
+                                  <p className="text-xs text-gray-500">{order.customer_email}</p>
+                                </div>
+                              </td>
+                              <td className="p-2 font-medium">₹{order.total_amount ? order.total_amount.toLocaleString() : '0'}</td>
+                              <td className="p-2">
+                                <Badge className={getStatusColor(order.status)}>
+                                  {order.status}
+                                </Badge>
+                              </td>
+                              <td className="p-2 text-sm text-gray-600">
+                                {formatDate(order.created_at)}
+                              </td>
+                              <td className="p-2">
+                                <div className="flex space-x-2">
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost"
+                                    onClick={() => handleViewOrder(order.id)}
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                  <Select 
+                                    value={order.status} 
+                                    onValueChange={(value) => handleUpdateOrderStatus(order.id, value)}
+                                  >
+                                    <SelectTrigger className="w-32">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="pending">Pending</SelectItem>
+                                      <SelectItem value="confirmed">Confirmed</SelectItem>
+                                      <SelectItem value="shipped">Shipped</SelectItem>
+                                      <SelectItem value="delivered">Delivered</SelectItem>
+                                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={6} className="p-4 text-center text-gray-500">
+                              No orders found.
                             </td>
                           </tr>
-                        ))}
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -1325,8 +1350,9 @@ const AdminDashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  {carousels.map((carousel) => (
-                    <div key={carousel.id} className="border rounded-lg p-4">
+                  {carousels.length > 0 ? (
+                    carousels.map((carousel) => (
+                      <div key={carousel.id} className="border rounded-lg p-4">
                       <div className="flex items-center justify-between mb-4">
                         <div>
                           <h3 className="text-lg font-semibold">{carousel.title}</h3>
