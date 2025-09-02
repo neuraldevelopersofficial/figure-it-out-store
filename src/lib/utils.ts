@@ -27,64 +27,113 @@ export function toCategorySlug(input: string): string {
 /**
  * Converts Google Drive sharing links to direct image URLs
  * Supports both sharing links and direct file IDs
+ * @param url The Google Drive URL or file ID
+ * @param debug Whether to log debug information
+ * @returns The converted direct URL
  */
-export function convertGoogleDriveUrl(url: string): string {
+export function convertGoogleDriveUrl(url: string, debug: boolean = false): string {
   if (!url) return '';
   
-  // If it's already a direct image URL, return as is
-  if (url.startsWith('http') && (url.includes('drive.google.com/uc') || url.includes('lh3.googleusercontent.com'))) {
+  try {
+    // For debugging
+    if (debug) console.log(`🔄 Converting Google Drive URL: ${url}`);
+    
+    // If it's already a direct image URL, return as is
+    if (url.startsWith('http') && (url.includes('drive.google.com/uc') || url.includes('lh3.googleusercontent.com'))) {
+      if (debug) console.log(`✅ URL is already in direct format`);
+      return url;
+    }
+    
+    // Handle Google Drive sharing links with file/d/ format
+    if (url.includes('drive.google.com/file/d/')) {
+      // Extract file ID from sharing link
+      const match = url.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
+      if (match && match[1]) {
+        const fileId = match[1];
+        const directUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
+        if (debug) console.log(`✅ Converted file/d/ URL to: ${directUrl}`);
+        return directUrl;
+      }
+    }
+    
+    // Handle Google Drive sharing links with open?id= format
+    if (url.includes('drive.google.com/open?id=')) {
+      const match = url.match(/id=([a-zA-Z0-9-_]+)/);
+      if (match && match[1]) {
+        const fileId = match[1];
+        const directUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
+        if (debug) console.log(`✅ Converted open?id= URL to: ${directUrl}`);
+        return directUrl;
+      }
+    }
+    
+    // Handle Google Drive sharing links with view?usp=sharing format
+    if (url.includes('drive.google.com') && url.includes('view?usp=sharing')) {
+      const match = url.match(/\/d\/([a-zA-Z0-9-_]+)\//);
+      if (match && match[1]) {
+        const fileId = match[1];
+        const directUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
+        if (debug) console.log(`✅ Converted view?usp=sharing URL to: ${directUrl}`);
+        return directUrl;
+      }
+    }
+    
+    // If it's just a file ID, convert to direct URL
+    if (/^[a-zA-Z0-9-_]+$/.test(url)) {
+      const directUrl = `https://drive.google.com/uc?export=view&id=${url}`;
+      if (debug) console.log(`✅ Converted file ID to: ${directUrl}`);
+      return directUrl;
+    }
+    
+    // Return original URL if no conversion possible
+    if (debug) console.log(`⚠️ No conversion applied, returning original URL`);
     return url;
+  } catch (error) {
+    console.error('❌ Error converting Google Drive URL:', error);
+    return url; // Return original URL in case of error
   }
-  
-  // Handle Google Drive sharing links
-  if (url.includes('drive.google.com/file/d/')) {
-    // Extract file ID from sharing link
-    const match = url.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
-    if (match && match[1]) {
-      const fileId = match[1];
-      return `https://drive.google.com/uc?export=view&id=${fileId}`;
-    }
-  }
-  
-  // Handle Google Drive sharing links with /view
-  if (url.includes('drive.google.com/open?id=')) {
-    const match = url.match(/id=([a-zA-Z0-9-_]+)/);
-    if (match && match[1]) {
-      const fileId = match[1];
-      return `https://drive.google.com/uc?export=view&id=${fileId}`;
-    }
-  }
-  
-  // If it's just a file ID, convert to direct URL
-  if (/^[a-zA-Z0-9-_]+$/.test(url)) {
-    return `https://drive.google.com/uc?export=view&id=${url}`;
-  }
-  
-  // Return original URL if no conversion possible
-  return url;
 }
 
 /**
  * Gets a proxy URL for Google Drive images to bypass CORS issues
  * @param url The original image URL
  * @param fallbackUrl Optional fallback URL to use if the image fails to load
+ * @param debug Whether to log debug information
+ * @returns The proxied URL or fallback URL
  */
-export function getGoogleDriveProxyUrl(url: string, fallbackUrl?: string): string {
-  if (!url) return fallbackUrl || '';
+export function getGoogleDriveProxyUrl(url: string, fallbackUrl: string = '/placeholder-image.png', debug: boolean = false): string {
+  if (!url) {
+    if (debug) console.log('⚠️ Empty URL provided to proxy, using fallback');
+    return fallbackUrl;
+  }
+  
+  // First convert to direct Google Drive URL format if needed
+  const directUrl = convertGoogleDriveUrl(url, debug);
   
   // If it's not a Google Drive URL, return as is
-  if (!url.includes('drive.google.com')) {
-    return url;
+  if (!directUrl.includes('drive.google.com')) {
+    if (debug) console.log('ℹ️ Not a Google Drive URL, skipping proxy');
+    return directUrl;
   }
   
   try {
     // Use our backend proxy - fix double /api issue
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
     const baseUrl = apiUrl.endsWith('/api') ? apiUrl : `${apiUrl}/api`;
-    return `${baseUrl}/products/image-proxy?url=${encodeURIComponent(url)}`;
+    const proxyUrl = `${baseUrl}/products/image-proxy?url=${encodeURIComponent(directUrl)}`;
+    
+    if (debug) {
+      console.log('🔄 Using image proxy for Google Drive URL:');
+      console.log(`   Original: ${url}`);
+      console.log(`   Direct: ${directUrl}`);
+      console.log(`   Proxied: ${proxyUrl}`);
+    }
+    
+    return proxyUrl;
   } catch (error) {
-    console.error('Error creating proxy URL:', error);
-    return fallbackUrl || url; // Return fallback or original URL if encoding fails
+    console.error('❌ Error creating proxy URL:', error);
+    if (debug) console.log(`⚠️ Proxy creation failed, using fallback: ${fallbackUrl}`);
+    return fallbackUrl || directUrl; // Return fallback or direct URL if encoding fails
   }
 }
 

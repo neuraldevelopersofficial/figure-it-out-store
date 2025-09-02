@@ -320,6 +320,8 @@ router.get('/search', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    console.log(`🔍 Fetching product with ID: ${id}`);
+    
     const col = await getProductsCollection();
     if (col) {
       // Improved query to handle ObjectId validation more safely
@@ -331,17 +333,37 @@ router.get('/:id', async (req, res) => {
         query.$or.push({ _id: new ObjectId(id) });
       }
       
+      console.log(`🔍 MongoDB query: ${JSON.stringify(query)}`);
       const doc = await col.findOne(query);
+      
+      if (!doc) {
+        console.log(`❌ MongoDB: No product found with ID ${id}`);
+        // Try fallback to in-memory store
+        const fallbackProduct = store.getById(id);
+        if (fallbackProduct) {
+          console.log(`✅ In-memory store: Found product with ID ${id}`);
+          return res.json({ success: true, product: fallbackProduct });
+        }
+        return res.status(404).json({ error: 'Product not found' });
+      }
+      
       const product = mapDbProductToApi(doc);
-      if (!product) return res.status(404).json({ error: 'Product not found' });
+      console.log(`✅ MongoDB: Found product ${product.name} with ID ${id}`);
       return res.json({ success: true, product });
     }
+    
+    // Fallback to in-memory store if no MongoDB
+    console.log(`🔍 Trying in-memory store for product ID: ${id}`);
     const product = store.getById(id);
-    if (!product) return res.status(404).json({ error: 'Product not found' });
+    if (!product) {
+      console.log(`❌ In-memory store: No product found with ID ${id}`);
+      return res.status(404).json({ error: 'Product not found' });
+    }
+    console.log(`✅ In-memory store: Found product ${product.name} with ID ${id}`);
     res.json({ success: true, product });
   } catch (error) {
-    console.error('Error fetching product by ID:', error);
-    res.status(500).json({ error: 'Failed to fetch product' });
+    console.error('❌ Error fetching product by ID:', error);
+    res.status(500).json({ error: 'Failed to fetch product', details: error.message });
   }
 });
 
