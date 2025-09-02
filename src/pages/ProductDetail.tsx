@@ -13,32 +13,14 @@ import Footer from "@/components/Footer";
 import { FallbackImage } from "@/components/ui/fallback-image";
 import LoadingState from "@/components/ui/LoadingState";
 import { useToast } from "@/hooks/use-toast";
+import { PageTransition } from "@/components/ui/page-transition";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   
-  // Review system state
-  const [rating, setRating] = useState(5);
-  const [reviewTitle, setReviewTitle] = useState('');
-  const [reviewText, setReviewText] = useState('');
-  const [reviews, setReviews] = useState([
-    {
-      rating: 5,
-      title: "Amazing Quality!",
-      text: "This figure exceeded my expectations. The details are incredible and the paint job is perfect.",
-      author: "AnimeFan123",
-      date: "2024-01-15"
-    },
-    {
-      rating: 4,
-      title: "Great Product",
-      text: "Really happy with this purchase. Good value for money and fast delivery.",
-      author: "Collector456",
-      date: "2024-01-10"
-    }
-  ]);
+  // Product state
   
   const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useStore();
   
@@ -146,34 +128,13 @@ const ProductDetail = () => {
     }
   };
 
-  const handleSubmitReview = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!reviewTitle.trim() || !reviewText.trim()) {
-      alert('Please fill in all fields');
-      return;
-    }
-    
-    const newReview = {
-      rating,
-      title: reviewTitle.trim(),
-      text: reviewText.trim(),
-      author: 'Anonymous User', // In real app, this would be the logged-in user
-      date: new Date().toISOString().split('T')[0]
-    };
-    
-    setReviews([newReview, ...reviews]);
-    setReviewTitle('');
-    setReviewText('');
-    setRating(5);
-    
-    alert('Review submitted successfully!');
-  };
+  // No review functionality in this version
 
   // Combine main image with additional images for the gallery
   const productImages = [product.image, ...(product.images || [])].filter(Boolean);
 
   return (
-    <div className="min-h-screen bg-background">
+    <PageTransition className="min-h-screen bg-background">
       <Header />
       {/* Breadcrumb */}
       <div className="border-b border-border">
@@ -252,7 +213,6 @@ const ProductDetail = () => {
               {product.name}
             </h1>
 
-            {/* Rating removed for first launch */}
 
             {/* Price */}
             <div className="space-y-2">
@@ -364,99 +324,7 @@ const ProductDetail = () => {
         </div>
       </div>
 
-      {/* Reviews and Ratings */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-2xl font-bold text-foreground mb-8 text-center">
-              Customer Reviews
-            </h2>
-            
-            {/* Review Form */}
-            <div className="bg-gray-50 rounded-lg p-6 mb-8">
-              <h3 className="text-lg font-semibold mb-4">Write a Review</h3>
-              <form className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Rating</label>
-                  <div className="flex space-x-2">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        type="button"
-                        className="text-2xl text-yellow-400 hover:text-yellow-500 transition-colors"
-                        onClick={() => setRating(star)}
-                      >
-                        {star <= rating ? '★' : '☆'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium mb-2">Review Title</label>
-                  <input
-                    type="text"
-                    placeholder="Summarize your experience"
-                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={reviewTitle}
-                    onChange={(e) => setReviewTitle(e.target.value)}
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium mb-2">Review</label>
-                  <textarea
-                    placeholder="Share your thoughts about this product..."
-                    rows={4}
-                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={reviewText}
-                    onChange={(e) => setReviewText(e.target.value)}
-                  />
-                </div>
-                
-                <Button
-                  type="submit"
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                  onClick={handleSubmitReview}
-                >
-                  Submit Review
-                </Button>
-              </form>
-            </div>
-
-            {/* Reviews List */}
-            <div className="space-y-6">
-              {reviews.map((review, index) => (
-                <div key={index} className="border-b border-gray-200 pb-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-2">
-                      <div className="flex text-yellow-400">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <span key={star}>
-                            {star <= review.rating ? '★' : '☆'}
-                          </span>
-                        ))}
-                      </div>
-                      <span className="font-medium">{review.title}</span>
-                    </div>
-                    <span className="text-sm text-gray-500">
-                      {new Date(review.date).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <p className="text-gray-700">{review.text}</p>
-                  <p className="text-sm text-gray-500 mt-2">- {review.author}</p>
-                </div>
-              ))}
-              
-              {reviews.length === 0 && (
-                <div className="text-center text-gray-500 py-8">
-                  <p>No reviews yet. Be the first to review this product!</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Reviews section removed for initial release */}
 
       {/* Related Products */}
       {relatedProducts.length > 0 && (
@@ -474,7 +342,7 @@ const ProductDetail = () => {
         </section>
       )}
       <Footer />
-    </div>
+    </PageTransition>
   );
 };
 

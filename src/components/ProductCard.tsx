@@ -8,13 +8,15 @@ import { Product } from "@/context/StoreContext";
 import { useToast } from "@/hooks/use-toast";
 import { convertGoogleDriveUrl, getGoogleDriveProxyUrl } from "@/lib/utils";
 import { FallbackImage } from "@/components/ui/fallback-image";
+import { MotionCard } from "@/components/ui/motion-card";
 
 interface ProductCardProps {
   product: Product;
   showQuickView?: boolean;
+  delay?: number;
 }
 
-const ProductCard = ({ product, showQuickView = true }: ProductCardProps) => {
+const ProductCard = ({ product, showQuickView = true, delay = 0 }: ProductCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useStore();
@@ -53,7 +55,8 @@ const allImages = [product.image].filter(Boolean);
   };
 
   return (
-    <div
+    <MotionCard
+      delay={delay}
       className="group relative bg-background border border-border rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300"
       onMouseEnter={() => {
         setIsHovered(true);
@@ -194,7 +197,7 @@ const allImages = [product.image].filter(Boolean);
           {product.inStock ? 'Add to Cart' : 'Out of Stock'}
         </Button>
       </div>
-    </div>
+    </MotionCard>
   );
 };
 

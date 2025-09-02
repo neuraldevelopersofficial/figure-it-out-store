@@ -26,8 +26,6 @@ export const products: Product[] = [
     originalPrice: 799,
     image: "/goku-keychain.jpg",
     category: "Keychains",
-    rating: 4.6,
-    reviews: 89,
     isOnSale: true,
     discount: 25,
     description: "Durable metal keychain featuring Goku from Dragon Ball Z. Perfect accessory for your keys or backpack. Features vibrant colors and detailed artwork.",
@@ -52,8 +50,7 @@ export const products: Product[] = [
     originalPrice: 1499,
     image: "/pikachu-keychain.jpg",
     category: "Keychains", 
-    rating: 4.7,
-    reviews: 203,
+
     isOnSale: true,
     discount: 15,
     description: "Adorable Pikachu keychain set featuring multiple poses and expressions. Made from high-quality materials, perfect for Pokemon fans of all ages.",
@@ -65,8 +62,7 @@ export const products: Product[] = [
     price: 4299,
     image: "/luffy-figure.jpg",
     category: "Anime Figures",
-    rating: 4.9,
-    reviews: 78,
+
     isNew: true,
     description: "Epic Luffy Gear 5 figure from One Piece. This premium collectible showcases Luffy's most powerful form with incredible detail and dynamic posing.",
     inStock: true
@@ -78,8 +74,7 @@ export const products: Product[] = [
     originalPrice: 899,
     image: "/tanjiro-keychain.jpg",
     category: "Keychains",
-    rating: 4.5,
-    reviews: 167,
+
     isOnSale: true,
     discount: 20,
     description: "Beautiful Tanjiro Kamado keychain from Demon Slayer. Features his signature hanafuda earrings and water breathing sword design.",
@@ -91,8 +86,7 @@ export const products: Product[] = [
     price: 2799,
     image: "/deku-figure.jpg",
     category: "Anime Figures", 
-    rating: 4.8,
-    reviews: 134,
+
     description: "Izuku Midoriya (Deku) figure from My Hero Academia. Captures his determination and hero spirit in this beautifully sculpted collectible.",
     inStock: true
   },
@@ -102,8 +96,7 @@ export const products: Product[] = [
     price: 10,
     image: "/totoro-keychain.jpg",
     category: "Keychains",
-    rating: 4.9,
-    reviews: 245,
+
     description: "Charming Totoro keychain from Studio Ghibli's My Neighbor Totoro. Made with love and attention to detail, perfect for Ghibli fans.",
     inStock: true
   },
@@ -113,8 +106,7 @@ export const products: Product[] = [
     price: 3899,
     image: "/gojo-figure.jpg",
     category: "Anime Figures",
-    rating: 4.9,
-    reviews: 92,
+
     isNew: true,
     description: "Satoru Gojo figure from Jujutsu Kaisen. Features his iconic blindfold and infinity technique pose. Limited availability.",
     inStock: false
@@ -125,8 +117,7 @@ export const products: Product[] = [
     price: 649,
     image: "/gon-keychain.jpg",
     category: "Keychains",
-    rating: 4.4,
-    reviews: 78,
+
     description: "Gon Freecss keychain from Hunter x Hunter. Features his green outfit and fishing rod design.",
     inStock: true
   },
@@ -137,8 +128,7 @@ export const products: Product[] = [
     originalPrice: 3599,
     image: "/ichigo-figure.jpg",
     category: "Anime Figures",
-    rating: 4.7,
-    reviews: 156,
+
     isOnSale: true,
     discount: 10,
     description: "Ichigo Kurosaki figure from Bleach. Captures his Bankai form with his signature black and red outfit.",

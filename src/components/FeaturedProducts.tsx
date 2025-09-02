@@ -39,9 +39,9 @@ const FeaturedProducts = () => {
         </div>
 
         {/* Products Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
-          {featuredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12 stagger-fade-in">
+          {featuredProducts.map((product, index) => (
+            <ProductCard key={product.id} product={product} delay={index} />
           ))}
         </div>
 
@@ -51,7 +51,7 @@ const FeaturedProducts = () => {
             <Button 
               size="lg" 
               variant="outline"
-              className="border-brand-red text-brand-red hover:bg-brand-red hover:text-white px-8 py-3 text-lg group"
+              className="border-brand-red text-brand-red hover:bg-brand-red hover:text-white px-8 py-3 text-lg group animate-pulse-button"
             >
               View All Products
               <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />

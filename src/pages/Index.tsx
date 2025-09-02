@@ -4,11 +4,12 @@ import HeroSection from "@/components/HeroSection";
 import CategorySection from "@/components/CategorySection";
 import FeaturedProducts from "@/components/FeaturedProducts";
 import Footer from "@/components/Footer";
+import { PageTransition } from "@/components/ui/page-transition";
 
 const Index = () => {
 
   return (
-    <div className="min-h-screen bg-background">
+    <PageTransition className="min-h-screen bg-background">
       <Header />
       <HeroSection />
       
@@ -19,7 +20,7 @@ const Index = () => {
         <FeaturedProducts />
       </div>
       <Footer />
-    </div>
+    </PageTransition>
   );
 };
 
