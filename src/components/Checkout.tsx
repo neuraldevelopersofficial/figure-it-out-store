@@ -288,7 +288,7 @@ const Checkout = () => {
                   <div className="space-y-3">
                     <div className="flex justify-between">
                       <span>Subtotal</span>
-                      <span>₹{cartTotal.toLocaleString()}</span>
+                      <span>₹{cartTotal ? cartTotal.toLocaleString() : '0'}</span>
                     </div>
                     
                     <div className="flex justify-between">
@@ -309,7 +309,7 @@ const Checkout = () => {
                     
                     <div className="flex justify-between text-lg font-bold">
                       <span>Total</span>
-                      <span>₹{finalTotal.toLocaleString()}</span>
+                      <span>₹{finalTotal ? finalTotal.toLocaleString() : '0'}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -371,7 +371,7 @@ const Checkout = () => {
                 disabled={loading}
                 className="w-full h-12 text-lg"
               >
-                {loading ? "Processing..." : `Pay ₹${finalTotal.toLocaleString()}`}
+                {loading ? "Processing..." : `Pay ₹${finalTotal ? finalTotal.toLocaleString() : '0'}`}
               </Button>
 
               <p className="text-xs text-center text-muted-foreground">

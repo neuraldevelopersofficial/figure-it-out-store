@@ -98,6 +98,20 @@ app.use(express.static('public'));
 // Serve uploaded files
 app.use('/uploads', express.static('public/uploads'));
 
+// Serve static files from the frontend build directory
+app.use(express.static('../dist'));
+
+// Serve the React app for all non-API routes
+app.get('*', (req, res, next) => {
+  // Skip API routes
+  if (req.path.startsWith('/api/') || req.path === '/health' || req.path.startsWith('/uploads/')) {
+    return next();
+  }
+  
+  // Serve the index.html from the frontend build directory
+  res.sendFile('index.html', { root: '../dist' });
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
@@ -112,9 +126,9 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({ error: 'Route not found' });
+// 404 handler for API routes only
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ error: 'API route not found' });
 });
 
 app.listen(PORT, async () => {

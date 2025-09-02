@@ -180,11 +180,11 @@ const Cart: React.FC = () => {
                         </p>
                         <div className="flex items-center gap-2">
                           <span className="text-lg font-bold text-foreground">
-                            ₹{item.price.toLocaleString()}
+                            ₹{item.price ? item.price.toLocaleString() : '0'}
                           </span>
                           {item.originalPrice && (
                             <span className="text-sm text-muted-foreground line-through">
-                              ₹{item.originalPrice.toLocaleString()}
+                              ₹{item.originalPrice ? item.originalPrice.toLocaleString() : '0'}
                             </span>
                           )}
                         </div>
@@ -230,7 +230,7 @@ const Cart: React.FC = () => {
                       <div className="text-right">
                         <div className="text-sm text-muted-foreground">Total</div>
                         <div className="font-semibold text-foreground">
-                          ₹{(item.price * item.quantity).toLocaleString()}
+                          ₹{item.price ? (item.price * item.quantity).toLocaleString() : '0'}
                         </div>
                       </div>
                     </div>
@@ -264,7 +264,7 @@ const Cart: React.FC = () => {
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Subtotal</span>
-                    <span className="font-medium">₹{cartTotal.toLocaleString()}</span>
+                    <span className="font-medium">₹{cartTotal ? cartTotal.toLocaleString() : '0'}</span>
                   </div>
                   
                   <div className="flex justify-between">
@@ -280,7 +280,7 @@ const Cart: React.FC = () => {
 
                   {shippingCost > 0 && (
                     <div className="text-sm text-green-600 bg-green-50 p-2 rounded">
-                      Add ₹{(shippingThreshold - cartTotal).toLocaleString()} more for free shipping!
+                      Add ₹{cartTotal ? (shippingThreshold - cartTotal).toLocaleString() : '0'} more for free shipping!
                     </div>
                   )}
 
@@ -288,7 +288,7 @@ const Cart: React.FC = () => {
                   
                   <div className="flex justify-between text-lg font-bold">
                     <span>Total</span>
-                    <span>₹{finalTotal.toLocaleString()}</span>
+                    <span>₹{finalTotal ? finalTotal.toLocaleString() : '0'}</span>
                   </div>
                 </div>
 

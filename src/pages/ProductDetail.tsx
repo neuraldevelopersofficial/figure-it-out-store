@@ -256,17 +256,17 @@ const ProductDetail = () => {
             <div className="space-y-2">
               <div className="flex items-center gap-3">
                 <span className="text-3xl font-bold text-foreground">
-                  ₹{product.price.toLocaleString()}
+                  ₹{product.price ? product.price.toLocaleString() : '0'}
                 </span>
                 {product.originalPrice && (
                   <span className="text-xl text-muted-foreground line-through">
-                    ₹{product.originalPrice.toLocaleString()}
+                    ₹{product.originalPrice ? product.originalPrice.toLocaleString() : '0'}
                   </span>
                 )}
               </div>
               {product.originalPrice && (
                 <div className="text-sm text-green-600 font-medium">
-                  You save ₹{(product.originalPrice - product.price).toLocaleString()} 
+                  You save ₹{product.originalPrice && product.price ? (product.originalPrice - product.price).toLocaleString() : '0'} 
                   ({Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%)
                 </div>
               )}

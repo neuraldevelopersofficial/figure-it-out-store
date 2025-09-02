@@ -947,7 +947,7 @@ const AdminDashboard = () => {
                           <div>
                             <p className="font-medium">{product.name}</p>
                             <p className="text-sm text-muted-foreground">
-                              {product.category} • ₹{product.price.toLocaleString()}
+                              {product.category} • ₹{product.price ? product.price.toLocaleString() : '0'}
                             </p>
                           </div>
                           <div className="flex items-center space-x-2">
@@ -1156,7 +1156,7 @@ const AdminDashboard = () => {
                             </td>
                             <td className="p-2 font-medium">{product.name}</td>
                             <td className="p-2 text-sm text-gray-600">{product.category}</td>
-                            <td className="p-2">₹{product.price.toLocaleString()}</td>
+                            <td className="p-2">₹{product.price ? product.price.toLocaleString() : '0'}</td>
                             <td className="p-2">
                               <Badge variant={product.stock < 10 ? "destructive" : "secondary"}>
                                 {product.stock}
@@ -1485,7 +1485,7 @@ const AdminDashboard = () => {
                                 {customer.total_orders} orders
                               </Badge>
                             </td>
-                            <td className="p-2 font-medium">₹{customer.total_spent.toLocaleString()}</td>
+                            <td className="p-2 font-medium">₹{customer.total_spent ? customer.total_spent.toLocaleString() : '0'}</td>
                             <td className="p-2 text-sm text-gray-600">
                               {formatDate(customer.created_at)}
                             </td>

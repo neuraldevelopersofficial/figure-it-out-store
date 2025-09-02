@@ -168,11 +168,11 @@ const ProductCard = ({ product, showQuickView = true }: ProductCardProps) => {
         {/* Price */}
         <div className="flex items-center gap-2 mb-3">
           <span className="text-lg font-bold text-foreground">
-            ₹{product.price.toLocaleString()}
+            ₹{product.price ? product.price.toLocaleString() : '0'}
           </span>
           {product.originalPrice && (
             <span className="text-sm text-muted-foreground line-through">
-              ₹{product.originalPrice.toLocaleString()}
+              ₹{product.originalPrice ? product.originalPrice.toLocaleString() : '0'}
             </span>
           )}
         </div>
