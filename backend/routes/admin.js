@@ -103,39 +103,58 @@ function applyProductDefaults(p) {
 }
 
 // Get admin statistics
-router.get('/stats', authenticateToken, requireAdmin, (req, res) => {
+router.get('/stats', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const productsStore = require('../store/productsStore');
-    const usersStore = require('../store/usersStore');
+    const db = getDatabase();
+    if (!db) {
+      return res.status(500).json({ error: 'Database connection not available' });
+    }
     
-    // Get real data from stores
-    const products = productsStore.getAll();
-    const userStats = usersStore.getStats();
+    // Get products from database
+    const productsCollection = await getCollection(COLLECTIONS.PRODUCTS);
+    const usersCollection = await getCollection(COLLECTIONS.USERS);
+    const ordersCollection = await getCollection(COLLECTIONS.ORDERS);
     
-    // Calculate product statistics
-    const totalProducts = products.length;
-    const lowStockProducts = products.filter(p => (p.stock_quantity || 0) < 10).length;
+    if (!productsCollection || !usersCollection || !ordersCollection) {
+      return res.status(500).json({ error: 'Required collections not available' });
+    }
     
-    // Calculate order statistics (mock for now, replace with real order store)
-    const totalOrders = userStats.totalOrders;
-    const totalRevenue = userStats.totalRevenue;
-    const pendingOrders = Math.floor(totalOrders * 0.15); // 15% pending rate
+    // Get product statistics
+    const totalProducts = await productsCollection.countDocuments();
+    const lowStockProducts = await productsCollection.countDocuments({ stock_quantity: { $lt: 10 } });
     
     // Get user statistics
-    const totalCustomers = userStats.totalCustomers;
-    const avgOrderValue = userStats.avgOrderValue;
+    const totalCustomers = await usersCollection.countDocuments({ role: 'customer' });
     
-    // Calculate monthly growth (mock for now)
-    const monthlyGrowth = 12; // 12% growth
+    // Get order statistics
+    const orders = await ordersCollection.find({}).toArray();
+    const totalOrders = orders.length;
+    
+    // Calculate revenue and pending orders
+    let totalRevenue = 0;
+    let pendingOrders = 0;
+    
+    orders.forEach(order => {
+      totalRevenue += order.total_amount || 0;
+      if (order.status === 'pending') {
+        pendingOrders++;
+      }
+    });
+    
+    const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
     
     // Get top selling category
+    const products = await productsCollection.find({}).toArray();
     const categoryCounts = products.reduce((acc, p) => {
       acc[p.category] = (acc[p.category] || 0) + 1;
       return acc;
     }, {});
     
-    const topSellingCategory = Object.entries(categoryCounts)
-      .sort(([,a], [,b]) => b - a)[0]?.[0] || "Anime Figures";
+    const topSellingCategory = Object.entries(categoryCounts).length > 0 ?
+      Object.entries(categoryCounts).sort(([,a], [,b]) => Number(b) - Number(a))[0]?.[0] : "Anime Figures";
+
+    // Calculate monthly growth (placeholder for now)
+    const monthlyGrowth = 12; // 12% growth - this would need actual calculation in production
 
     const stats = {
       totalProducts,
@@ -161,29 +180,14 @@ router.get('/stats', authenticateToken, requireAdmin, (req, res) => {
 });
 
 // Get all orders for admin
-router.get('/orders', authenticateToken, requireAdmin, (req, res) => {
+router.get('/orders', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    // Mock orders data (replace with actual database queries in production)
-    const orders = [
-      {
-        id: "1",
-        customer_name: "John Doe",
-        customer_email: "john@example.com",
-        total_amount: 2500,
-        status: "pending",
-        payment_status: "completed",
-        created_at: "2024-01-15T10:30:00.000Z"
-      },
-      {
-        id: "2",
-        customer_name: "Jane Smith",
-        customer_email: "jane@example.com",
-        total_amount: 1800,
-        status: "confirmed",
-        payment_status: "completed",
-        created_at: "2024-01-14T15:45:00.000Z"
-      }
-    ];
+    const ordersCollection = await getCollection(COLLECTIONS.ORDERS);
+    if (!ordersCollection) {
+      return res.status(500).json({ error: 'Orders collection not available' });
+    }
+    
+    const orders = await ordersCollection.find({}).toArray();
 
     res.json({
       success: true,
@@ -223,9 +227,20 @@ router.get('/products', authenticateToken, requireAdmin, async (req, res) => {
       }));
       return res.json({ success: true, products });
     }
+    
+    // If database is not available, use in-memory store as fallback
     const store = require('../store/productsStore');
-    const products = store.toAdminList();
-    res.json({ success: true, products });
+    await store.init(); // Ensure store is initialized
+    const products = await store.getAll();
+    const adminList = products.map(p => ({
+      id: p.id,
+      name: p.name,
+      category: p.category,
+      price: p.price,
+      stock: p.stock_quantity,
+      image: p.image
+    }));
+    res.json({ success: true, products: adminList });
   } catch (error) {
     console.error('Products fetch error:', error);
     res.status(500).json({ error: 'Failed to fetch products' });
@@ -236,6 +251,8 @@ router.get('/products', authenticateToken, requireAdmin, async (req, res) => {
 router.post('/products', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const store = require('../store/productsStore');
+    await store.init(); // Ensure store is initialized
+    
     const { name, price, category, description, stock_quantity, image, original_price, is_new, is_on_sale, discount, in_stock, rating, reviews } = req.body;
 
     if (!name || !price || !category || !stock_quantity) {
@@ -245,29 +262,7 @@ router.post('/products', authenticateToken, requireAdmin, async (req, res) => {
     // Convert Google Drive URL if present
     const convertedImage = image ? convertGoogleDriveUrl(image) : image;
 
-    const col = await getProductsCollection();
-    if (col) {
-      const doc = applyProductDefaults(store.add({
-        name,
-        price,
-        category,
-        description,
-        stock_quantity,
-        image: convertedImage,
-        original_price,
-        is_new,
-        is_on_sale,
-        discount,
-        in_stock,
-        rating,
-        reviews
-      }));
-      // Ensure unique id field
-      await col.insertOne({ ...doc });
-      return res.status(201).json({ success: true, message: 'Product created successfully', product: doc });
-    }
-
-    const newProduct = applyProductDefaults(store.add({
+    const productData = applyProductDefaults({
       name,
       price,
       category,
@@ -281,8 +276,17 @@ router.post('/products', authenticateToken, requireAdmin, async (req, res) => {
       in_stock,
       rating,
       reviews
-    }));
+    });
 
+    const col = await getProductsCollection();
+    if (col) {
+      // Insert directly into MongoDB collection
+      await col.insertOne({ ...productData });
+      return res.status(201).json({ success: true, message: 'Product created successfully', product: productData });
+    }
+
+    // Fallback to in-memory store if database is not available
+    const newProduct = await store.add(productData);
     res.status(201).json({ success: true, message: 'Product created successfully', product: newProduct });
 
   } catch (error) {
@@ -295,6 +299,8 @@ router.post('/products', authenticateToken, requireAdmin, async (req, res) => {
 router.put('/products/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const store = require('../store/productsStore');
+    await store.init(); // Ensure store is initialized
+    
     const { id } = req.params;
     const updates = applyProductDefaults(req.body || {});
 
@@ -342,14 +348,15 @@ router.put('/products/:id', authenticateToken, requireAdmin, async (req, res) =>
       return res.json({ success: true, message: 'Product updated successfully', product: result.value });
     }
 
+    // Fallback to in-memory store if database is not available
     // Try updating by ID first, then by name in memory store
-    let updatedProduct = store.update(id, updates);
+    let updatedProduct = await store.update(id, updates);
     if (!updatedProduct) {
       // Try to find by name in memory store
-      const products = store.getAll();
+      const products = await store.getAll();
       const productByName = products.find(p => p.name.toLowerCase() === id.toLowerCase());
       if (productByName) {
-        updatedProduct = store.update(productByName.id, updates);
+        updatedProduct = await store.update(productByName.id, updates);
       }
     }
     
@@ -369,6 +376,8 @@ router.put('/products/:id', authenticateToken, requireAdmin, async (req, res) =>
 router.delete('/products/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const store = require('../store/productsStore');
+    await store.init(); // Ensure store is initialized
+    
     const { id } = req.params;
 
     const col = await getProductsCollection();
@@ -385,7 +394,8 @@ router.delete('/products/:id', authenticateToken, requireAdmin, async (req, res)
       return res.json({ success: true, message: 'Product deleted successfully' });
     }
 
-    const removed = store.remove(id);
+    // Fallback to in-memory store if database is not available
+    const removed = await store.remove(id);
     if (!removed) return res.status(404).json({ error: 'Product not found' });
 
     res.json({ success: true, message: 'Product deleted successfully' });
@@ -396,27 +406,29 @@ router.delete('/products/:id', authenticateToken, requireAdmin, async (req, res)
   }
 });
 
-// Clear all products
+// Delete all products (admin only)
 router.delete('/products/all', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const store = require('../store/productsStore');
-    const col = await getProductsCollection();
-    let deletedCount = 0;
-    
-    if (col) {
-      const result = await col.deleteMany({});
-      deletedCount = result.deletedCount;
-    } else {
-      deletedCount = store.clearAll();
+    const db = getDatabase();
+    if (!db) {
+      return res.status(500).json({ error: 'Database connection not available' });
     }
+    
+    const productsCollection = await getCollection(COLLECTIONS.PRODUCTS);
+    if (!productsCollection) {
+      return res.status(500).json({ error: 'Products collection not available' });
+    }
+    
+    const result = await productsCollection.deleteMany({});
+    const deletedCount = result.deletedCount;
     
     return res.json({
       success: true,
       message: `Successfully deleted all products (${deletedCount} items removed)`
     });
   } catch (error) {
-    console.error('Clear all products error:', error);
-    res.status(500).json({ error: 'Failed to clear all products' });
+    console.error('Delete all products error:', error);
+    res.status(500).json({ error: 'Failed to delete all products' });
   }
 });
 
@@ -695,9 +707,12 @@ router.post('/products/bulk', authenticateToken, requireAdmin, bulkUploadLimiter
 // Get all customers for admin
 router.get('/customers', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const usersStore = require('../store/usersStore');
-    // Ensure usersStore is synced with userStore before returning customers
-    const customers = await usersStore.getCustomers();
+    const usersCollection = await getCollection(COLLECTIONS.USERS);
+    if (!usersCollection) {
+      return res.status(500).json({ error: 'Users collection not available' });
+    }
+    
+    const customers = await usersCollection.find({ role: 'customer' }).toArray();
 
     res.json({
       success: true,

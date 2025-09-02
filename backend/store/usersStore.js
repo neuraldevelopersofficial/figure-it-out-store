@@ -1,96 +1,144 @@
 const { v4: uuidv4 } = require('uuid');
+const { getDatabase, getCollection, COLLECTIONS } = require('../config/database');
 
-// Import userStore to sync data
-const userStore = require('./userStore');
-
-// In-memory users store. Replace with DB in production.
+// This file now serves as a compatibility layer for MongoDB
+// All operations will be performed on the database when available
+// Empty array as fallback only if database is not available
 let users = [];
 
-// Initialize with minimal data for testing
-const initializeSampleUsers = () => {
-  if (users.length === 0) {
-    const sampleUsers = [
-      {
-        id: "1",
-        email: "test@example.com",
-        full_name: "Test User",
-        phone: "+91 98765 43210",
-        pincode: "400001",
-        address: "Test Address",
-        city: "Mumbai",
-        state: "Maharashtra",
-        role: "customer",
-        total_orders: 0,
-        total_spent: 0,
-        created_at: "2024-01-01T00:00:00.000Z",
-        updated_at: "2024-01-01T00:00:00.000Z"
-      }
-    ];
-
-    users = sampleUsers;
-    console.log('👥 Test user initialized');
-  }
-};
-
-// Initialize sample users on startup
-initializeSampleUsers();
-
-// Sync with userStore
-const syncWithUserStore = () => {
-  const userStoreUsers = userStore.getAllUsers();
-  if (userStoreUsers && userStoreUsers.length > 0) {
-    // Map userStore users to usersStore format
-    userStoreUsers.forEach(user => {
-      if (!users.some(u => u.id === user.id)) {
-        users.push({
-          id: user.id,
-          email: user.email,
-          full_name: user.name || '',
-          phone: user.phone || '',
-          pincode: user.pincode || '',
-          address: user.address || '',
-          city: user.city || '',
-          state: user.state || '',
-          role: user.role || 'customer',
-          total_orders: user.total_orders || 0,
-          total_spent: user.total_spent || 0,
-          created_at: user.created_at,
-          updated_at: user.updated_at
+// Initialize the users collection if needed
+const initializeUsersCollection = async () => {
+  try {
+    const usersCollection = await getCollection(COLLECTIONS.USERS);
+    if (usersCollection) {
+      // Check if we have any users
+      const count = await usersCollection.countDocuments();
+      if (count === 0) {
+        console.log('No users found in database, initializing with test user');
+        // Add a test user if the collection is empty
+        await usersCollection.insertOne({
+          id: "1",
+          email: "test@example.com",
+          full_name: "Test User",
+          phone: "+91 98765 43210",
+          pincode: "400001",
+          address: "Test Address",
+          city: "Mumbai",
+          state: "Maharashtra",
+          role: "customer",
+          total_orders: 0,
+          total_spent: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         });
+        console.log('👥 Test user initialized in database');
       }
-    });
+      return;
+    }
+  } catch (error) {
+    console.error('Error initializing users collection:', error);
+  }
+  
+  // Fallback to in-memory if DB is not available
+  if (users.length === 0) {
+    users = [{
+      id: "1",
+      email: "test@example.com",
+      full_name: "Test User",
+      phone: "+91 98765 43210",
+      pincode: "400001",
+      address: "Test Address",
+      city: "Mumbai",
+      state: "Maharashtra",
+      role: "customer",
+      total_orders: 0,
+      total_spent: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }];
+    console.log('👥 Test user initialized in memory');
   }
 };
 
+// Initialize users collection on startup
+initializeUsersCollection();
+
+// Helper function for current timestamp
 function nowIso() {
   return new Date().toISOString();
 }
 
-function getAll() {
-  // Sync with userStore before returning all users
-  syncWithUserStore();
+async function getAll() {
+  try {
+    const collection = await getCollection(COLLECTIONS.USERS);
+    if (collection) {
+      return await collection.find({}).toArray();
+    }
+  } catch (error) {
+    console.error('Error getting all users from DB:', error);
+  }
+  
+  // Fallback to in-memory if DB fails
   return users;
 }
 
-function getById(id) {
+async function getById(id) {
+  try {
+    const collection = await getCollection(COLLECTIONS.USERS);
+    if (collection) {
+      return await collection.findOne({ id: id });
+    }
+  } catch (error) {
+    console.error(`Error getting user ${id} from DB:`, error);
+  }
+  
+  // Fallback to in-memory if DB fails
   return users.find(u => u.id === id);
 }
 
-function getByEmail(email) {
+async function getByEmail(email) {
+  try {
+    const collection = await getCollection(COLLECTIONS.USERS);
+    if (collection) {
+      return await collection.findOne({ email: email });
+    }
+  } catch (error) {
+    console.error(`Error getting user by email ${email} from DB:`, error);
+  }
+  
+  // Fallback to in-memory if DB fails
   return users.find(u => u.email === email);
 }
 
-function getCustomers() {
-  // Sync with userStore before returning customers
-  syncWithUserStore();
+async function getCustomers() {
+  try {
+    const collection = await getCollection(COLLECTIONS.USERS);
+    if (collection) {
+      return await collection.find({ role: 'customer' }).toArray();
+    }
+  } catch (error) {
+    console.error('Error getting customers from DB:', error);
+  }
+  
+  // Fallback to in-memory if DB fails
   return users.filter(u => u.role === 'customer');
 }
 
-function getAdmins() {
+async function getAdmins() {
+  try {
+    const collection = await getCollection(COLLECTIONS.USERS);
+    if (collection) {
+      return await collection.find({ role: 'admin' }).toArray();
+    }
+  } catch (error) {
+    console.error('Error getting admins from DB:', error);
+  }
+  
+  // Fallback to in-memory if DB fails
   return users.filter(u => u.role === 'admin');
 }
 
-function add(userData) {
+async function add(userData) {
   const id = userData.id || uuidv4();
   const created_at = nowIso();
   
@@ -110,11 +158,45 @@ function add(userData) {
     updated_at: created_at
   };
 
+  try {
+    const collection = await getCollection(COLLECTIONS.USERS);
+    if (collection) {
+      await collection.insertOne(newUser);
+      return newUser;
+    }
+  } catch (error) {
+    console.error('Error adding user to DB:', error);
+  }
+  
+  // Fallback to in-memory if DB fails
   users.push(newUser);
   return newUser;
 }
 
-function update(id, updates) {
+async function update(id, updates) {
+  try {
+    const collection = await getCollection(COLLECTIONS.USERS);
+    if (collection) {
+      const updatedUser = {
+        ...updates,
+        updated_at: nowIso()
+      };
+      
+      const result = await collection.findOneAndUpdate(
+        { id: id },
+        { $set: updatedUser },
+        { returnDocument: 'after' }
+      );
+      
+      if (result) {
+        return result;
+      }
+    }
+  } catch (error) {
+    console.error(`Error updating user ${id} in DB:`, error);
+  }
+  
+  // Fallback to in-memory if DB fails
   const index = users.findIndex(u => u.id === id);
   if (index === -1) return null;
 
@@ -127,7 +209,18 @@ function update(id, updates) {
   return users[index];
 }
 
-function remove(id) {
+async function remove(id) {
+  try {
+    const collection = await getCollection(COLLECTIONS.USERS);
+    if (collection) {
+      const result = await collection.deleteOne({ id: id });
+      return result.deletedCount > 0;
+    }
+  } catch (error) {
+    console.error(`Error removing user ${id} from DB:`, error);
+  }
+  
+  // Fallback to in-memory if DB fails
   const index = users.findIndex(u => u.id === id);
   if (index === -1) return false;
 
@@ -135,8 +228,35 @@ function remove(id) {
   return true;
 }
 
-function updateUserStats(id, orderCount, orderAmount) {
-  const user = getById(id);
+async function updateUserStats(id, orderCount, orderAmount) {
+  try {
+    const collection = await getCollection(COLLECTIONS.USERS);
+    if (collection) {
+      const user = await collection.findOne({ id: id });
+      if (!user) return null;
+      
+      const updatedStats = {
+        total_orders: (user.total_orders || 0) + orderCount,
+        total_spent: (user.total_spent || 0) + orderAmount,
+        updated_at: nowIso()
+      };
+      
+      const result = await collection.findOneAndUpdate(
+        { id: id },
+        { $set: updatedStats },
+        { returnDocument: 'after' }
+      );
+      
+      if (result) {
+        return result;
+      }
+    }
+  } catch (error) {
+    console.error(`Error updating user stats for ${id} in DB:`, error);
+  }
+  
+  // Fallback to in-memory if DB fails
+  const user = users.find(u => u.id === id);
   if (!user) return null;
 
   user.total_orders = (user.total_orders || 0) + orderCount;
@@ -146,8 +266,53 @@ function updateUserStats(id, orderCount, orderAmount) {
   return user;
 }
 
-function getStats() {
-  const customers = getCustomers();
+async function getStats() {
+  try {
+    const collection = await getCollection(COLLECTIONS.USERS);
+    if (collection) {
+      // Get all customers from DB
+      const customers = await collection.find({ role: 'customer' }).toArray();
+      
+      const totalCustomers = customers.length;
+      const totalOrders = customers.reduce((sum, u) => sum + (u.total_orders || 0), 0);
+      const totalRevenue = customers.reduce((sum, u) => sum + (u.total_spent || 0), 0);
+      
+      // Calculate average order value
+      const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+      
+      // Get top customers by spending
+      const topCustomers = customers
+        .sort((a, b) => (b.total_spent || 0) - (a.total_spent || 0))
+        .slice(0, 5);
+
+      // Get customers by city
+      const customersByCity = customers.reduce((acc, u) => {
+        acc[u.city] = (acc[u.city] || 0) + 1;
+        return acc;
+      }, {});
+
+      // Get customers by state
+      const customersByState = customers.reduce((acc, u) => {
+        acc[u.state] = (acc[u.state] || 0) + 1;
+        return acc;
+      }, {});
+
+      return {
+        totalCustomers,
+        totalOrders,
+        totalRevenue,
+        avgOrderValue,
+        topCustomers,
+        customersByCity,
+        customersByState
+      };
+    }
+  } catch (error) {
+    console.error('Error getting user stats from DB:', error);
+  }
+  
+  // Fallback to in-memory if DB fails
+  const customers = users.filter(u => u.role === 'customer');
   const totalCustomers = customers.length;
   const totalOrders = customers.reduce((sum, u) => sum + (u.total_orders || 0), 0);
   const totalRevenue = customers.reduce((sum, u) => sum + (u.total_spent || 0), 0);
@@ -183,8 +348,30 @@ function getStats() {
   };
 }
 
-function search(query) {
+async function search(query) {
   const q = query.toLowerCase();
+  
+  try {
+    const collection = await getCollection(COLLECTIONS.USERS);
+    if (collection) {
+      // MongoDB text search (requires text index on these fields)
+      // For simplicity, we'll use a regex search instead
+      const users = await collection.find({
+        $or: [
+          { full_name: { $regex: q, $options: 'i' } },
+          { email: { $regex: q, $options: 'i' } },
+          { city: { $regex: q, $options: 'i' } },
+          { state: { $regex: q, $options: 'i' } }
+        ]
+      }).toArray();
+      
+      return users;
+    }
+  } catch (error) {
+    console.error(`Error searching users with query "${q}" in DB:`, error);
+  }
+  
+  // Fallback to in-memory if DB fails
   return users.filter(u =>
     u.full_name.toLowerCase().includes(q) ||
     u.email.toLowerCase().includes(q) ||
