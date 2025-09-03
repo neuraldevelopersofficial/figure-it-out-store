@@ -174,159 +174,73 @@ const Checkout: React.FC = () => {
         currency: razorpayResponse.currency
       });
 
-      // Import and use the proper Razorpay integration with fallback
-      const { initializePayment, initializeDirectCheckout } = await import('@/lib/razorpay');
+      // Import and use the simplified Razorpay integration
+      const { initializePayment } = await import('@/lib/razorpay');
       
-      // Try the main Razorpay integration first
-      try {
-        console.log('🚀 Initializing main Razorpay payment...');
-        console.log('⚠️ Note: If Razorpay modal fails, automatic fallback to direct checkout will be used');
-        
-        await initializePayment(
-          razorpayResponse.order_id,
-          razorpayResponse.currency || 'INR',
-          user.full_name,
-          user.email,
-          shippingAddress.phone || '',
-          async (paymentResponse: any) => {
-            try {
-              console.log('✅ Payment successful:', paymentResponse);
-              
-              // Verify payment signature with backend
-              console.log('🔍 Verifying payment signature...');
-              const verificationData = {
-                razorpay_order_id: paymentResponse.razorpay_order_id,
-                razorpay_payment_id: paymentResponse.razorpay_payment_id,
-                razorpay_signature: paymentResponse.razorpay_signature,
-                method: 'razorpay' // Regular Razorpay payment
-              };
-              
-              console.log('📤 Sending verification request with data:', verificationData);
-              
-              const verificationResponse = await apiClient.verifyPayment(verificationData);
+      // Initialize Razorpay payment with default UI
+      console.log('🚀 Initializing Razorpay payment...');
+      
+      await initializePayment(
+        razorpayResponse.order_id,
+        razorpayResponse.currency || 'INR',
+        user.full_name,
+        user.email,
+        shippingAddress.phone || '',
+        async (paymentResponse: any) => {
+          try {
+            console.log('✅ Payment successful:', paymentResponse);
+            
+            // Verify payment signature with backend
+            console.log('🔍 Verifying payment signature...');
+            const verificationData = {
+              razorpay_order_id: paymentResponse.razorpay_order_id,
+              razorpay_payment_id: paymentResponse.razorpay_payment_id,
+              razorpay_signature: paymentResponse.razorpay_signature,
+              method: 'razorpay'
+            };
+            
+            console.log('📤 Sending verification request with data:', verificationData);
+            
+            const verificationResponse = await apiClient.verifyPayment(verificationData);
 
-              if (verificationResponse.success && verificationResponse.verified) {
-                console.log('✅ Payment verification successful');
-                
-                // Update order status
-                await apiClient.updateOrderStatus(orderResponse.order.id, 'confirmed');
-                
-                // Clear cart
-                clearCart();
-                
-                toast({
-                  title: "Payment successful!",
-                  description: "Your order has been placed successfully.",
-                });
-
-                // Redirect to order confirmation
-                navigate('/orders');
-              } else {
-                console.error('❌ Payment verification failed:', verificationResponse);
-                throw new Error('Payment verification failed');
-              }
-            } catch (error) {
-              console.error('❌ Payment verification error:', error);
+            if (verificationResponse.success && verificationResponse.verified) {
+              console.log('✅ Payment verification successful');
+              
+              // Update order status
+              await apiClient.updateOrderStatus(orderResponse.order.id, 'confirmed');
+              
+              // Clear cart
+              clearCart();
+              
               toast({
-                title: "Payment verification failed",
-                description: "Please contact support for assistance.",
-                variant: "destructive"
+                title: "Payment successful!",
+                description: "Your order has been placed successfully.",
               });
+
+              // Redirect to order confirmation
+              navigate('/orders');
+            } else {
+              console.error('❌ Payment verification failed:', verificationResponse);
+              throw new Error('Payment verification failed');
             }
-          },
-          (error: any) => {
-            console.error('❌ Payment failed:', error);
+          } catch (error) {
+            console.error('❌ Payment verification error:', error);
             toast({
-              title: "Payment failed",
-              description: error.message || "Payment was not completed",
+              title: "Payment verification failed",
+              description: "Please contact support for assistance.",
               variant: "destructive"
             });
-          },
-          false // Don't force direct checkout initially
-        );
-      } catch (error) {
-        console.log('⚠️ Main Razorpay integration failed, trying direct checkout...', error);
-        
-        // Show user notification about fallback
-        toast({
-          title: "Using alternative payment method",
-          description: "Opening direct checkout due to payment modal issues.",
-          variant: "default"
-        });
-        
-        // Fallback to direct checkout method
-        try {
-          console.log('🔄 Initializing direct checkout fallback...');
-          await initializeDirectCheckout(
-            razorpayResponse.order_id,
-            razorpayResponse.currency || 'INR',
-            user.full_name,
-            user.email,
-            shippingAddress.phone || '',
-            async (paymentResponse: any) => {
-              try {
-                console.log('✅ Direct checkout payment successful:', paymentResponse);
-                
-                // Verify payment signature with backend
-                console.log('🔍 Verifying direct checkout payment signature...');
-                const verificationData = {
-                  razorpay_order_id: paymentResponse.razorpay_order_id,
-                  razorpay_payment_id: paymentResponse.razorpay_payment_id,
-                  razorpay_signature: paymentResponse.razorpay_signature,
-                  method: 'custom_form' // Always use custom_form for direct checkout
-                };
-                
-                console.log('📤 Sending verification request with data:', verificationData);
-                
-                const verificationResponse = await apiClient.verifyPayment(verificationData);
-
-                if (verificationResponse.success && verificationResponse.verified) {
-                  console.log('✅ Direct checkout payment verification successful');
-                  
-                  // Update order status
-                  await apiClient.updateOrderStatus(orderResponse.order.id, 'confirmed');
-                  
-                  // Clear cart
-                  clearCart();
-                  
-                  toast({
-                    title: "Payment successful!",
-                    description: "Your order has been placed successfully via direct checkout.",
-                  });
-
-                  // Redirect to order confirmation
-                  navigate('/orders');
-                } else {
-                  console.error('❌ Direct checkout payment verification failed:', verificationResponse);
-                  throw new Error('Payment verification failed');
-                }
-              } catch (error) {
-                console.error('❌ Direct checkout payment verification error:', error);
-                toast({
-                  title: "Payment verification failed",
-                  description: "Please contact support for assistance.",
-                  variant: "destructive"
-                });
-              }
-            },
-            (error: any) => {
-              console.error('❌ Direct checkout failed:', error);
-              toast({
-                title: "Payment failed",
-                description: "Both payment methods failed. Please contact support.",
-                variant: "destructive"
-              });
-            }
-          );
-        } catch (fallbackError) {
-          console.error('❌ Direct checkout fallback also failed:', fallbackError);
+          }
+        },
+        (error: any) => {
+          console.error('❌ Payment failed:', error);
           toast({
-            title: "All payment methods failed",
-            description: "Please contact support for assistance.",
+            title: "Payment failed",
+            description: error.message || "Payment was not completed",
             variant: "destructive"
           });
         }
-      }
+      );
 
     } catch (error: any) {
       console.error('Checkout error:', error);
