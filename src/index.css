@@ -1,9 +1,9 @@
+/* Import custom animations */
+@import './components/ui/animations.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Import custom animations */
-@import './components/ui/animations.css';
 
 /* FIGUREITOUT E-commerce Design System */
 @layer base {

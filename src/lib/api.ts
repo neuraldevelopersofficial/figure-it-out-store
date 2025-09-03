@@ -160,13 +160,6 @@ class ApiClient {
     return this.request(`/orders/${id}`);
   }
 
-  async updateOrderStatus(orderId: string, status: string) {
-    return this.request(`/orders/${orderId}/status`, {
-      method: 'PUT',
-      body: JSON.stringify({ status }),
-    });
-  }
-
   // Admin endpoints
   async getAdminStats() {
     return this.request('/admin/stats');

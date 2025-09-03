@@ -1369,147 +1369,146 @@ const AdminDashboard = () => {
                   {carousels.length > 0 ? (
                     carousels.map((carousel) => (
                       <div key={carousel.id} className="border rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-4">
-                        <div>
-                          <h3 className="text-lg font-semibold">{carousel.title}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Name: {carousel.name} • {carousel.slides.length} slides
-                          </p>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant={carousel.isActive ? "default" : "secondary"}>
-                            {carousel.isActive ? "Active" : "Inactive"}
-                          </Badge>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="hover:bg-green-50 hover:text-green-700 hover:border-green-300"
-                            onClick={() => {
-                              setSelectedCarousel(carousel);
-                              setShowAddCarousel(true);
-                            }}
-                          >
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300"
-                            onClick={() => {
-                              setSelectedCarouselForSlide(carousel);
-                              setShowAddSlide(true);
-                            }}
-                          >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add Slide
-                          </Button>
-                        </div>
-                      </div>
-                      
-                      {/* Slides Preview */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {carousel.slides.map((slide) => (
-                          <div key={slide.id} className="border rounded-lg p-3 bg-gray-50">
-                            <div className="aspect-video bg-gray-200 rounded mb-2 overflow-hidden">
-                              {slide.image ? (
-                                <img 
-                                  src={slide.image.startsWith('/uploads/') ? slide.image : slide.image}
-                                  alt={slide.title}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    const target = e.currentTarget as HTMLImageElement;
-                                    target.style.display = 'none';
-                                    const nextElement = target.nextElementSibling as HTMLElement;
-                                    if (nextElement) {
-                                      nextElement.style.display = 'flex';
-                                    }
-                                  }}
-                                />
-                              ) : null}
-                              <div className={`w-full h-full items-center justify-center text-gray-400 ${slide.image ? 'hidden' : 'flex'}`}>
-                                <Image className="h-8 w-8" />
-                              </div>
-                            </div>
-                            <h4 className="font-medium text-sm mb-1 truncate" title={slide.title}>{slide.title}</h4>
-                            <p className="text-xs text-gray-600 mb-2 line-clamp-2" title={slide.subtitle}>{slide.subtitle}</p>
-                            <div className="flex items-center justify-between">
-                              <Badge variant="outline" className="text-xs">
-                                Order: {slide.order}
-                              </Badge>
-                              <div className="flex space-x-1">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-6 w-6 p-0 hover:bg-green-50 hover:text-green-700 border-green-200"
-                                  onClick={() => {
-                                    setSelectedCarousel(carousel);
-                                    setSelectedCarouselForSlide(carousel);
-                                    setShowAddSlide(true);
-                                  }}
-                                  title="Edit slide"
-                                >
-                                  <Edit className="h-3 w-3" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-6 w-6 p-0 hover:bg-red-50 hover:text-red-700 text-red-500 border-red-200"
-                                  onClick={() => {
-                                    if (window.confirm('Are you sure you want to delete this slide?')) {
-                                      handleDeleteSlide(carousel.id, slide.id);
-                                    }
-                                  }}
-                                  title="Delete slide"
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            </div>
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <h3 className="text-lg font-semibold">{carousel.title}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              Name: {carousel.name} • {carousel.slides.length} slides
+                            </p>
                           </div>
-                        ))}
-                        
-                        {/* Add New Slide Button */}
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 bg-gray-50 hover:bg-gray-100 transition-colors">
-                          <div className="aspect-video flex items-center justify-center">
+                          <div className="flex items-center space-x-2">
+                            <Badge variant={carousel.isActive ? "default" : "secondary"}>
+                              {carousel.isActive ? "Active" : "Inactive"}
+                            </Badge>
                             <Button
+                              size="sm"
                               variant="outline"
+                              className="hover:bg-green-50 hover:text-green-700 hover:border-green-300"
+                              onClick={() => {
+                                setSelectedCarousel(carousel);
+                                setShowAddCarousel(true);
+                              }}
+                            >
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300"
                               onClick={() => {
                                 setSelectedCarouselForSlide(carousel);
                                 setShowAddSlide(true);
                               }}
-                              className="h-full w-full flex flex-col items-center justify-center text-gray-600 hover:text-gray-800 hover:bg-gray-50 border-dashed border-gray-300"
                             >
-                              <Plus className="h-8 w-8 mb-2" />
-                              <span className="text-sm font-medium">Add Slide</span>
+                              <Plus className="h-4 w-4 mr-2" />
+                              Add Slide
                             </Button>
                           </div>
                         </div>
+                        
+                        {/* Slides Preview */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {carousel.slides.map((slide) => (
+                            <div key={slide.id} className="border rounded-lg p-3 bg-gray-50">
+                              <div className="aspect-video bg-gray-200 rounded mb-2 overflow-hidden">
+                                {slide.image ? (
+                                  <img 
+                                    src={slide.image.startsWith('/uploads/') ? slide.image : slide.image}
+                                    alt={slide.title}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      const target = e.currentTarget as HTMLImageElement;
+                                      target.style.display = 'none';
+                                      const nextElement = target.nextElementSibling as HTMLElement;
+                                      if (nextElement) {
+                                        nextElement.style.display = 'flex';
+                                      }
+                                    }}
+                                  />
+                                ) : null}
+                                <div className={`w-full h-full items-center justify-center text-gray-400 ${slide.image ? 'hidden' : 'flex'}`}>
+                                  <Image className="h-8 w-8" />
+                                </div>
+                              </div>
+                              <h4 className="font-medium text-sm mb-1 truncate" title={slide.title}>{slide.title}</h4>
+                              <p className="text-xs text-gray-600 mb-2 line-clamp-2" title={slide.subtitle}>{slide.subtitle}</p>
+                              <div className="flex items-center justify-between">
+                                <Badge variant="outline" className="text-xs">
+                                  Order: {slide.order}
+                                </Badge>
+                                <div className="flex space-x-1">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-6 w-6 p-0 hover:bg-green-50 hover:text-green-700 border-green-200"
+                                    onClick={() => {
+                                      setSelectedCarousel(carousel);
+                                      setSelectedCarouselForSlide(carousel);
+                                      setShowAddSlide(true);
+                                    }}
+                                    title="Edit slide"
+                                  >
+                                    <Edit className="h-3 w-3" />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-6 w-6 p-0 hover:bg-red-50 hover:text-red-700 text-red-500 border-red-200"
+                                    onClick={() => {
+                                      if (window.confirm('Are you sure you want to delete this slide?')) {
+                                        handleDeleteSlide(carousel.id, slide.id);
+                                      }
+                                    }}
+                                    title="Delete slide"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                          
+                          {/* Add New Slide Button */}
+                          <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 bg-gray-50 hover:bg-gray-100 transition-colors">
+                            <div className="aspect-video flex items-center justify-center">
+                              <Button
+                                variant="outline"
+                                onClick={() => {
+                                  setSelectedCarouselForSlide(carousel);
+                                  setShowAddSlide(true);
+                                }}
+                                className="h-full w-full flex flex-col items-center justify-center text-gray-600 hover:text-gray-800 hover:bg-gray-50 border-dashed border-gray-300"
+                              >
+                                <Plus className="h-8 w-8 mb-2" />
+                                <span className="text-sm font-medium">Add Slide</span>
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Carousel Settings */}
+                        <div className="mt-4 pt-4 border-t grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">Auto-play:</span>
+                            <span className="ml-2 font-medium">{carousel.autoPlay ? "Yes" : "No"}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Interval:</span>
+                            <span className="ml-2 font-medium">{carousel.interval}ms</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Height:</span>
+                            <span className="ml-2 font-medium">{carousel.height}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Updated:</span>
+                            <span className="ml-2 font-medium">{formatDate(carousel.updated_at)}</span>
+                          </div>
+                        </div>
                       </div>
-                      
-                      {/* Carousel Settings */}
-                      <div className="mt-4 pt-4 border-t grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                        <div>
-                          <span className="text-muted-foreground">Auto-play:</span>
-                          <span className="ml-2 font-medium">{carousel.autoPlay ? "Yes" : "No"}</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Interval:</span>
-                          <span className="ml-2 font-medium">{carousel.interval}ms</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Height:</span>
-                          <span className="ml-2 font-medium">{carousel.height}</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Updated:</span>
-                          <span className="ml-2 font-medium">{formatDate(carousel.updated_at)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  
-                  {carousels.length === 0 && (
+                    ))
+                  ) : (
                     <div className="text-center text-muted-foreground py-12">
                       <Sliders className="h-12 w-12 mx-auto mb-4 opacity-50" />
                       <h3 className="text-lg font-medium mb-2">No carousels found</h3>
