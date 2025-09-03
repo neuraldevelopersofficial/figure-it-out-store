@@ -664,6 +664,7 @@ export const initializeDirectCheckout = async (
     }, 300000); // 5 minutes timeout
     
     // Also check for URL changes in the checkout window (if possible)
+    let crossOriginLogged = false;
     try {
       const checkUrlChange = setInterval(() => {
         try {
@@ -676,11 +677,15 @@ export const initializeDirectCheckout = async (
           }
         } catch (e) {
           // Cross-origin restrictions might prevent this
-          console.log('Cannot check checkout window URL due to cross-origin restrictions');
+          // Only log once to avoid console spam
+          if (!crossOriginLogged) {
+            console.log('ℹ️ Cannot check checkout window URL due to cross-origin restrictions');
+            crossOriginLogged = true;
+          }
         }
       }, 2000);
     } catch (e) {
-      console.log('URL change detection not available due to cross-origin restrictions');
+      console.log('ℹ️ URL change detection not available due to cross-origin restrictions');
     }
     
   } catch (error) {
