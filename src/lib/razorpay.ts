@@ -17,6 +17,24 @@ const getApiUrl = () => {
   return import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 };
 
+// User notification functions
+const showUserNotification = (message: string, type: 'info' | 'warning' | 'error' = 'info') => {
+  console.log(`🔔 User Notification [${type.toUpperCase()}]: ${message}`);
+  
+  // Try to show a browser notification if available
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification('FIGURE IT OUT Store', {
+      body: message,
+      icon: '/logo.png'
+    });
+  }
+  
+  // Also try to show a toast notification if the app has a toast system
+  if (typeof window !== 'undefined' && (window as any).showToast) {
+    (window as any).showToast(message, type);
+  }
+};
+
 // Log configuration for debugging
 console.log('🔥 Razorpay Config Loaded:', {
   key_id: RAZORPAY_CONFIG.key_id,
@@ -81,8 +99,16 @@ export const loadRazorpayScript = (): Promise<void> => {
       }
       
       // Additional verification - check if Razorpay constructor is callable
+      // Use a minimal valid configuration for testing
       try {
-        const testInstance = new (window as any).Razorpay({});
+        const testOptions = {
+          key: RAZORPAY_CONFIG.key_id,
+          amount: 100, // 1 rupee in paise
+          currency: 'INR',
+          name: 'Test',
+          description: 'Test payment'
+        };
+        const testInstance = new (window as any).Razorpay(testOptions);
         console.log('✅ Razorpay constructor test passed');
         resolve();
       } catch (error) {
@@ -233,6 +259,7 @@ export const initializePayment = async (
       razorpay.open();
     } catch (openError) {
       console.error('❌ Error opening Razorpay modal:', openError);
+      showUserNotification('Payment modal failed to open, trying alternative method...', 'warning');
       
       // If modal opening fails, try direct checkout as fallback
       console.log('🔄 Falling back to direct checkout...');
@@ -252,9 +279,10 @@ export const initializePayment = async (
   } catch (error) {
     console.error('❌ Error initializing payment:', error);
     
-    // Check if it's a 400 Bad Request error
-    if (error.message && error.message.includes('400')) {
-      console.log('🔄 400 Bad Request detected, trying direct checkout fallback...');
+    // Check if it's a 400 Bad Request error or constructor error
+    if (error.message && (error.message.includes('400') || error.message.includes('constructor') || error.message.includes('No key passed'))) {
+      console.log('🔄 Payment modal failed, trying direct checkout fallback...');
+      showUserNotification('Payment modal failed, using alternative checkout method...', 'warning');
       
       // Try direct checkout as fallback
       try {
@@ -271,6 +299,7 @@ export const initializePayment = async (
         return;
       } catch (fallbackError) {
         console.error('❌ Direct checkout fallback also failed:', fallbackError);
+        showUserNotification('Both payment methods failed. Please contact support.', 'error');
         onFailure(fallbackError);
         return;
       }
@@ -293,23 +322,33 @@ export const initializeDirectCheckout = async (
 ) => {
   try {
     console.log('🚀 Initializing direct Razorpay checkout...');
+    showUserNotification('Opening alternative checkout method...', 'info');
     
     // Create checkout URL directly
     const checkoutUrl = `https://checkout.razorpay.com/v1/checkout.html?key=${RAZORPAY_CONFIG.key_id}&amount=${amount}&currency=${currency}&name=FIGURE%20IT%20OUT&description=Anime%20Collectibles%20Purchase&order_id=${orderId}&prefill[name]=${encodeURIComponent(customerName)}&prefill[email]=${encodeURIComponent(customerEmail)}&prefill[contact]=${encodeURIComponent(customerPhone)}&theme[color]=%23dc2626`;
     
     console.log('🔗 Direct checkout URL created:', checkoutUrl);
     
+    // Show user notification about fallback
+    console.log('ℹ️ Using direct checkout as fallback method');
+    
     // Open in new window/tab
     const checkoutWindow = window.open(checkoutUrl, '_blank', 'width=500,height=600');
     
     if (!checkoutWindow) {
-      throw new Error('Failed to open checkout window');
+      const errorMsg = 'Failed to open checkout window. Please allow popups for this site.';
+      showUserNotification(errorMsg, 'error');
+      throw new Error(errorMsg);
     }
+    
+    console.log('✅ Direct checkout window opened successfully');
+    showUserNotification('Checkout window opened successfully!', 'info');
     
     // Listen for messages from checkout window
     const messageHandler = (event: MessageEvent) => {
       if (event.origin === 'https://checkout.razorpay.com') {
         console.log('✅ Payment message received:', event.data);
+        showUserNotification('Payment completed successfully!', 'info');
         onSuccess(event.data);
         checkoutWindow.close();
         window.removeEventListener('message', messageHandler);
@@ -323,12 +362,23 @@ export const initializeDirectCheckout = async (
       if (checkoutWindow.closed) {
         clearInterval(checkClosed);
         window.removeEventListener('message', messageHandler);
+        console.log('⚠️ Direct checkout window was closed');
+        showUserNotification('Checkout window was closed', 'warning');
         onFailure(new Error('Checkout window closed'));
       }
     }, 1000);
     
+    // Add a timeout for the checkout process
+    setTimeout(() => {
+      if (!checkoutWindow.closed) {
+        console.log('⏰ Direct checkout timeout - checking window status');
+        // Don't close the window, just log the timeout
+      }
+    }, 300000); // 5 minutes timeout
+    
   } catch (error) {
     console.error('❌ Error initializing direct checkout:', error);
+    showUserNotification('Failed to open checkout: ' + error.message, 'error');
     onFailure(error);
   }
 };
