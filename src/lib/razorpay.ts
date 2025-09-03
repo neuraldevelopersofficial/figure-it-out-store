@@ -183,6 +183,27 @@ export const initializePayment = async (
   try {
     console.log('🚀 Initializing Razorpay payment...');
     
+    // Add global error handler for network errors
+    const originalOnError = window.onerror;
+    let hasNetworkError = false;
+    
+    window.onerror = (message, source, lineno, colno, error) => {
+      if (message && typeof message === 'string' && (
+        message.includes('400') || 
+        message.includes('Bad Request') || 
+        message.includes('v2-entry.modern.js') ||
+        source?.includes('razorpay.com')
+      )) {
+        console.log('🌐 Network error detected, will use fallback:', message);
+        hasNetworkError = true;
+      }
+      // Call original error handler if it exists
+      if (originalOnError) {
+        return originalOnError(message, source, lineno, colno, error);
+      }
+      return false;
+    };
+    
     await loadRazorpayScript();
 
     // Validate inputs
@@ -209,24 +230,21 @@ export const initializePayment = async (
       },
       handler: (response: any) => {
         console.log('✅ Payment completed successfully:', response);
+        // Restore original error handler
+        window.onerror = originalOnError;
         onSuccess(response);
       },
       modal: {
         ondismiss: () => {
           console.log('⚠️ Payment modal dismissed');
+          // Restore original error handler
+          window.onerror = originalOnError;
           onFailure(new Error('Payment cancelled'));
         },
-      },
-      // Add these parameters to ensure compatibility with latest API
-      notes: {
-        source: 'figure_it_out_store',
-        integration: 'latest_api'
-      },
-      // Ensure proper error handling
-      retry: {
-        enabled: true,
-        max_count: 3
       }
+      // Removed potentially problematic parameters:
+      // - notes (might cause API compatibility issues)
+      // - retry (not supported in all versions)
     };
 
     console.log('🔧 Razorpay payment options:', {
@@ -257,6 +275,65 @@ export const initializePayment = async (
     // Add error handling for the open() method
     try {
       razorpay.open();
+      
+      // Check for network errors after a short delay
+      setTimeout(() => {
+        if (hasNetworkError) {
+          console.log('🔄 Network error detected, triggering fallback...');
+          showUserNotification('Network error detected, using alternative checkout method...', 'warning');
+          
+          // Close the modal if it's open
+          try {
+            razorpay.close();
+          } catch (e) {
+            console.log('Modal already closed or not open');
+          }
+          
+          // Trigger fallback
+          initializeDirectCheckout(
+            orderId,
+            amount,
+            currency,
+            customerName,
+            customerEmail,
+            customerPhone,
+            onSuccess,
+            onFailure
+          );
+        }
+      }, 2000); // Check after 2 seconds
+      
+      // Also add a more proactive check - if the modal doesn't show up after 3 seconds, use fallback
+      setTimeout(() => {
+        // Check if there are any Razorpay elements visible on the page
+        const razorpayElements = document.querySelectorAll('[class*="razorpay"], [id*="razorpay"]');
+        const hasRazorpayUI = razorpayElements.length > 0;
+        
+        if (!hasRazorpayUI && !hasNetworkError) {
+          console.log('🔄 Razorpay modal not visible, triggering fallback...');
+          showUserNotification('Payment modal not loading, using alternative checkout method...', 'warning');
+          
+          // Close the modal if it's open
+          try {
+            razorpay.close();
+          } catch (e) {
+            console.log('Modal already closed or not open');
+          }
+          
+          // Trigger fallback
+          initializeDirectCheckout(
+            orderId,
+            amount,
+            currency,
+            customerName,
+            customerEmail,
+            customerPhone,
+            onSuccess,
+            onFailure
+          );
+        }
+      }, 3000); // Check after 3 seconds
+      
     } catch (openError) {
       console.error('❌ Error opening Razorpay modal:', openError);
       showUserNotification('Payment modal failed to open, trying alternative method...', 'warning');
@@ -280,7 +357,13 @@ export const initializePayment = async (
     console.error('❌ Error initializing payment:', error);
     
     // Check if it's a 400 Bad Request error or constructor error
-    if (error.message && (error.message.includes('400') || error.message.includes('constructor') || error.message.includes('No key passed'))) {
+    if (error.message && (
+      error.message.includes('400') || 
+      error.message.includes('constructor') || 
+      error.message.includes('No key passed') ||
+      error.message.includes('Bad Request') ||
+      error.message.includes('v2-entry.modern.js')
+    )) {
       console.log('🔄 Payment modal failed, trying direct checkout fallback...');
       showUserNotification('Payment modal failed, using alternative checkout method...', 'warning');
       
@@ -324,16 +407,32 @@ export const initializeDirectCheckout = async (
     console.log('🚀 Initializing direct Razorpay checkout...');
     showUserNotification('Opening alternative checkout method...', 'info');
     
-    // Create checkout URL directly
-    const checkoutUrl = `https://checkout.razorpay.com/v1/checkout.html?key=${RAZORPAY_CONFIG.key_id}&amount=${amount}&currency=${currency}&name=FIGURE%20IT%20OUT&description=Anime%20Collectibles%20Purchase&order_id=${orderId}&prefill[name]=${encodeURIComponent(customerName)}&prefill[email]=${encodeURIComponent(customerEmail)}&prefill[contact]=${encodeURIComponent(customerPhone)}&theme[color]=%23dc2626`;
+    // Create checkout URL directly with all necessary parameters
+    const checkoutUrl = new URL('https://checkout.razorpay.com/v1/checkout.html');
+    checkoutUrl.searchParams.set('key', RAZORPAY_CONFIG.key_id);
+    checkoutUrl.searchParams.set('amount', amount.toString());
+    checkoutUrl.searchParams.set('currency', currency);
+    checkoutUrl.searchParams.set('name', 'FIGURE IT OUT');
+    checkoutUrl.searchParams.set('description', 'Anime Collectibles Purchase');
+    checkoutUrl.searchParams.set('order_id', orderId);
+    checkoutUrl.searchParams.set('prefill[name]', customerName);
+    checkoutUrl.searchParams.set('prefill[email]', customerEmail);
+    checkoutUrl.searchParams.set('prefill[contact]', customerPhone);
+    checkoutUrl.searchParams.set('theme[color]', '#dc2626');
     
-    console.log('🔗 Direct checkout URL created:', checkoutUrl);
+    // Add callback URL for better integration
+    const currentOrigin = window.location.origin;
+    checkoutUrl.searchParams.set('callback_url', `${currentOrigin}/payment-success`);
+    checkoutUrl.searchParams.set('cancel_url', `${currentOrigin}/payment-cancelled`);
+    
+    const finalUrl = checkoutUrl.toString();
+    console.log('🔗 Direct checkout URL created:', finalUrl);
     
     // Show user notification about fallback
     console.log('ℹ️ Using direct checkout as fallback method');
     
-    // Open in new window/tab
-    const checkoutWindow = window.open(checkoutUrl, '_blank', 'width=500,height=600');
+    // Open in new window/tab with better dimensions
+    const checkoutWindow = window.open(finalUrl, '_blank', 'width=600,height=700,scrollbars=yes,resizable=yes');
     
     if (!checkoutWindow) {
       const errorMsg = 'Failed to open checkout window. Please allow popups for this site.';
@@ -375,6 +474,26 @@ export const initializeDirectCheckout = async (
         // Don't close the window, just log the timeout
       }
     }, 300000); // 5 minutes timeout
+    
+    // Also check for URL changes in the checkout window (if possible)
+    try {
+      const checkUrlChange = setInterval(() => {
+        try {
+          if (checkoutWindow.location.href.includes('payment-success') || 
+              checkoutWindow.location.href.includes('payment-cayment')) {
+            clearInterval(checkUrlChange);
+            console.log('✅ Payment completed via URL change detection');
+            checkoutWindow.close();
+            onSuccess({ status: 'success', method: 'direct_checkout' });
+          }
+        } catch (e) {
+          // Cross-origin restrictions might prevent this
+          console.log('Cannot check checkout window URL due to cross-origin restrictions');
+        }
+      }, 2000);
+    } catch (e) {
+      console.log('URL change detection not available due to cross-origin restrictions');
+    }
     
   } catch (error) {
     console.error('❌ Error initializing direct checkout:', error);
