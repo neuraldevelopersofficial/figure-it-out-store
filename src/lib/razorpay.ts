@@ -3,7 +3,8 @@ export const RAZORPAY_CONFIG = {
   key_id: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_RD4Ia7eTGct90w',
   key_secret: import.meta.env.VITE_RAZORPAY_KEY_SECRET || 'B18FWmc6yNaaVSQkPDULsJ2U',
   currency: 'INR',
-  mode: 'live' // Force live production mode
+  mode: 'live', // Force live production mode
+  skipModal: true // Skip problematic modal and use direct checkout
 };
 
 // Get the correct API URL based on environment
@@ -183,10 +184,12 @@ export const initializePayment = async (
   try {
     console.log('🚀 Initializing Razorpay payment with backend order...');
     console.log('🔍 Order ID from backend:', orderId);
+    console.log('⚠️ Note: Razorpay v1 script may still call v2 API internally');
+    console.log('🔄 Fallback to direct checkout will be triggered automatically if v2 API is detected');
     
     // If forceDirectCheckout is true, skip modal and go directly to checkout
-    if (forceDirectCheckout) {
-      console.log('🔄 Force direct checkout requested, skipping modal...');
+    if (forceDirectCheckout || RAZORPAY_CONFIG.skipModal) {
+      console.log('🔄 Force direct checkout requested, skipping problematic modal...');
       return await initializeDirectCheckout(
         orderId,
         currency,
@@ -220,6 +223,46 @@ export const initializePayment = async (
       if (typeof url === 'string' && url.includes('razorpay.com')) {
         console.log('🌐 Intercepting Razorpay request:', url);
         
+        // Immediately detect v2 preferences API calls and trigger fallback
+        if (url.includes('/v2/standard_checkout/preferences')) {
+          console.log('🚨 V2 preferences API detected - immediately triggering fallback');
+          hasNetworkError = true;
+          // Don't wait for response, trigger fallback immediately
+          setTimeout(() => {
+            if (!fallbackTriggered) {
+              console.log('🔄 Immediate fallback to direct checkout...');
+              fallbackTriggered = true;
+              showUserNotification('Switching to alternative checkout method...', 'info');
+              
+              // Close modal if open
+              try {
+                if (razorpay && typeof razorpay.close === 'function') {
+                  razorpay.close();
+                }
+              } catch (e) {
+                console.log('Modal already closed or not open');
+              }
+              
+              // Restore original functions
+              window.fetch = originalFetch;
+              XMLHttpRequest.prototype.open = originalXHROpen;
+              XMLHttpRequest.prototype.send = originalXHRSend;
+              console.error = originalConsoleError;
+              
+              // Trigger fallback immediately
+              initializeDirectCheckout(
+                orderId,
+                currency,
+                customerName,
+                customerEmail,
+                customerPhone,
+                onSuccess,
+                onFailure
+              );
+            }
+          }, 100); // Immediate fallback
+        }
+        
         return originalFetch.apply(this, args).then(response => {
           if (response.status === 400) {
             console.log('🔄 400 Bad Request detected in fetch, will trigger fallback');
@@ -242,6 +285,13 @@ export const initializePayment = async (
     XMLHttpRequest.prototype.open = function(method, url, ...args) {
       if (typeof url === 'string' && url.includes('razorpay.com')) {
         console.log('🌐 Intercepting Razorpay XHR request:', url);
+        
+        // Immediately detect v2 preferences API calls
+        if (url.includes('/v2/standard_checkout/preferences')) {
+          console.log('🚨 V2 preferences API detected in XHR - marking for immediate fallback');
+          this._isV2PreferencesRequest = true;
+        }
+        
         this._isRazorpayRequest = true;
       }
       return originalXHROpen.apply(this, [method, url, ...args]);
@@ -250,9 +300,44 @@ export const initializePayment = async (
     XMLHttpRequest.prototype.send = function(...args) {
       if (this._isRazorpayRequest) {
         this.addEventListener('readystatechange', () => {
-          if (this.readyState === 4 && this.status === 400) {
-            console.log('🔄 400 Bad Request detected in XHR, will trigger fallback');
-            hasNetworkError = true;
+          if (this.readyState === 4) {
+            if (this.status === 400) {
+              console.log('🔄 400 Bad Request detected in XHR, will trigger fallback');
+              hasNetworkError = true;
+            }
+            
+            // If this is a v2 preferences request, trigger immediate fallback
+            if (this._isV2PreferencesRequest && !fallbackTriggered) {
+              console.log('🚨 V2 preferences XHR completed - immediately triggering fallback');
+              fallbackTriggered = true;
+              showUserNotification('Switching to alternative checkout method...', 'info');
+              
+              // Close modal if open
+              try {
+                if (razorpay && typeof razorpay.close === 'function') {
+                  razorpay.close();
+                }
+              } catch (e) {
+                console.log('Modal already closed or not open');
+              }
+              
+              // Restore original functions
+              window.fetch = originalFetch;
+              XMLHttpRequest.prototype.open = originalXHROpen;
+              XMLHttpRequest.prototype.send = originalXHRSend;
+              console.error = originalConsoleError;
+              
+              // Trigger fallback immediately
+              initializeDirectCheckout(
+                orderId,
+                currency,
+                customerName,
+                customerEmail,
+                customerPhone,
+                onSuccess,
+                onFailure
+              );
+            }
           }
         });
       }

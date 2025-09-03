@@ -180,6 +180,8 @@ const Checkout: React.FC = () => {
       // Try the main Razorpay integration first
       try {
         console.log('🚀 Initializing main Razorpay payment...');
+        console.log('⚠️ Note: If Razorpay modal fails, automatic fallback to direct checkout will be used');
+        
         await initializePayment(
           razorpayResponse.order_id,
           razorpayResponse.currency || 'INR',
