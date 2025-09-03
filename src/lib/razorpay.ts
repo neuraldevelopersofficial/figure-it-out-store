@@ -92,9 +92,27 @@ export const initializePayment = async (
   onSuccess: (response: any) => void,
   onFailure: (error: any) => void
 ) => {
+  // Store original fetch function
+  const originalFetch = window.fetch;
+  
   try {
     console.log('🚀 Initializing Razorpay payment with default UI...');
     console.log('🔍 Order ID from backend:', orderId);
+    
+    // Intercept and block v2 API calls before loading Razorpay
+    window.fetch = function(...args) {
+      const url = args[0];
+      if (typeof url === 'string' && url.includes('/v2/standard_checkout/preferences')) {
+        console.log('🚫 Blocking v2 preferences API call:', url);
+        // Return a mock successful response to prevent the error
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ success: true, v1_mode: true })
+        } as Response);
+      }
+      return originalFetch.apply(this, args);
+    };
     
     await loadRazorpayScript();
 
@@ -130,6 +148,15 @@ export const initializePayment = async (
         escape: false,
         backdropclose: false
       },
+      // Force v1 mode and disable v2 features
+      v2: false,
+      checkout: {
+        method: {
+          upi: "force",
+          card: "force",
+          netbanking: "force"
+        }
+      },
       // Ensure proper callback handling
       callback_url: window.location.origin + '/orders',
       cancel_url: window.location.origin + '/checkout'
@@ -155,8 +182,16 @@ export const initializePayment = async (
     // Open the payment modal
     razorpay.open();
     
+    // Restore original fetch function after modal opens
+    setTimeout(() => {
+      window.fetch = originalFetch;
+      console.log('✅ Restored original fetch function');
+    }, 1000);
+    
   } catch (error) {
     console.error('❌ Error initializing payment:', error);
+    // Restore original fetch function on error
+    window.fetch = originalFetch;
     onFailure(error);
   }
 };
