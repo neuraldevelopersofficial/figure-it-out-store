@@ -10,10 +10,9 @@ const razorpay = new Razorpay({
 });
 
 console.log('Razorpay initialized with key:', process.env.RAZORPAY_KEY_ID || 'rzp_live_RD4Ia7eTGct90w');
-console.log('Razorpay mode: LIVE PRODUCTION');
-console.log('Razorpay API version: Modern Orders API');
+console.log('Razorpay API version: Latest Orders API');
 
-// Create Razorpay order using modern orders API
+// Create Razorpay order using latest orders API
 router.post('/create-order', async (req, res) => {
   try {
     const { amount, currency = 'INR', receipt = 'order_receipt' } = req.body;
@@ -29,15 +28,20 @@ router.post('/create-order', async (req, res) => {
       receipt
     });
 
+    // Create order with modern parameters
     const options = {
       amount: Math.round(amount * 100), // Convert to paise
       currency,
       receipt,
       payment_capture: 1,
       notes: {
-        integration: 'modern_orders_api',
-        mode: 'live_production'
-      }
+        integration: 'latest_orders_api',
+        mode: 'live_production',
+        source: 'figure_it_out_store'
+      },
+      // Add these modern parameters for better compatibility
+      partial_payment: false,
+      first_payment_min_amount: Math.round(amount * 100)
     };
 
     const order = await razorpay.orders.create(options);
@@ -46,14 +50,16 @@ router.post('/create-order', async (req, res) => {
       order_id: order.id,
       amount: order.amount,
       currency: order.currency,
-      status: order.status
+      status: order.status,
+      receipt: order.receipt
     });
     
     res.json({
       success: true,
       order_id: order.id,
       amount: order.amount,
-      currency: order.currency
+      currency: order.currency,
+      receipt: order.receipt
     });
 
   } catch (error) {

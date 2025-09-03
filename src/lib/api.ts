@@ -1,5 +1,22 @@
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const getApiBaseUrl = () => {
+  // Check if we're in production
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    // Production environment - use production API
+    return 'https://api.figureitoutstore.in/api';
+  }
+  // Development environment - use local API
+  return import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+};
+
+const API_BASE_URL = getApiBaseUrl();
+
+// Log API configuration for debugging
+console.log('🌐 API Configuration:', {
+  baseUrl: API_BASE_URL,
+  hostname: typeof window !== 'undefined' ? window.location.hostname : 'server',
+  environment: typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? 'production' : 'development'
+});
 
 // API Client
 class ApiClient {
