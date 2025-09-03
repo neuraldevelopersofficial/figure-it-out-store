@@ -197,7 +197,8 @@ const Checkout: React.FC = () => {
               const verificationResponse = await apiClient.verifyPayment({
                 razorpay_order_id: paymentResponse.razorpay_order_id,
                 razorpay_payment_id: paymentResponse.razorpay_payment_id,
-                razorpay_signature: paymentResponse.razorpay_signature
+                razorpay_signature: paymentResponse.razorpay_signature,
+                method: 'razorpay' // Regular Razorpay payment
               });
 
               if (verificationResponse.success && verificationResponse.verified) {
@@ -267,7 +268,8 @@ const Checkout: React.FC = () => {
                 const verificationResponse = await apiClient.verifyPayment({
                   razorpay_order_id: paymentResponse.razorpay_order_id,
                   razorpay_payment_id: paymentResponse.razorpay_payment_id,
-                  razorpay_signature: paymentResponse.razorpay_signature
+                  razorpay_signature: paymentResponse.razorpay_signature,
+                  method: paymentResponse.method || 'custom_form'
                 });
 
                 if (verificationResponse.success && verificationResponse.verified) {

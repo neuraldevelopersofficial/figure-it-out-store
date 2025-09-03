@@ -53,8 +53,10 @@ router.post('/', authenticateToken, async (req, res) => {
     const newOrder = {
       id: uuidv4(),
       user_id: req.user.id,
+      userId: req.user.id, // Add both for compatibility
       items: items,
       total_amount: total_amount,
+      totalAmount: total_amount, // Add both for compatibility
       shipping_address: shipping_address,
       shipping_city: shipping_city,
       shipping_state: shipping_state,
@@ -67,14 +69,23 @@ router.post('/', authenticateToken, async (req, res) => {
       updated_at: new Date().toISOString()
     };
 
+    console.log('Creating new order:', {
+      order_id: newOrder.id,
+      user_id: newOrder.user_id,
+      total_amount: newOrder.total_amount,
+      payment_method: newOrder.payment_method
+    });
+
     const col = await getOrdersCollection();
     if (col) {
       await col.insertOne({ ...newOrder });
+      console.log('✅ Order created in database:', newOrder.id);
       return res.status(201).json({ success: true, message: 'Order created successfully', order: newOrder });
     }
 
+    // Fallback to in-memory storage
     orders.push(newOrder);
-
+    console.log('✅ Order created in memory:', newOrder.id);
     res.status(201).json({ success: true, message: 'Order created successfully', order: newOrder });
 
   } catch (error) {
@@ -86,13 +97,26 @@ router.post('/', authenticateToken, async (req, res) => {
 // Get user orders
 router.get('/', authenticateToken, async (req, res) => {
   try {
+    console.log('Fetching orders for user:', { user_id: req.user.id });
+    
     const col = await getOrdersCollection();
-    if (col) {
-      const userOrders = await col.find({ user_id: req.user.id }).sort({ created_at: -1 }).toArray();
-      return res.json({ success: true, orders: userOrders });
-    }
-    const userOrders = orders.filter(order => order.user_id === req.user.id);
-    res.json({ success: true, orders: userOrders });
+    const userOrders = col ? 
+      await col.find({ 
+        $or: [
+          { user_id: req.user.id },
+          { userId: req.user.id }
+        ]
+      }).sort({ created_at: -1 }).toArray() : 
+      orders.filter(o => 
+        o.user_id === req.user.id || o.userId === req.user.id
+      ).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    
+    console.log('✅ Found orders for user:', { user_id: req.user.id, count: userOrders.length });
+    
+    res.json({
+      success: true,
+      orders: userOrders
+    });
 
   } catch (error) {
     console.error('Orders fetch error:', error);
@@ -104,13 +128,28 @@ router.get('/', authenticateToken, async (req, res) => {
 router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
+    
+    console.log('Fetching order by ID:', { order_id: id, user_id: req.user.id });
+    
     const col = await getOrdersCollection();
-    const order = col ? await col.findOne({ id, user_id: req.user.id }) : orders.find(o => o.id === id && o.user_id === req.user.id);
+    const order = col ? 
+      await col.findOne({ 
+        id, 
+        $or: [
+          { user_id: req.user.id },
+          { userId: req.user.id }
+        ]
+      }) : 
+      orders.find(o => 
+        o.id === id && (o.user_id === req.user.id || o.userId === req.user.id)
+      );
     
     if (!order) {
+      console.log('❌ Order not found:', { order_id: id, user_id: req.user.id });
       return res.status(404).json({ error: 'Order not found' });
     }
     
+    console.log('✅ Order found:', { order_id: id, status: order.status });
     res.json({
       success: true,
       order: order
@@ -132,20 +171,46 @@ router.put('/:id/status', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Status is required' });
     }
 
+    console.log('Updating order status:', { order_id: id, new_status: status, user_id: req.user.id });
+
     const col = await getOrdersCollection();
     if (col) {
+      // Try to find order by ID and either user_id or userId field
       const result = await col.findOneAndUpdate(
-        { id, user_id: req.user.id },
+        { 
+          id: id, 
+          $or: [
+            { user_id: req.user.id },
+            { userId: req.user.id }
+          ]
+        },
         { $set: { status, updated_at: new Date().toISOString() } },
         { returnDocument: 'after' }
       );
-      if (!result.value) return res.status(404).json({ error: 'Order not found' });
+      
+      if (!result.value) {
+        console.log('❌ Order not found in database:', { order_id: id, user_id: req.user.id });
+        return res.status(404).json({ error: 'Order not found' });
+      }
+      
+      console.log('✅ Order status updated in database:', { order_id: id, new_status: status });
       return res.json({ success: true, message: 'Order status updated successfully', order: result.value });
     }
-    const orderIndex = orders.findIndex(o => o.id === id && o.user_id === req.user.id);
-    if (orderIndex === -1) return res.status(404).json({ error: 'Order not found' });
+    
+    // Fallback to in-memory storage
+    const orderIndex = orders.findIndex(o => 
+      o.id === id && (o.user_id === req.user.id || o.userId === req.user.id)
+    );
+    
+    if (orderIndex === -1) {
+      console.log('❌ Order not found in memory:', { order_id: id, user_id: req.user.id });
+      return res.status(404).json({ error: 'Order not found' });
+    }
+    
     orders[orderIndex].status = status;
     orders[orderIndex].updated_at = new Date().toISOString();
+    
+    console.log('✅ Order status updated in memory:', { order_id: id, new_status: status });
     res.json({ success: true, message: 'Order status updated successfully', order: orders[orderIndex] });
 
   } catch (error) {
@@ -164,10 +229,18 @@ router.post('/:id/confirm-payment', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Payment details required' });
     }
 
+    console.log('Confirming payment for order:', { order_id: id, user_id: req.user.id });
+
     const col = await getOrdersCollection();
     if (col) {
       const result = await col.findOneAndUpdate(
-        { id, user_id: req.user.id },
+        { 
+          id, 
+          $or: [
+            { user_id: req.user.id },
+            { userId: req.user.id }
+          ]
+        },
         { $set: {
           payment_status: 'completed',
           razorpay_payment_id,
@@ -176,15 +249,32 @@ router.post('/:id/confirm-payment', authenticateToken, async (req, res) => {
         } },
         { returnDocument: 'after' }
       );
-      if (!result.value) return res.status(404).json({ error: 'Order not found' });
+      
+      if (!result.value) {
+        console.log('❌ Order not found in database for payment confirmation:', { order_id: id, user_id: req.user.id });
+        return res.status(404).json({ error: 'Order not found' });
+      }
+      
+      console.log('✅ Payment confirmed in database:', { order_id: id, payment_id: razorpay_payment_id });
       return res.json({ success: true, message: 'Payment confirmed successfully', order: result.value });
     }
-    const orderIndex = orders.findIndex(o => o.id === id && o.user_id === req.user.id);
-    if (orderIndex === -1) return res.status(404).json({ error: 'Order not found' });
+    
+    // Fallback to in-memory storage
+    const orderIndex = orders.findIndex(o => 
+      o.id === id && (o.user_id === req.user.id || o.userId === req.user.id)
+    );
+    
+    if (orderIndex === -1) {
+      console.log('❌ Order not found in memory for payment confirmation:', { order_id: id, user_id: req.user.id });
+      return res.status(404).json({ error: 'Order not found' });
+    }
+    
     orders[orderIndex].payment_status = 'completed';
     orders[orderIndex].razorpay_payment_id = razorpay_payment_id;
     orders[orderIndex].razorpay_signature = razorpay_signature;
     orders[orderIndex].updated_at = new Date().toISOString();
+    
+    console.log('✅ Payment confirmed in memory:', { order_id: id, payment_id: razorpay_payment_id });
     res.json({ success: true, message: 'Payment confirmed successfully', order: orders[orderIndex] });
 
   } catch (error) {
