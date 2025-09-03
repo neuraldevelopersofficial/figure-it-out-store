@@ -90,7 +90,12 @@ router.post('/verify-payment', async (req, res) => {
       payment_id: razorpay_payment_id,
       signature_length: razorpay_signature.length,
       method: method || 'razorpay',
-      signature_preview: razorpay_signature.substring(0, 20) + '...'
+      signature_preview: razorpay_signature.substring(0, 20) + '...',
+      full_request_body: req.body,
+      method_received: method,
+      method_type: typeof method,
+      method_undefined: method === undefined,
+      method_null: method === null
     });
 
     // Special handling for custom form payments
@@ -153,6 +158,38 @@ router.post('/verify-payment', async (req, res) => {
           verified: false,
           error: 'Invalid custom form payment signature',
           method: 'custom_form'
+        });
+      }
+    }
+    
+    // TEMPORARY: Additional check for custom form payments that might not have method parameter
+    // This is a fallback to handle cases where the method parameter is not received
+    if (!method && razorpay_signature && razorpay_signature.length === 64) {
+      console.log('🔧 No method parameter received, but signature looks like custom form (64 chars)');
+      console.log('🔄 Attempting custom form verification as fallback...');
+      
+      const body = razorpay_order_id + "|" + razorpay_payment_id;
+      const expectedSignature = crypto
+        .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || 'B18FWmc6yNaaVSQkPDULsJ2U')
+        .update(body.toString())
+        .digest('hex');
+      
+      const isCustomFormAuthentic = expectedSignature === razorpay_signature;
+      
+      console.log('Fallback custom form verification:', {
+        body_string: body,
+        expected_signature: expectedSignature,
+        received_signature: razorpay_signature,
+        is_authentic: isCustomFormAuthentic
+      });
+      
+      if (isCustomFormAuthentic) {
+        console.log('✅ Custom form payment verified successfully via fallback');
+        return res.json({
+          success: true,
+          verified: true,
+          message: 'Custom form payment verified successfully (fallback detection)',
+          method: 'custom_form_fallback'
         });
       }
     }
