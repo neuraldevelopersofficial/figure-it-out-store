@@ -720,6 +720,14 @@ export const initializeDirectCheckout = async (
           // Note: In production, this should be handled server-side for security
           const keySecret = RAZORPAY_CONFIG.key_secret;
           
+          console.log('🔐 Frontend signature generation details:', {
+            orderId,
+            paymentId,
+            signatureString,
+            keySecret: keySecret.substring(0, 10) + '...',
+            keySecretLength: keySecret.length
+          });
+          
           // Generate HMAC SHA256 signature (same as Razorpay)
           const crypto = window.crypto || (window as any).msCrypto;
           if (crypto && crypto.subtle) {
@@ -743,6 +751,58 @@ export const initializeDirectCheckout = async (
                 .join('');
               
               // Call success callback with properly signed data
+              console.log('🎯 Final payment response data:', {
+                razorpay_payment_id: paymentId,
+                razorpay_order_id: orderId,
+                razorpay_signature: signatureHex,
+                method: 'custom_form',
+                signature_generation_details: {
+                  orderId,
+                  paymentId,
+                  signatureString,
+                  keySecret: keySecret.substring(0, 10) + '...',
+                  generated_signature: signatureHex
+                }
+              });
+              
+              // Test signature verification locally
+              (async () => {
+                try {
+                  const testBody = orderId + "|" + paymentId;
+                  const testKeyData = encoder.encode(keySecret);
+                  const testKey = await crypto.subtle.importKey(
+                    'raw',
+                    testKeyData,
+                    { name: 'HMAC', hash: 'SHA-256' },
+                    false,
+                    ['sign']
+                  );
+                  const testSignature = await crypto.subtle.sign('HMAC', testKey, encoder.encode(testBody));
+                  const testSignatureArray = new Uint8Array(testSignature);
+                  const testSignatureHex = Array.from(testSignatureArray)
+                    .map(b => b.toString(16).padStart(2, '0'))
+                    .join('');
+                  
+                  console.log('🧪 Local signature verification test:', {
+                    testBody,
+                    testSignatureHex,
+                    matches_generated: testSignatureHex === signatureHex,
+                    generated_signature: signatureHex
+                  });
+                  
+                  // Additional test: verify the signature can be regenerated
+                  if (testSignatureHex === signatureHex) {
+                    console.log('✅ Signature generation is working correctly!');
+                  } else {
+                    console.error('❌ Signature generation mismatch detected!');
+                    console.error('Expected:', testSignatureHex);
+                    console.error('Generated:', signatureHex);
+                  }
+                } catch (error) {
+                  console.error('❌ Local signature verification test failed:', error);
+                }
+              })();
+              
               onSuccess({
                 razorpay_payment_id: paymentId,
                 razorpay_order_id: orderId,

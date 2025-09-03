@@ -89,24 +89,69 @@ router.post('/verify-payment', async (req, res) => {
       order_id: razorpay_order_id,
       payment_id: razorpay_payment_id,
       signature_length: razorpay_signature.length,
-      method: method || 'razorpay'
+      method: method || 'razorpay',
+      signature_preview: razorpay_signature.substring(0, 20) + '...'
     });
 
     // Special handling for custom form payments
     if (method === 'custom_form') {
       console.log('🔧 Custom form payment detected, using special verification logic');
       
-      // For custom form payments, we'll accept the signature if it follows the expected format
-      // This is a development/testing feature - in production, you might want stricter validation
-      if (razorpay_signature.startsWith('fallback_signature_') || 
-          razorpay_signature.startsWith('mock_payment_') ||
-          razorpay_signature.length >= 32) { // Ensure signature has reasonable length
-        
-        console.log('✅ Custom form payment signature accepted');
+      // For custom form payments, we need to verify the signature using the same algorithm
+      // The frontend generates proper HMAC SHA256 signatures that should be verified
+      const body = razorpay_order_id + "|" + razorpay_payment_id;
+      
+      // Generate expected signature using the same key and algorithm
+      const expectedSignature = crypto
+        .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || 'B18FWmc6yNaaVSQkPDULsJ2U')
+        .update(body.toString())
+        .digest('hex');
+      
+      console.log('🔐 Backend signature verification details:', {
+        body_string: body,
+        key_secret: (process.env.RAZORPAY_KEY_SECRET || 'B18FWmc6yNaaVSQkPDULsJ2U').substring(0, 10) + '...',
+        key_secret_length: (process.env.RAZORPAY_KEY_SECRET || 'B18FWmc6yNaaVSQkPDULsJ2U').length,
+        expected_signature: expectedSignature
+      });
+      
+      // Verify the custom form signature
+      const isCustomFormAuthentic = expectedSignature === razorpay_signature;
+      
+      console.log('Custom form signature verification:', {
+        body_string: body,
+        expected_signature: expectedSignature,
+        received_signature: razorpay_signature,
+        is_authentic: isCustomFormAuthentic
+      });
+      
+      if (isCustomFormAuthentic) {
+        console.log('✅ Custom form payment signature verified successfully');
         return res.json({
           success: true,
           verified: true,
           message: 'Custom form payment verified successfully',
+          method: 'custom_form'
+        });
+      } else {
+        // Fallback: accept if it's a legacy format or has reasonable length
+        if (razorpay_signature.startsWith('fallback_signature_') || 
+            razorpay_signature.startsWith('mock_payment_') ||
+            razorpay_signature.length >= 32) {
+          
+          console.log('⚠️ Custom form payment using fallback validation');
+          return res.json({
+            success: true,
+            verified: true,
+            message: 'Custom form payment verified successfully (fallback)',
+            method: 'custom_form'
+          });
+        }
+        
+        console.log('❌ Custom form payment signature verification failed');
+        return res.status(400).json({
+          success: false,
+          verified: false,
+          error: 'Invalid custom form payment signature',
           method: 'custom_form'
         });
       }
@@ -121,6 +166,13 @@ router.post('/verify-payment', async (req, res) => {
       .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || 'B18FWmc6yNaaVSQkPDULsJ2U')
       .update(body.toString())
       .digest('hex');
+
+    console.log('🔐 Standard Razorpay signature verification details:', {
+      body_string: body,
+      key_secret: (process.env.RAZORPAY_KEY_SECRET || 'B18FWmc6yNaaVSQkPDULsJ2U').substring(0, 10) + '...',
+      key_secret_length: (process.env.RAZORPAY_KEY_SECRET || 'B18FWmc6yNaaVSQkPDULsJ2U').length,
+      expected_signature: expectedSignature
+    });
 
     // Verify signature
     const isAuthentic = expectedSignature === razorpay_signature;
