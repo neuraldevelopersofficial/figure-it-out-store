@@ -127,7 +127,12 @@ export const initializePayment = async (
           console.log('⚠️ Payment modal dismissed');
           onFailure(new Error('Payment cancelled'));
         },
-      }
+        escape: false,
+        backdropclose: false
+      },
+      // Ensure proper callback handling
+      callback_url: window.location.origin + '/orders',
+      cancel_url: window.location.origin + '/checkout'
     };
 
     console.log('🔧 Razorpay payment options:', {
