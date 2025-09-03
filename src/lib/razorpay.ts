@@ -7,27 +7,82 @@ export const RAZORPAY_CONFIG = {
 };
 
 // Log configuration for debugging
-console.log('Razorpay Config:', {
+console.log('🔥 Razorpay Config Loaded:', {
   key_id: RAZORPAY_CONFIG.key_id,
   mode: RAZORPAY_CONFIG.mode,
-  isLive: RAZORPAY_CONFIG.key_id.startsWith('rzp_live_')
+  isLive: RAZORPAY_CONFIG.key_id.startsWith('rzp_live_'),
+  timestamp: new Date().toISOString()
 });
 
-// Load Razorpay script
+// Clear any existing Razorpay instances and scripts
+const clearExistingRazorpay = () => {
+  console.log('🧹 Clearing existing Razorpay instances...');
+  
+  // Remove any existing Razorpay scripts
+  const existingScripts = document.querySelectorAll('script[src*="checkout.razorpay.com"]');
+  existingScripts.forEach(script => {
+    const scriptElement = script as HTMLScriptElement;
+    console.log('❌ Removing existing Razorpay script:', scriptElement.src);
+    scriptElement.remove();
+  });
+
+  // Clear any existing Razorpay instances
+  if ((window as any).Razorpay) {
+    console.log('❌ Clearing existing Razorpay instance');
+    delete (window as any).Razorpay;
+  }
+
+  // Clear any global Razorpay variables
+  if ((window as any).razorpay) {
+    console.log('❌ Clearing existing razorpay variable');
+    delete (window as any).razorpay;
+  }
+
+  // Clear any cached Razorpay data
+  if ((window as any).__razorpay) {
+    console.log('❌ Clearing cached Razorpay data');
+    delete (window as any).__razorpay;
+  }
+};
+
+// Load fresh Razorpay script with cache busting
 export const loadRazorpayScript = (): Promise<void> => {
   return new Promise((resolve, reject) => {
-    if (window.Razorpay) {
-      resolve();
-      return;
-    }
+    // Clear any existing Razorpay instances and scripts
+    clearExistingRazorpay();
+
+    console.log('📦 Loading fresh Razorpay script...');
 
     const script = document.createElement('script');
-    script.src = `https://checkout.razorpay.com/v1/checkout.js?_=${new Date().getTime()}`;
+    // Use cache busting to ensure fresh script load
+    const timestamp = new Date().getTime();
+    script.src = `https://checkout.razorpay.com/v1/checkout.js?v=${timestamp}&cache=false`;
+    script.async = true;
+    script.defer = true;
+    
+    // Add additional attributes to ensure fresh load
+    script.setAttribute('data-timestamp', timestamp.toString());
+    script.setAttribute('data-integration', 'modern-orders-api');
+    
     script.onload = () => {
-      console.log('Razorpay script loaded successfully - LIVE PRODUCTION MODE');
+      console.log('✅ Razorpay script loaded successfully - LIVE PRODUCTION MODE');
+      console.log('📊 Razorpay version:', (window as any).Razorpay?.version || 'unknown');
+      console.log('🔧 Razorpay instance type:', typeof (window as any).Razorpay);
+      
+      // Verify the script loaded correctly
+      if (!(window as any).Razorpay) {
+        reject(new Error('Razorpay script loaded but Razorpay object not found'));
+        return;
+      }
+      
       resolve();
     };
-    script.onerror = () => reject(new Error('Failed to load Razorpay script'));
+    
+    script.onerror = (error) => {
+      console.error('❌ Failed to load Razorpay script:', error);
+      reject(new Error('Failed to load Razorpay script'));
+    };
+    
     document.body.appendChild(script);
   });
 };
@@ -36,6 +91,8 @@ export const loadRazorpayScript = (): Promise<void> => {
 // ✅ Send amount in rupees, backend will convert to paise
 export const createRazorpayOrder = async (amount: number, currency: string = 'INR') => {
   try {
+    console.log('🛒 Creating Razorpay order:', { amount, currency });
+    
     const response = await fetch('/api/razorpay/create-order', {
       method: 'POST',
       headers: {
@@ -48,18 +105,21 @@ export const createRazorpayOrder = async (amount: number, currency: string = 'IN
     });
 
     if (!response.ok) {
-      throw new Error('Failed to create order');
+      const errorText = await response.text();
+      console.error('❌ Order creation failed:', errorText);
+      throw new Error(`Failed to create order: ${errorText}`);
     }
 
     const order = await response.json();
+    console.log('✅ Razorpay order created:', order);
     return order; // contains { order_id, amount, currency }
   } catch (error) {
-    console.error('Error creating Razorpay order:', error);
+    console.error('❌ Error creating Razorpay order:', error);
     throw error;
   }
 };
 
-// Initialize Razorpay payment
+// Initialize Razorpay payment using modern orders API
 // ✅ Use amount + order_id returned from backend directly
 export const initializePayment = async (
   orderId: string,
@@ -72,15 +132,23 @@ export const initializePayment = async (
   onFailure: (error: any) => void
 ) => {
   try {
+    console.log('🚀 Initializing Razorpay payment...');
+    
     await loadRazorpayScript();
 
+    // Validate inputs
+    if (!orderId || !amount || !customerName || !customerEmail) {
+      throw new Error('Missing required payment parameters');
+    }
+
+    // Ensure we're using the modern Razorpay orders API
     const options = {
       key: RAZORPAY_CONFIG.key_id,
-      amount,            // use backend value (already in paise)
-      currency,
+      amount: Number(amount),    // ensure it's a number
+      currency: currency || 'INR',
       name: 'FIGURE IT OUT',
       description: 'Anime Collectibles Purchase',
-      order_id: orderId,
+      order_id: orderId, // Critical: use order_id for modern API
       prefill: {
         name: customerName,
         email: customerEmail,
@@ -89,27 +157,52 @@ export const initializePayment = async (
       theme: {
         color: '#dc2626',
       },
-      handler: onSuccess,
-      modal: {
-        ondismiss: () => onFailure(new Error('Payment cancelled')),
+      handler: (response: any) => {
+        console.log('✅ Payment completed successfully:', response);
+        onSuccess(response);
       },
-      // Force live mode
+      modal: {
+        ondismiss: () => {
+          console.log('⚠️ Payment modal dismissed');
+          onFailure(new Error('Payment cancelled'));
+        },
+      },
+      // Force modern API usage
       notes: {
-        mode: 'live_production'
+        mode: 'live_production',
+        integration: 'modern_orders_api',
+        timestamp: new Date().toISOString()
       }
     };
 
-    console.log('Initializing Razorpay payment with LIVE keys:', {
-      key: RAZORPAY_CONFIG.key_id,
-      amount,
-      orderId,
-      mode: 'LIVE PRODUCTION'
+    console.log('🔧 Razorpay payment options:', {
+      key: options.key,
+      amount: options.amount,
+      currency: options.currency,
+      order_id: options.order_id,
+      mode: 'LIVE PRODUCTION',
+      api_version: 'v1_orders_modern'
     });
 
+    // Ensure we're using the modern Razorpay instance
+    if (!(window as any).Razorpay) {
+      throw new Error('Razorpay script not loaded properly');
+    }
+
+    // Log the constructor and options
+    console.log('🔨 Creating Razorpay instance...');
+    console.log('🔧 Razorpay constructor available:', !!(window as any).Razorpay);
+    
     const razorpay = new (window as any).Razorpay(options);
+    
+    // Log the created instance
+    console.log('✅ Razorpay instance created successfully');
+    console.log('🚀 Opening payment modal...');
+    
     razorpay.open();
+    
   } catch (error) {
-    console.error('Error initializing payment:', error);
+    console.error('❌ Error initializing payment:', error);
     onFailure(error);
   }
 };
@@ -121,6 +214,8 @@ export const verifyPaymentSignature = async (
   signature: string
 ) => {
   try {
+    console.log('🔐 Verifying payment signature...');
+    
     const response = await fetch('/api/razorpay/verify-payment', {
       method: 'POST',
       headers: {
@@ -134,13 +229,16 @@ export const verifyPaymentSignature = async (
     });
 
     if (!response.ok) {
-      throw new Error('Payment verification failed');
+      const errorText = await response.text();
+      console.error('❌ Payment verification failed:', errorText);
+      throw new Error(`Payment verification failed: ${errorText}`);
     }
 
     const result = await response.json();
+    console.log('✅ Payment verification result:', result);
     return result.verified;
   } catch (error) {
-    console.error('Error verifying payment:', error);
+    console.error('❌ Error verifying payment:', error);
     return false;
   }
 };

@@ -11,8 +11,9 @@ const razorpay = new Razorpay({
 
 console.log('Razorpay initialized with key:', process.env.RAZORPAY_KEY_ID || 'rzp_live_RD4Ia7eTGct90w');
 console.log('Razorpay mode: LIVE PRODUCTION');
+console.log('Razorpay API version: Modern Orders API');
 
-// Create Razorpay order
+// Create Razorpay order using modern orders API
 router.post('/create-order', async (req, res) => {
   try {
     const { amount, currency = 'INR', receipt = 'order_receipt' } = req.body;
@@ -21,14 +22,32 @@ router.post('/create-order', async (req, res) => {
       return res.status(400).json({ error: 'Invalid amount' });
     }
 
+    console.log('Creating Razorpay order:', {
+      amount_in_rupees: amount,
+      amount_in_paise: Math.round(amount * 100),
+      currency,
+      receipt
+    });
+
     const options = {
       amount: Math.round(amount * 100), // Convert to paise
       currency,
       receipt,
-      payment_capture: 1
+      payment_capture: 1,
+      notes: {
+        integration: 'modern_orders_api',
+        mode: 'live_production'
+      }
     };
 
     const order = await razorpay.orders.create(options);
+    
+    console.log('Razorpay order created successfully:', {
+      order_id: order.id,
+      amount: order.amount,
+      currency: order.currency,
+      status: order.status
+    });
     
     res.json({
       success: true,
@@ -59,6 +78,12 @@ router.post('/verify-payment', async (req, res) => {
       return res.status(400).json({ error: 'Missing payment details' });
     }
 
+    console.log('Verifying payment signature:', {
+      order_id: razorpay_order_id,
+      payment_id: razorpay_payment_id,
+      signature_length: razorpay_signature.length
+    });
+
     // Create the signature string
     const body = razorpay_order_id + "|" + razorpay_payment_id;
     
@@ -70,6 +95,12 @@ router.post('/verify-payment', async (req, res) => {
 
     // Verify signature
     const isAuthentic = expectedSignature === razorpay_signature;
+
+    console.log('Payment verification result:', {
+      isAuthentic,
+      expected_signature: expectedSignature.substring(0, 10) + '...',
+      received_signature: razorpay_signature.substring(0, 10) + '...'
+    });
 
     if (isAuthentic) {
       res.json({
@@ -120,6 +151,17 @@ router.get('/payment/:payment_id', async (req, res) => {
       details: error.message 
     });
   }
+});
+
+// Health check endpoint
+router.get('/health', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Razorpay integration is healthy',
+    mode: 'LIVE PRODUCTION',
+    api_version: 'Modern Orders API',
+    key_id: process.env.RAZORPAY_KEY_ID ? 'configured' : 'using_fallback'
+  });
 });
 
 module.exports = router;
