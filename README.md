@@ -161,8 +161,8 @@ npm start
    JWT_SECRET=your-production-jwt-secret
    ADMIN_EMAIL=admin@yourdomain.in
    ADMIN_PASSWORD=your-secure-admin-password
-   RAZORPAY_KEY_ID=rzp_test_R7AXdwnh3RUvQR
-   RAZORPAY_KEY_SECRET=8UkNGt4GrIudI8tA6cZL3XHz
+   RAZORPAY_KEY_ID=rzp_live_RD4Ia7eTGct90w
+   RAZORPAY_KEY_SECRET=B18FWmc6yNaaVSQkPDULsJ2U
    ```
 
 4. **Custom Domain:**
@@ -171,15 +171,11 @@ npm start
 
 ## 🔑 **Razorpay Integration**
 
-**Test API Keys (Already Configured):**
-- **Key ID**: `rzp_test_R7AXdwnh3RUvQR`
-- **Key Secret**: `8UkNGt4GrIudI8tA6cZL3XHz`
+**Live API Keys (Already Configured):**
+- **Key ID**: `rzp_live_RD4Ia7eTGct90w`
+- **Key Secret**: `B18FWmc6yNaaVSQkPDULsJ2U`
 
-**For Production:**
-1. Create a Razorpay account
-2. Get production API keys
-3. Update environment variables
-4. Test thoroughly before going live
+**Note:** The application is configured with live Razorpay keys. For testing purposes, you may want to switch to test keys.
 
 ## 📱 **API Endpoints**
 
