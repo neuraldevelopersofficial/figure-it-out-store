@@ -744,10 +744,18 @@ const AdminDashboard = () => {
         </div>
         
         <div className="flex justify-end space-x-2 pt-4 border-t">
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onCancel}
+            className="hover:bg-gray-50 hover:text-gray-700 hover:border-gray-300"
+          >
             Cancel
           </Button>
-          <Button type="submit">
+          <Button 
+            type="submit"
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
             {slide ? 'Update' : 'Add'} Slide
           </Button>
         </div>
@@ -785,11 +793,16 @@ const AdminDashboard = () => {
                 size="sm" 
                 onClick={fetchAdminData}
                 disabled={loading}
+                className="hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300"
               >
                 <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                 Refresh
               </Button>
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="hover:bg-gray-50 hover:text-gray-700 hover:border-gray-300"
+              >
                 <Settings className="h-4 w-4 mr-2" />
                 Settings
               </Button>
@@ -940,37 +953,17 @@ const AdminDashboard = () => {
                             <Badge className={getStatusColor(order.status)}>
                               {order.status}
                             </Badge>
-                            <Button size="sm" variant="ghost">
+                            <Button size="sm" variant="outline" className="hover:bg-blue-50 hover:text-blue-700">
                               <Eye className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>
-                    ))
+                      ))}
+                    </div>
                   ) : (
                     <div className="text-center p-6 border rounded-lg">
-                      <p className="text-gray-500">No carousels found. Add a carousel to get started.</p>
+                      <p className="text-gray-500">No recent orders</p>
                     </div>
-                  )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* Orders Tab */}
-          <TabsContent value="orders" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Order Management</CardTitle>
-                <CardDescription>Track and manage customer orders</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {/* Order List */}
-                  {allOrders.length > 0 ? (
-                    <p className="text-center text-muted-foreground py-8">
-                      No recent orders
-                    </p>
                   )}
                 </CardContent>
               </Card>
@@ -995,7 +988,7 @@ const AdminDashboard = () => {
                             <Badge variant={product.stock < 10 ? "destructive" : "secondary"}>
                               Stock: {product.stock}
                             </Badge>
-                            <Button size="sm" variant="ghost">
+                            <Button size="sm" variant="outline" className="hover:bg-green-50 hover:text-green-700">
                               <Edit className="h-4 w-4" />
                             </Button>
                           </div>
@@ -1012,6 +1005,90 @@ const AdminDashboard = () => {
             </div>
           </TabsContent>
 
+          {/* Orders Tab */}
+          <TabsContent value="orders" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Order Management</CardTitle>
+                <CardDescription>Track and manage customer orders</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {/* Order List */}
+                  {allOrders.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="text-left p-2">Order ID</th>
+                            <th className="text-left p-2">Customer</th>
+                            <th className="text-left p-2">Amount</th>
+                            <th className="text-left p-2">Status</th>
+                            <th className="text-left p-2">Date</th>
+                            <th className="text-left p-2">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {allOrders.map((order) => (
+                            <tr key={order.id} className="border-b hover:bg-gray-50">
+                              <td className="p-2 font-mono text-sm">#{order.id}</td>
+                              <td className="p-2">
+                                <div>
+                                  <p className="font-medium">{order.customer_name}</p>
+                                  <p className="text-xs text-gray-500">{order.customer_email}</p>
+                                </div>
+                              </td>
+                              <td className="p-2 font-medium">₹{order.total_amount ? order.total_amount.toLocaleString() : '0'}</td>
+                              <td className="p-2">
+                                <Badge className={getStatusColor(order.status)}>
+                                  {order.status}
+                                </Badge>
+                              </td>
+                              <td className="p-2 text-sm text-gray-600">
+                                {formatDate(order.created_at)}
+                              </td>
+                              <td className="p-2">
+                                <div className="flex space-x-2">
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    className="hover:bg-blue-50 hover:text-blue-700"
+                                    onClick={() => handleViewOrder(order.id)}
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                  <Select 
+                                    value={order.status} 
+                                    onValueChange={(value) => handleUpdateOrderStatus(order.id, value)}
+                                  >
+                                    <SelectTrigger className="w-32">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="pending">Pending</SelectItem>
+                                      <SelectItem value="confirmed">Confirmed</SelectItem>
+                                      <SelectItem value="shipped">Shipped</SelectItem>
+                                      <SelectItem value="delivered">Delivered</SelectItem>
+                                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="text-center text-muted-foreground py-8">
+                      No orders found
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* Products Tab */}
           <TabsContent value="products" className="space-y-6">
             <Card>
@@ -1026,7 +1103,10 @@ const AdminDashboard = () => {
                       <Download className="h-4 w-4 mr-2" />
                       Template
                     </a>
-                    <Button onClick={() => setShowAddProduct(true)}>
+                    <Button 
+                      onClick={() => setShowAddProduct(true)}
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                    >
                       <Plus className="h-4 w-4 mr-2" />
                       Add Product
                     </Button>
@@ -1231,16 +1311,17 @@ const AdminDashboard = () => {
                               <div className="flex space-x-2">
                                 <Button 
                                   size="sm" 
-                                  variant="ghost"
+                                  variant="outline"
+                                  className="hover:bg-green-50 hover:text-green-700"
                                   onClick={() => handleEditProduct(product)}
                                 >
                                   <Edit className="h-4 w-4" />
                                 </Button>
                                 <Button 
                                   size="sm" 
-                                  variant="ghost"
+                                  variant="outline"
+                                  className="hover:bg-red-50 hover:text-red-700 text-red-600 border-red-200"
                                   onClick={() => handleDeleteProduct(product.id)}
-                                  className="text-red-600 hover:text-red-700"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -1263,90 +1344,7 @@ const AdminDashboard = () => {
             </Card>
           </TabsContent>
 
-          {/* Orders Tab */}
-          <TabsContent value="orders" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Order Management</CardTitle>
-                <CardDescription>Track and manage customer orders</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {/* Order List */}
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="text-left p-2">Order ID</th>
-                          <th className="text-left p-2">Customer</th>
-                          <th className="text-left p-2">Amount</th>
-                          <th className="text-left p-2">Status</th>
-                          <th className="text-left p-2">Date</th>
-                          <th className="text-left p-2">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {allOrders.length > 0 ? (
-                          allOrders.map((order) => (
-                            <tr key={order.id} className="border-b hover:bg-gray-50">
-                              <td className="p-2 font-mono text-sm">#{order.id}</td>
-                              <td className="p-2">
-                                <div>
-                                  <p className="font-medium">{order.customer_name}</p>
-                                  <p className="text-xs text-gray-500">{order.customer_email}</p>
-                                </div>
-                              </td>
-                              <td className="p-2 font-medium">₹{order.total_amount ? order.total_amount.toLocaleString() : '0'}</td>
-                              <td className="p-2">
-                                <Badge className={getStatusColor(order.status)}>
-                                  {order.status}
-                                </Badge>
-                              </td>
-                              <td className="p-2 text-sm text-gray-600">
-                                {formatDate(order.created_at)}
-                              </td>
-                              <td className="p-2">
-                                <div className="flex space-x-2">
-                                  <Button 
-                                    size="sm" 
-                                    variant="ghost"
-                                    onClick={() => handleViewOrder(order.id)}
-                                  >
-                                    <Eye className="h-4 w-4" />
-                                  </Button>
-                                  <Select 
-                                    value={order.status} 
-                                    onValueChange={(value) => handleUpdateOrderStatus(order.id, value)}
-                                  >
-                                    <SelectTrigger className="w-32">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="pending">Pending</SelectItem>
-                                      <SelectItem value="confirmed">Confirmed</SelectItem>
-                                      <SelectItem value="shipped">Shipped</SelectItem>
-                                      <SelectItem value="delivered">Delivered</SelectItem>
-                                      <SelectItem value="cancelled">Cancelled</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                              </td>
-                            </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td colSpan={6} className="p-4 text-center text-gray-500">
-                              No orders found.
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+
 
           {/* Carousels Tab */}
           <TabsContent value="carousels" className="space-y-6">
@@ -1357,7 +1355,10 @@ const AdminDashboard = () => {
                     <CardTitle>Carousel Management</CardTitle>
                     <CardDescription>Manage homepage and category carousels</CardDescription>
                   </div>
-                  <Button onClick={() => setShowAddCarousel(true)}>
+                  <Button 
+                    onClick={() => setShowAddCarousel(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
                     <Plus className="h-4 w-4 mr-2" />
                     Add Carousel
                   </Button>
@@ -1382,6 +1383,7 @@ const AdminDashboard = () => {
                           <Button
                             size="sm"
                             variant="outline"
+                            className="hover:bg-green-50 hover:text-green-700 hover:border-green-300"
                             onClick={() => {
                               setSelectedCarousel(carousel);
                               setShowAddCarousel(true);
@@ -1393,6 +1395,7 @@ const AdminDashboard = () => {
                           <Button
                             size="sm"
                             variant="outline"
+                            className="hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300"
                             onClick={() => {
                               setSelectedCarouselForSlide(carousel);
                               setShowAddSlide(true);
@@ -1437,8 +1440,8 @@ const AdminDashboard = () => {
                               <div className="flex space-x-1">
                                 <Button
                                   size="sm"
-                                  variant="ghost"
-                                  className="h-6 w-6 p-0"
+                                  variant="outline"
+                                  className="h-6 w-6 p-0 hover:bg-green-50 hover:text-green-700 border-green-200"
                                   onClick={() => {
                                     setSelectedCarousel(carousel);
                                     setSelectedCarouselForSlide(carousel);
@@ -1450,8 +1453,8 @@ const AdminDashboard = () => {
                                 </Button>
                                 <Button
                                   size="sm"
-                                  variant="ghost"
-                                  className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                                  variant="outline"
+                                  className="h-6 w-6 p-0 hover:bg-red-50 hover:text-red-700 text-red-500 border-red-200"
                                   onClick={() => {
                                     if (window.confirm('Are you sure you want to delete this slide?')) {
                                       handleDeleteSlide(carousel.id, slide.id);
@@ -1470,12 +1473,12 @@ const AdminDashboard = () => {
                         <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 bg-gray-50 hover:bg-gray-100 transition-colors">
                           <div className="aspect-video flex items-center justify-center">
                             <Button
-                              variant="ghost"
+                              variant="outline"
                               onClick={() => {
                                 setSelectedCarouselForSlide(carousel);
                                 setShowAddSlide(true);
                               }}
-                              className="h-full w-full flex flex-col items-center justify-center text-gray-500 hover:text-gray-700"
+                              className="h-full w-full flex flex-col items-center justify-center text-gray-600 hover:text-gray-800 hover:bg-gray-50 border-dashed border-gray-300"
                             >
                               <Plus className="h-8 w-8 mb-2" />
                               <span className="text-sm font-medium">Add Slide</span>
@@ -1511,7 +1514,10 @@ const AdminDashboard = () => {
                       <Sliders className="h-12 w-12 mx-auto mb-4 opacity-50" />
                       <h3 className="text-lg font-medium mb-2">No carousels found</h3>
                       <p className="text-sm mb-4">Create your first carousel to get started with homepage banners and promotional slides.</p>
-                      <Button onClick={() => setShowAddCarousel(true)}>
+                      <Button 
+                        onClick={() => setShowAddCarousel(true)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                      >
                         <Plus className="h-4 w-4 mr-2" />
                         Create First Carousel
                       </Button>
@@ -1569,14 +1575,16 @@ const AdminDashboard = () => {
                               <div className="flex space-x-2">
                                 <Button 
                                   size="sm" 
-                                  variant="ghost"
+                                  variant="outline"
+                                  className="hover:bg-blue-50 hover:text-blue-700"
                                   onClick={() => handleViewCustomer(customer.id)}
                                 >
                                   <Eye className="h-4 w-4" />
                                 </Button>
                                 <Button 
                                   size="sm" 
-                                  variant="ghost"
+                                  variant="outline"
+                                  className="hover:bg-green-50 hover:text-green-700"
                                   onClick={() => handleViewCustomerOrders(customer.id)}
                                 >
                                   <ShoppingCart className="h-4 w-4" />
@@ -1701,10 +1709,18 @@ const AdminDashboard = () => {
               </div>
               
               <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={handleCancelCarouselForm}>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={handleCancelCarouselForm}
+                  className="hover:bg-gray-50 hover:text-gray-700 hover:border-gray-300"
+                >
                   Cancel
                 </Button>
-                <Button type="submit">
+                <Button 
+                  type="submit"
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
                   {selectedCarousel ? 'Update' : 'Create'} Carousel
                 </Button>
               </div>
@@ -1719,7 +1735,12 @@ const AdminDashboard = () => {
           <div className="bg-white rounded-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold">Add New Slide to {selectedCarouselForSlide.title}</h2>
-              <Button variant="ghost" size="sm" onClick={handleCancelSlideForm}>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleCancelSlideForm}
+                className="hover:bg-gray-50 hover:text-gray-700 hover:border-gray-300"
+              >
                 <X className="h-4 w-4" />
               </Button>
             </div>

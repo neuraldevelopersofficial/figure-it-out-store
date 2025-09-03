@@ -3,13 +3,14 @@ const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const router = express.Router();
 
-// Initialize Razorpay with live keys
+// Initialize Razorpay with live keys from environment variables
 const razorpay = new Razorpay({
-  key_id: 'rzp_live_RD4Ia7eTGct90w',
-  key_secret: 'B18FWmc6yNaaVSQkPDULsJ2U'
+  key_id: process.env.RAZORPAY_KEY_ID || 'rzp_live_RD4Ia7eTGct90w',
+  key_secret: process.env.RAZORPAY_KEY_SECRET || 'B18FWmc6yNaaVSQkPDULsJ2U'
 });
 
-console.log('Razorpay initialized with key:', 'rzp_live_RD4Ia7eTGct90w');
+console.log('Razorpay initialized with key:', process.env.RAZORPAY_KEY_ID || 'rzp_live_RD4Ia7eTGct90w');
+console.log('Razorpay mode: LIVE PRODUCTION');
 
 // Create Razorpay order
 router.post('/create-order', async (req, res) => {

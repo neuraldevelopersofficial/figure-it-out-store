@@ -1,9 +1,17 @@
-// Razorpay configuration
+// Razorpay configuration for LIVE PRODUCTION
 export const RAZORPAY_CONFIG = {
   key_id: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_RD4Ia7eTGct90w',
   key_secret: import.meta.env.VITE_RAZORPAY_KEY_SECRET || 'B18FWmc6yNaaVSQkPDULsJ2U',
   currency: 'INR',
+  mode: 'live' // Force live production mode
 };
+
+// Log configuration for debugging
+console.log('Razorpay Config:', {
+  key_id: RAZORPAY_CONFIG.key_id,
+  mode: RAZORPAY_CONFIG.mode,
+  isLive: RAZORPAY_CONFIG.key_id.startsWith('rzp_live_')
+});
 
 // Load Razorpay script
 export const loadRazorpayScript = (): Promise<void> => {
@@ -16,7 +24,7 @@ export const loadRazorpayScript = (): Promise<void> => {
     const script = document.createElement('script');
     script.src = `https://checkout.razorpay.com/v1/checkout.js?_=${new Date().getTime()}`;
     script.onload = () => {
-      console.log('Razorpay script loaded successfully');
+      console.log('Razorpay script loaded successfully - LIVE PRODUCTION MODE');
       resolve();
     };
     script.onerror = () => reject(new Error('Failed to load Razorpay script'));
@@ -28,7 +36,7 @@ export const loadRazorpayScript = (): Promise<void> => {
 // ✅ Send amount in rupees, backend will convert to paise
 export const createRazorpayOrder = async (amount: number, currency: string = 'INR') => {
   try {
-    const response = await fetch('/api/create-order', {
+    const response = await fetch('/api/razorpay/create-order', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -85,7 +93,18 @@ export const initializePayment = async (
       modal: {
         ondismiss: () => onFailure(new Error('Payment cancelled')),
       },
+      // Force live mode
+      notes: {
+        mode: 'live_production'
+      }
     };
+
+    console.log('Initializing Razorpay payment with LIVE keys:', {
+      key: RAZORPAY_CONFIG.key_id,
+      amount,
+      orderId,
+      mode: 'LIVE PRODUCTION'
+    });
 
     const razorpay = new (window as any).Razorpay(options);
     razorpay.open();
@@ -102,7 +121,7 @@ export const verifyPaymentSignature = async (
   signature: string
 ) => {
   try {
-    const response = await fetch('/api/verify-payment', {
+    const response = await fetch('/api/razorpay/verify-payment', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -110,7 +129,7 @@ export const verifyPaymentSignature = async (
       body: JSON.stringify({
         razorpay_order_id: razorpayOrderId,
         razorpay_payment_id: razorpayPaymentId,
-        signature,
+        razorpay_signature: signature,
       }),
     });
 

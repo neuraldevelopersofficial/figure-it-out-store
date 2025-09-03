@@ -166,31 +166,26 @@ const Checkout: React.FC = () => {
         throw new Error(razorpayResponse.error || 'Failed to create payment order');
       }
 
-      // Initialize Razorpay payment
-      console.log('RAZORPAY DEBUG - Using key:', 'rzp_live_RD4Ia7eTGct90w');
-      console.log('RAZORPAY DEBUG - Environment variable value:', import.meta.env.VITE_RAZORPAY_KEY_ID);
+      // Import and use the proper Razorpay integration
+      const { initializePayment } = await import('@/lib/razorpay');
       
-      // Force live mode by setting key directly and adding prefetch parameter
-      const options = {
-        key: 'rzp_live_RD4Ia7eTGct90w', // Force live key
-        amount: razorpayResponse.amount,
-        currency: razorpayResponse.currency || 'INR',
-        theme: { color: '#3399cc' },
-        prefill: {
-          name: user?.name || '',
-          email: user?.email || '',
-          contact: shippingDetails.phone || ''
-        },
-        name: 'Figure It Out Store',
-        description: `Order #${orderResponse.order.id}`,
-        order_id: razorpayResponse.order_id,
-        handler: async function (response: any) {
+      // Initialize Razorpay payment with proper integration
+      await initializePayment(
+        razorpayResponse.order_id,
+        razorpayResponse.amount,
+        razorpayResponse.currency || 'INR',
+        user.full_name,
+        user.email,
+        shippingAddress.phone || '',
+        async (paymentResponse: any) => {
           try {
+            console.log('Payment successful:', paymentResponse);
+            
             // Verify payment signature
             const verificationResponse = await apiClient.verifyPayment({
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature
+              razorpay_order_id: paymentResponse.razorpay_order_id,
+              razorpay_payment_id: paymentResponse.razorpay_payment_id,
+              razorpay_signature: paymentResponse.razorpay_signature
             });
 
             if (verificationResponse.success && verificationResponse.verified) {
@@ -219,25 +214,15 @@ const Checkout: React.FC = () => {
             });
           }
         },
-        prefill: {
-          name: user.full_name,
-          email: user.email,
-          contact: shippingAddress.phone
-        },
-        theme: {
-          color: '#3B82F6'
+        (error: any) => {
+          console.error('Payment failed:', error);
+          toast({
+            title: "Payment failed",
+            description: error.message || "Payment was not completed",
+            variant: "destructive"
+          });
         }
-      };
-
-      // Load Razorpay script and initialize payment
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.onload = () => {
-        const razorpay = (window as any).Razorpay;
-        const rzp = new razorpay(options);
-        rzp.open();
-      };
-      document.body.appendChild(script);
+      );
 
     } catch (error: any) {
       console.error('Checkout error:', error);

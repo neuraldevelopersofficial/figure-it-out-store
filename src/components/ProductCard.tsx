@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Heart, ShoppingCart, Eye } from "lucide-react";
+import { Heart, ShoppingCart, Eye, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useStore } from "@/context/StoreContext";
 import { Product } from "@/context/StoreContext";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 import { convertGoogleDriveUrl, getGoogleDriveProxyUrl } from "@/lib/utils";
 import { FallbackImage } from "@/components/ui/fallback-image";
 import { MotionCard } from "@/components/ui/motion-card";
@@ -20,14 +21,16 @@ const ProductCard = ({ product, showQuickView = true, delay = 0 }: ProductCardPr
   const [isHovered, setIsHovered] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useStore();
+  const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const isWishlisted = isInWishlist(product.id);
 
   // Combine all images for cycling
-const allImages = [
-  product.image,
-  ...(product.images || [])
-].filter(Boolean);
+  const allImages = [
+    product.image,
+    ...(product.images || [])
+  ].filter(Boolean);
 
   const handleWishlistToggle = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -57,6 +60,42 @@ const allImages = [
     });
   };
 
+  const handleBuyNow = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!user) {
+      toast({
+        title: "Please sign in",
+        description: "You need to be signed in to make a purchase.",
+        variant: "destructive"
+      });
+      navigate('/login');
+      return;
+    }
+
+    if (!product.inStock) {
+      toast({
+        title: "Out of stock",
+        description: "This product is currently out of stock.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Add to cart first, then navigate to checkout
+    addToCart(product);
+    toast({
+      title: "Added to cart",
+      description: `${product.name} has been added to your cart. Redirecting to checkout...`,
+    });
+    
+    // Navigate to checkout after a short delay
+    setTimeout(() => {
+      navigate('/checkout');
+    }, 1000);
+  };
+
   return (
     <MotionCard
       delay={delay}
@@ -67,10 +106,9 @@ const allImages = [
         if (allImages.length > 1) {
           const interval = setInterval(() => {
             setCurrentImageIndex(prev => (prev + 1) % allImages.length);
-          }, 2000); // Change image every 2 seconds
+          }, 1000); // Change image every 1 second
           
           // Store interval ID to clear it on mouse leave
-          // Use a unique property name based on product ID to avoid conflicts
           const intervalKey = `imageCycleInterval_${product.id}`;
           (window as any)[intervalKey] = interval;
         }
@@ -204,15 +242,28 @@ const allImages = [
           </div>
         )}
 
-        {/* Add to Cart Button */}
-        <Button
-          className="w-full !bg-brand-red hover:bg-brand-red-dark text-white"
-          disabled={!product.inStock}
-          onClick={handleAddToCart}
-        >
-          <ShoppingCart className="h-4 w-4 mr-2" />
-          {product.inStock ? 'Add to Cart' : 'Out of Stock'}
-        </Button>
+        {/* Action Buttons */}
+        <div className="space-y-2">
+          {/* Buy Now Button */}
+          <Button
+            className="w-full bg-green-600 hover:bg-green-700 text-white font-medium"
+            disabled={!product.inStock}
+            onClick={handleBuyNow}
+          >
+            <Zap className="h-4 w-4 mr-2" />
+            {product.inStock ? 'Buy Now' : 'Out of Stock'}
+          </Button>
+          
+          {/* Add to Cart Button */}
+          <Button
+            className="w-full !bg-brand-red hover:bg-brand-red-dark text-white"
+            disabled={!product.inStock}
+            onClick={handleAddToCart}
+          >
+            <ShoppingCart className="h-4 w-4 mr-2" />
+            {product.inStock ? 'Add to Cart' : 'Out of Stock'}
+          </Button>
+        </div>
       </div>
     </MotionCard>
   );
