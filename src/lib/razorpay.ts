@@ -14,7 +14,6 @@ export const loadRazorpayScript = (): Promise<void> => {
     }
 
     const script = document.createElement('script');
-    // Add cache-busting parameter to prevent browser caching
     script.src = `https://checkout.razorpay.com/v1/checkout.js?_=${new Date().getTime()}`;
     script.onload = () => {
       console.log('Razorpay script loaded successfully');
@@ -26,6 +25,7 @@ export const loadRazorpayScript = (): Promise<void> => {
 };
 
 // Create Razorpay order
+// ✅ Send amount in rupees, backend will convert to paise
 export const createRazorpayOrder = async (amount: number, currency: string = 'INR') => {
   try {
     const response = await fetch('/api/create-order', {
@@ -34,7 +34,7 @@ export const createRazorpayOrder = async (amount: number, currency: string = 'IN
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        amount: amount * 100, // Razorpay expects amount in paise
+        amount,   // in rupees
         currency,
       }),
     });
@@ -44,7 +44,7 @@ export const createRazorpayOrder = async (amount: number, currency: string = 'IN
     }
 
     const order = await response.json();
-    return order;
+    return order; // contains { order_id, amount, currency }
   } catch (error) {
     console.error('Error creating Razorpay order:', error);
     throw error;
@@ -52,9 +52,10 @@ export const createRazorpayOrder = async (amount: number, currency: string = 'IN
 };
 
 // Initialize Razorpay payment
+// ✅ Use amount + order_id returned from backend directly
 export const initializePayment = async (
   orderId: string,
-  amount: number,
+  amount: number, // this should already be in paise (from backend order)
   currency: string = 'INR',
   customerName: string,
   customerEmail: string,
@@ -67,7 +68,7 @@ export const initializePayment = async (
 
     const options = {
       key: RAZORPAY_CONFIG.key_id,
-      amount: amount * 100, // Convert to paise
+      amount,            // use backend value (already in paise)
       currency,
       name: 'FIGURE IT OUT',
       description: 'Anime Collectibles Purchase',
@@ -78,7 +79,7 @@ export const initializePayment = async (
         contact: customerPhone,
       },
       theme: {
-        color: '#dc2626', // brand-red
+        color: '#dc2626',
       },
       handler: onSuccess,
       modal: {
