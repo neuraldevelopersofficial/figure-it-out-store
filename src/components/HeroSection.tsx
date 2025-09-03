@@ -117,7 +117,7 @@ const HeroSection = () => {
       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20 flex gap-4">
         <Button 
           size="lg" 
-          className="bg-brand-red hover:bg-brand-red-dark text-white px-8 py-3"
+          className="!bg-brand-red hover:bg-brand-red-dark text-white px-8 py-3"
           onClick={() => {
             const featuredSection = document.getElementById('featured-collection');
             if (featuredSection) {
@@ -130,7 +130,7 @@ const HeroSection = () => {
         <Button 
           size="lg" 
           variant="outline" 
-          className="bg-white/90 hover:bg-white text-foreground px-8 py-3"
+          className="!bg-white/90 hover:bg-white text-foreground px-8 py-3"
           onClick={() => {
             const categoriesSection = document.getElementById('categories-section');
             if (categoriesSection) {

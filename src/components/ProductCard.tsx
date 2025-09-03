@@ -206,7 +206,7 @@ const allImages = [
 
         {/* Add to Cart Button */}
         <Button
-          className="w-full bg-brand-red hover:bg-brand-red-dark text-white"
+          className="w-full !bg-brand-red hover:bg-brand-red-dark text-white"
           disabled={!product.inStock}
           onClick={handleAddToCart}
         >

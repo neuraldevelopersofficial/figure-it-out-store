@@ -134,7 +134,7 @@ const Checkout: React.FC = () => {
 
       // Initialize Razorpay payment
       const options = {
-        key: 'rzp_live_RD4Ia7eTGct90w', // Your Razorpay live key
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_RD4Ia7eTGct90w', // Razorpay key from environment
         amount: razorpayResponse.amount,
         currency: razorpayResponse.currency || 'INR',
         name: 'Figure It Out Store',

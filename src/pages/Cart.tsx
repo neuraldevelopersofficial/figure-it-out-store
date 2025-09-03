@@ -294,7 +294,7 @@ const Cart: React.FC = () => {
 
                 {/* Checkout Button */}
                 <Button
-                  className="w-full bg-brand-red hover:bg-brand-red-dark text-white py-3 text-lg"
+                  className="w-full !bg-brand-red hover:bg-brand-red-dark text-white py-3 text-lg"
                   size="lg"
                   onClick={handleCheckout}
                   disabled={isCheckingOut}
