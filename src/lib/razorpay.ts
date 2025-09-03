@@ -168,8 +168,8 @@ export const createRazorpayOrder = async (amount: number, currency: string = 'IN
   }
 };
 
-// Initialize Razorpay payment using latest orders API
-// ✅ Use order_id returned from backend directly - amount is tied to the order
+// Initialize Razorpay payment using backend order
+// ✅ Use order_id returned from backend - amount is tied to the order
 export const initializePayment = async (
   orderId: string,
   currency: string = 'INR',
@@ -180,7 +180,8 @@ export const initializePayment = async (
   onFailure: (error: any) => void
 ) => {
   try {
-    console.log('🚀 Initializing Razorpay payment...');
+    console.log('🚀 Initializing Razorpay payment with backend order...');
+    console.log('🔍 Order ID from backend:', orderId);
     
     // Intercept network requests to detect 400 errors
     let hasNetworkError = false;
@@ -250,8 +251,7 @@ export const initializePayment = async (
       throw new Error('Missing required payment parameters');
     }
 
-    // Create modern options object with only essential parameters
-    // Avoid deprecated parameters and use the latest API structure
+    // Create Razorpay options using backend order_id
     // IMPORTANT: Do NOT include 'amount' when using 'order_id' - amount is tied to the backend order
     const options = {
       key: RAZORPAY_CONFIG.key_id,
@@ -462,6 +462,7 @@ export const initializePayment = async (
 };
 
 // Alternative method: Direct checkout without script loading
+// ✅ Uses backend order_id - amount is tied to the order
 export const initializeDirectCheckout = async (
   orderId: string,
   currency: string = 'INR',
@@ -472,10 +473,12 @@ export const initializeDirectCheckout = async (
   onFailure: (error: any) => void
 ) => {
   try {
-    console.log('🚀 Initializing direct Razorpay checkout...');
+    console.log('🚀 Initializing direct Razorpay checkout with backend order...');
+    console.log('🔍 Order ID from backend:', orderId);
     showUserNotification('Opening alternative checkout method...', 'info');
     
     // Create checkout URL directly with all necessary parameters
+    // Note: amount is tied to order_id, so we don't need to set it separately
     const checkoutUrl = new URL('https://checkout.razorpay.com/v1/checkout.html');
     checkoutUrl.searchParams.set('key', RAZORPAY_CONFIG.key_id);
     // Note: amount is tied to order_id, so we don't need to set it separately
@@ -495,6 +498,7 @@ export const initializeDirectCheckout = async (
     
     const finalUrl = checkoutUrl.toString();
     console.log('🔗 Direct checkout URL created:', finalUrl);
+    console.log('💰 Amount is tied to backend order_id:', orderId);
     
     // Show user notification about fallback
     console.log('ℹ️ Using direct checkout as fallback method');
@@ -548,7 +552,7 @@ export const initializeDirectCheckout = async (
       const checkUrlChange = setInterval(() => {
         try {
           if (checkoutWindow.location.href.includes('payment-success') || 
-              checkoutWindow.location.href.includes('payment-cayment')) {
+              checkoutWindow.location.href.includes('payment-cancelled')) {
             clearInterval(checkUrlChange);
             console.log('✅ Payment completed via URL change detection');
             checkoutWindow.close();
