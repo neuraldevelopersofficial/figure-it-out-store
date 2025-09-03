@@ -4,6 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useStore } from '@/context/StoreContext';
 import { apiClient } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
@@ -20,6 +21,8 @@ const Checkout: React.FC = () => {
     pincode: '',
     phone: ''
   });
+  
+  const [paymentMethod, setPaymentMethod] = useState('razorpay');
 
   const [loading, setLoading] = useState(false);
 
@@ -108,6 +111,17 @@ const Checkout: React.FC = () => {
     setLoading(true);
 
     try {
+      // Check if COD is allowed (only for orders above ₹1000)
+      if (paymentMethod === 'cod' && cartTotal < 1000) {
+        toast({
+          title: "Cash on Delivery not available",
+          description: "Cash on Delivery is only available for orders above ₹1000.",
+          variant: "destructive"
+        });
+        setLoading(false);
+        return;
+      }
+
       // Create order in backend
       const orderData = {
         items: cartItems,
@@ -116,7 +130,8 @@ const Checkout: React.FC = () => {
         shipping_city: shippingAddress.city,
         shipping_state: shippingAddress.state,
         shipping_pincode: shippingAddress.pincode,
-        shipping_phone: shippingAddress.phone
+        shipping_phone: shippingAddress.phone,
+        payment_method: paymentMethod
       };
 
       const orderResponse = await apiClient.createOrder(orderData);
@@ -125,7 +140,26 @@ const Checkout: React.FC = () => {
         throw new Error(orderResponse.error || 'Failed to create order');
       }
 
-      // Create Razorpay order
+      // For COD, skip Razorpay and complete the order directly
+      if (paymentMethod === 'cod') {
+        // Update order status to confirmed for COD
+        await apiClient.updateOrderStatus(orderResponse.order.id, 'confirmed');
+        
+        // Clear cart
+        clearCart();
+        
+        toast({
+          title: "Order placed successfully!",
+          description: "Your Cash on Delivery order has been placed.",
+        });
+
+        // Redirect to order confirmation
+        navigate('/orders');
+        setLoading(false);
+        return;
+      }
+      
+      // For Razorpay, create payment order
       const razorpayResponse = await apiClient.createRazorpayOrder(cartTotal);
       
       if (!razorpayResponse.success) {
@@ -133,10 +167,20 @@ const Checkout: React.FC = () => {
       }
 
       // Initialize Razorpay payment
+      console.log('RAZORPAY DEBUG - Using key:', 'rzp_live_RD4Ia7eTGct90w');
+      console.log('RAZORPAY DEBUG - Environment variable value:', import.meta.env.VITE_RAZORPAY_KEY_ID);
+      
+      // Force live mode by setting key directly and adding prefetch parameter
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_RD4Ia7eTGct90w', // Razorpay key from environment
+        key: 'rzp_live_RD4Ia7eTGct90w', // Force live key
         amount: razorpayResponse.amount,
         currency: razorpayResponse.currency || 'INR',
+        theme: { color: '#3399cc' },
+        prefill: {
+          name: user?.name || '',
+          email: user?.email || '',
+          contact: shippingDetails.phone || ''
+        },
         name: 'Figure It Out Store',
         description: `Order #${orderResponse.order.id}`,
         order_id: razorpayResponse.order_id,
@@ -332,6 +376,36 @@ const Checkout: React.FC = () => {
 
             {/* Order Summary */}
             <div className="bg-white p-6 rounded-lg shadow-md">
+              <h2 className="text-xl font-semibold mb-4">Payment Method</h2>
+              
+              <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="mb-6">
+                <div className="flex items-center space-x-2 p-2 border rounded-md mb-2">
+                  <RadioGroupItem value="razorpay" id="razorpay" />
+                  <label htmlFor="razorpay" className="flex items-center cursor-pointer">
+                    <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center mr-2">
+                      <span className="text-white text-xs font-bold">R</span>
+                    </div>
+                    <div>
+                      <p className="font-medium">Razorpay</p>
+                      <p className="text-sm text-gray-500">Credit/Debit Card, UPI, Netbanking</p>
+                    </div>
+                  </label>
+                </div>
+                
+                <div className="flex items-center space-x-2 p-2 border rounded-md">
+                  <RadioGroupItem value="cod" id="cod" disabled={cartTotal < 1000} />
+                  <label htmlFor="cod" className={`flex items-center ${cartTotal < 1000 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+                    <div className="w-8 h-8 bg-green-600 rounded flex items-center justify-center mr-2">
+                      <span className="text-white text-xs font-bold">₹</span>
+                    </div>
+                    <div>
+                      <p className="font-medium">Cash on Delivery</p>
+                      <p className="text-sm text-gray-500">{cartTotal < 1000 ? 'Available only for orders above ₹1000' : 'Pay when you receive'}</p>
+                    </div>
+                  </label>
+                </div>
+              </RadioGroup>
+              
               <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
               
               <div className="space-y-3 mb-6">
@@ -365,7 +439,7 @@ const Checkout: React.FC = () => {
                 disabled={loading || cartItems.length === 0}
                 className="w-full mt-6 bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
               >
-                {loading ? 'Processing...' : 'Proceed to Payment'}
+                {loading ? 'Processing...' : paymentMethod === 'cod' ? 'Place Order (Cash on Delivery)' : 'Proceed to Payment'}
               </button>
             </div>
           </div>

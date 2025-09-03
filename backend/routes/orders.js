@@ -39,10 +39,15 @@ async function getOrdersCollection() {
 // Create new order
 router.post('/', authenticateToken, async (req, res) => {
   try {
-    const { items, total_amount, shipping_address, shipping_city, shipping_state, shipping_pincode, shipping_phone } = req.body;
+    const { items, total_amount, shipping_address, shipping_city, shipping_state, shipping_pincode, shipping_phone, payment_method } = req.body;
 
     if (!items || !total_amount || !shipping_address || !shipping_city || !shipping_state || !shipping_pincode) {
       return res.status(400).json({ error: 'Missing required order details' });
+    }
+    
+    // Validate COD payment method (only available for orders above ₹1000)
+    if (payment_method === 'cod' && total_amount < 1000) {
+      return res.status(400).json({ error: 'Cash on Delivery is only available for orders above ₹1000' });
     }
 
     const newOrder = {
@@ -55,8 +60,9 @@ router.post('/', authenticateToken, async (req, res) => {
       shipping_state: shipping_state,
       shipping_pincode: shipping_pincode,
       shipping_phone: shipping_phone || '',
-      status: 'pending',
-      payment_status: 'pending',
+      payment_method: payment_method || 'razorpay',
+      status: payment_method === 'cod' ? 'processing' : 'pending',
+      payment_status: payment_method === 'cod' ? 'pending' : 'pending',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };

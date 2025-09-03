@@ -100,8 +100,8 @@ FRONTEND_URL=http://localhost:5173
 JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
 ADMIN_EMAIL=admin@figureitout.in
 ADMIN_PASSWORD=admin123456
-RAZORPAY_KEY_ID=rzp_test_R7AXdwnh3RUvQR
-RAZORPAY_KEY_SECRET=8UkNGt4GrIudI8tA6cZL3XHz
+RAZORPAY_KEY_ID=rzp_live_RD4Ia7eTGct90w
+RAZORPAY_KEY_SECRET=B18FWmc6yNaaVSQkPDULsJ2U
 ```
 
 ```bash

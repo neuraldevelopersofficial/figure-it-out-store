@@ -14,8 +14,12 @@ export const loadRazorpayScript = (): Promise<void> => {
     }
 
     const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.onload = () => resolve();
+    // Add cache-busting parameter to prevent browser caching
+    script.src = `https://checkout.razorpay.com/v1/checkout.js?_=${new Date().getTime()}`;
+    script.onload = () => {
+      console.log('Razorpay script loaded successfully');
+      resolve();
+    };
     script.onerror = () => reject(new Error('Failed to load Razorpay script'));
     document.body.appendChild(script);
   });

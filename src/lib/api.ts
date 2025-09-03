@@ -144,6 +144,13 @@ class ApiClient {
       body: JSON.stringify(orderData),
     });
   }
+  
+  async updateOrderStatus(orderId: string, status: string) {
+    return this.request(`/orders/${orderId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    });
+  }
 
   async getOrders() {
     return this.request('/orders');

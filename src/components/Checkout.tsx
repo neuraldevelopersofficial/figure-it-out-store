@@ -10,15 +10,19 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { MapPin, Phone, Mail, CreditCard, Shield, Truck } from "lucide-react";
+import { MapPin, Phone, Mail, CreditCard, Shield, Truck, Cash } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { api } from "@/lib/api";
 
 const Checkout = () => {
   const { user } = useAuth();
   const { state, getCartTotal, clearCart } = useStore();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const apiClient = api();
   
   const [loading, setLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("razorpay");
   const [shippingAddress, setShippingAddress] = useState({
     address: user?.address || "",
     city: user?.city || "",
@@ -66,6 +70,17 @@ const Checkout = () => {
       return;
     }
 
+    // Validate COD eligibility
+    const cartTotal = getCartTotal();
+    if (paymentMethod === "cod" && cartTotal < 1000) {
+      toast({
+        title: "Cash on Delivery not available",
+        description: "Cash on Delivery is only available for orders above ₹1000",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -73,33 +88,38 @@ const Checkout = () => {
       const orderData = {
         user_id: user.id,
         items: state.cart,
-        total_amount: getCartTotal(),
+        total_amount: cartTotal,
         shipping_address: shippingAddress.address,
         shipping_city: shippingAddress.city,
         shipping_state: shippingAddress.state,
         shipping_pincode: shippingAddress.pincode,
         shipping_phone: shippingAddress.phone,
+        payment_method: paymentMethod
       };
 
-      // This would typically be an API call to your backend
-      const orderResponse = await fetch('/api/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(orderData),
-      });
-
-      if (!orderResponse.ok) {
-        throw new Error('Failed to create order');
+      // Create order via API
+      const orderResponse = await apiClient.createOrder(orderData);
+      
+      if (!orderResponse.success) {
+        throw new Error(orderResponse.error || 'Failed to create order');
       }
 
-      const order = await orderResponse.json();
+      // For COD, skip Razorpay and complete the order directly
+      if (paymentMethod === 'cod') {
+        toast({
+          title: "Order Placed Successfully!",
+          description: "Your Cash on Delivery order has been confirmed.",
+        });
 
-      // Initialize Razorpay payment
+        clearCart();
+        navigate('/orders');
+        return;
+      }
+
+      // For Razorpay payments, initialize payment
       await initializePayment(
-        order.razorpay_order_id,
-        getCartTotal(),
+        orderResponse.order.razorpay_order_id,
+        cartTotal,
         'INR',
         user.full_name,
         user.email,
@@ -115,11 +135,8 @@ const Checkout = () => {
 
             if (isVerified) {
               // Update order status
-              await fetch(`/api/orders/${order.id}/confirm-payment`, {
+              await apiClient.request(`/orders/${orderResponse.order.id}/confirm-payment`, {
                 method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
                 body: JSON.stringify({
                   razorpay_payment_id: paymentResponse.razorpay_payment_id,
                   razorpay_signature: paymentResponse.razorpay_signature,
@@ -132,7 +149,7 @@ const Checkout = () => {
               });
 
               clearCart();
-              navigate(`/orders/${order.id}`);
+              navigate('/orders');
             } else {
               throw new Error('Payment verification failed');
             }
@@ -152,10 +169,10 @@ const Checkout = () => {
           });
         }
       );
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Checkout Failed",
-        description: "An error occurred during checkout. Please try again.",
+        description: error.message || "An error occurred during checkout. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -322,20 +339,49 @@ const Checkout = () => {
                     <CreditCard className="h-5 w-5 mr-2" />
                     Payment Method
                   </CardTitle>
-                  <CardDescription>Secure payment via Razorpay</CardDescription>
+                  <CardDescription>Choose your preferred payment method</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center space-x-3 p-3 border rounded-lg bg-gray-50">
-                    <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
-                      <span className="text-white text-xs font-bold">R</span>
+                  <RadioGroup 
+                    value={paymentMethod} 
+                    onValueChange={setPaymentMethod}
+                    className="space-y-3"
+                  >
+                    <div className={`flex items-center space-x-3 p-3 border rounded-lg ${paymentMethod === 'razorpay' ? 'bg-blue-50 border-blue-200' : 'bg-gray-50'}`}>
+                      <RadioGroupItem value="razorpay" id="razorpay" />
+                      <Label htmlFor="razorpay" className="flex items-center cursor-pointer flex-1">
+                        <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center mr-3">
+                          <span className="text-white text-xs font-bold">R</span>
+                        </div>
+                        <div>
+                          <p className="font-medium">Razorpay</p>
+                          <p className="text-sm text-muted-foreground">
+                            Secure online payment
+                          </p>
+                        </div>
+                      </Label>
                     </div>
-                    <div>
-                      <p className="font-medium">Razorpay</p>
-                      <p className="text-sm text-muted-foreground">
-                        Secure payment gateway
-                      </p>
+                    
+                    <div className={`flex items-center space-x-3 p-3 border rounded-lg ${paymentMethod === 'cod' ? 'bg-blue-50 border-blue-200' : 'bg-gray-50'} ${cartTotal < 1000 ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                      <RadioGroupItem 
+                        value="cod" 
+                        id="cod" 
+                        disabled={cartTotal < 1000}
+                      />
+                      <Label htmlFor="cod" className={`flex items-center cursor-pointer flex-1 ${cartTotal < 1000 ? 'cursor-not-allowed' : ''}`}>
+                        <div className="w-8 h-8 bg-green-600 rounded flex items-center justify-center mr-3">
+                          <Cash className="h-4 w-4 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-medium">Cash on Delivery</p>
+                          <p className="text-sm text-muted-foreground">
+                            Pay when you receive your order
+                            {cartTotal < 1000 && <span className="block text-red-500 font-medium">Available for orders above ₹1000</span>}
+                          </p>
+                        </div>
+                      </Label>
                     </div>
-                  </div>
+                  </RadioGroup>
                 </CardContent>
               </Card>
 
@@ -371,7 +417,9 @@ const Checkout = () => {
                 disabled={loading}
                 className="w-full h-12 text-lg"
               >
-                {loading ? "Processing..." : `Pay ₹${finalTotal ? finalTotal.toLocaleString() : '0'}`}
+                {loading ? "Processing..." : paymentMethod === 'cod' 
+                  ? `Place Order - ₹${finalTotal ? finalTotal.toLocaleString() : '0'} (COD)` 
+                  : `Pay ₹${finalTotal ? finalTotal.toLocaleString() : '0'}`}
               </Button>
 
               <p className="text-xs text-center text-muted-foreground">

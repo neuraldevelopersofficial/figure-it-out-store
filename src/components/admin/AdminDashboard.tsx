@@ -944,15 +944,30 @@ const AdminDashboard = () => {
                               <Eye className="h-4 w-4" />
                             </Button>
                           </div>
-                      </div>
-                    )))
+                        </div>
+                    ))
                   ) : (
                     <div className="text-center p-6 border rounded-lg">
                       <p className="text-gray-500">No carousels found. Add a carousel to get started.</p>
                     </div>
                   )}
                   </div>
-                  ) : (
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Orders Tab */}
+          <TabsContent value="orders" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Order Management</CardTitle>
+                <CardDescription>Track and manage customer orders</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {/* Order List */}
+                  {allOrders.length > 0 ? (
                     <p className="text-center text-muted-foreground py-8">
                       No recent orders
                     </p>
