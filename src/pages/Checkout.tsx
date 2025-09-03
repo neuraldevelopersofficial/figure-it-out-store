@@ -194,12 +194,16 @@ const Checkout: React.FC = () => {
               
               // Verify payment signature with backend
               console.log('🔍 Verifying payment signature...');
-              const verificationResponse = await apiClient.verifyPayment({
+              const verificationData = {
                 razorpay_order_id: paymentResponse.razorpay_order_id,
                 razorpay_payment_id: paymentResponse.razorpay_payment_id,
                 razorpay_signature: paymentResponse.razorpay_signature,
                 method: 'razorpay' // Regular Razorpay payment
-              });
+              };
+              
+              console.log('📤 Sending verification request with data:', verificationData);
+              
+              const verificationResponse = await apiClient.verifyPayment(verificationData);
 
               if (verificationResponse.success && verificationResponse.verified) {
                 console.log('✅ Payment verification successful');
@@ -265,12 +269,16 @@ const Checkout: React.FC = () => {
                 
                 // Verify payment signature with backend
                 console.log('🔍 Verifying direct checkout payment signature...');
-                const verificationResponse = await apiClient.verifyPayment({
+                const verificationData = {
                   razorpay_order_id: paymentResponse.razorpay_order_id,
                   razorpay_payment_id: paymentResponse.razorpay_payment_id,
                   razorpay_signature: paymentResponse.razorpay_signature,
-                  method: paymentResponse.method || 'custom_form'
-                });
+                  method: 'custom_form' // Always use custom_form for direct checkout
+                };
+                
+                console.log('📤 Sending verification request with data:', verificationData);
+                
+                const verificationResponse = await apiClient.verifyPayment(verificationData);
 
                 if (verificationResponse.success && verificationResponse.verified) {
                   console.log('✅ Direct checkout payment verification successful');

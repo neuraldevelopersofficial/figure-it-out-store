@@ -59,6 +59,16 @@ class ApiClient {
       headers,
     };
 
+    // Add debugging for payment verification requests
+    if (endpoint === '/razorpay/verify-payment') {
+      console.log('🔍 API Request Debug - verify-payment endpoint:');
+      console.log('  URL:', url);
+      console.log('  Method:', config.method);
+      console.log('  Headers:', config.headers);
+      console.log('  Body:', options.body);
+      console.log('  Body parsed:', typeof options.body === 'string' ? JSON.parse(options.body) : options.body);
+    }
+
     try {
       const response = await fetch(url, config);
       
@@ -132,6 +142,9 @@ class ApiClient {
     razorpay_signature: string;
     method?: string; // Add optional method parameter
   }) {
+    console.log('🔍 API Client - verifyPayment called with data:', paymentData);
+    console.log('📤 Method parameter value:', paymentData.method);
+    
     return this.request('/razorpay/verify-payment', {
       method: 'POST',
       body: JSON.stringify(paymentData),
