@@ -234,10 +234,18 @@ const Checkout: React.FC = () => {
               description: error.message || "Payment was not completed",
               variant: "destructive"
             });
-          }
+          },
+          false // Don't force direct checkout initially
         );
       } catch (error) {
         console.log('⚠️ Main Razorpay integration failed, trying direct checkout...', error);
+        
+        // Show user notification about fallback
+        toast({
+          title: "Using alternative payment method",
+          description: "Opening direct checkout due to payment modal issues.",
+          variant: "default"
+        });
         
         // Fallback to direct checkout method
         try {

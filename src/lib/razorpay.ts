@@ -69,16 +69,16 @@ const clearExistingRazorpay = () => {
   });
 };
 
-// Load fresh Razorpay script with latest version
+// Load fresh Razorpay script with specific v1 version
 export const loadRazorpayScript = (): Promise<void> => {
   return new Promise((resolve, reject) => {
     // Clear any existing Razorpay instances and scripts
     clearExistingRazorpay();
 
-    console.log('📦 Loading fresh Razorpay script...');
+    console.log('📦 Loading Razorpay v1 script...');
 
     const script = document.createElement('script');
-    // Use the latest version without explicit versioning to get the most recent
+    // Use specific v1 version to avoid v2 preferences API
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
     script.async = true;
     script.defer = true;
@@ -88,7 +88,7 @@ export const loadRazorpayScript = (): Promise<void> => {
     
     script.onload = () => {
       clearTimeout(scriptLoadTimeout);
-      console.log('✅ Razorpay script loaded successfully - LIVE PRODUCTION MODE');
+      console.log('✅ Razorpay v1 script loaded successfully - LIVE PRODUCTION MODE');
       console.log('📊 Razorpay version:', (window as any).Razorpay?.version || 'unknown');
       console.log('🔧 Razorpay instance type:', typeof (window as any).Razorpay);
       
@@ -177,11 +177,26 @@ export const initializePayment = async (
   customerEmail: string,
   customerPhone: string,
   onSuccess: (response: any) => void,
-  onFailure: (error: any) => void
+  onFailure: (error: any) => void,
+  forceDirectCheckout: boolean = false // New parameter to force direct checkout
 ) => {
   try {
     console.log('🚀 Initializing Razorpay payment with backend order...');
     console.log('🔍 Order ID from backend:', orderId);
+    
+    // If forceDirectCheckout is true, skip modal and go directly to checkout
+    if (forceDirectCheckout) {
+      console.log('🔄 Force direct checkout requested, skipping modal...');
+      return await initializeDirectCheckout(
+        orderId,
+        currency,
+        customerName,
+        customerEmail,
+        customerPhone,
+        onSuccess,
+        onFailure
+      );
+    }
     
     // Intercept network requests to detect 400 errors
     let hasNetworkError = false;
@@ -253,6 +268,7 @@ export const initializePayment = async (
 
     // Create Razorpay options using backend order_id
     // IMPORTANT: Do NOT include 'amount' when using 'order_id' - amount is tied to the backend order
+    // Force v1 checkout to avoid v2 preferences API issues
     const options = {
       key: RAZORPAY_CONFIG.key_id,
       currency: currency || 'INR',
@@ -267,6 +283,16 @@ export const initializePayment = async (
       theme: {
         color: '#dc2626',
       },
+      // Force v1 checkout mode
+      checkout: {
+        method: {
+          upi: "force",
+          card: "force",
+          netbanking: "force"
+        }
+      },
+      // Disable v2 features that cause the preferences API call
+      v2: false,
       handler: (response: any) => {
         console.log('✅ Payment completed successfully:', response);
         // Restore original functions
@@ -358,9 +384,9 @@ export const initializePayment = async (
             onFailure
           );
         }
-      }, 1500); // Check after 1.5 seconds
+      }, 1000); // Check after 1 second (faster fallback)
       
-      // Also add a more proactive check - if the modal doesn't show up after 2 seconds, use fallback
+      // Also add a more proactive check - if the modal doesn't show up after 1.5 seconds, use fallback
       setTimeout(() => {
         if (!fallbackTriggered) {
           // Check if there are any Razorpay elements visible on the page
@@ -397,7 +423,7 @@ export const initializePayment = async (
             );
           }
         }
-      }, 2000); // Check after 2 seconds
+      }, 1500); // Check after 1.5 seconds (faster fallback)
       
     } catch (openError) {
       console.error('❌ Error opening Razorpay modal:', openError);
@@ -491,6 +517,10 @@ export const initializeDirectCheckout = async (
     checkoutUrl.searchParams.set('prefill[contact]', customerPhone);
     checkoutUrl.searchParams.set('theme[color]', '#dc2626');
     
+    // Force v1 checkout mode
+    checkoutUrl.searchParams.set('checkout_v2', '0');
+    checkoutUrl.searchParams.set('v2', 'false');
+    
     // Add callback URL for better integration
     const currentOrigin = window.location.origin;
     checkoutUrl.searchParams.set('callback_url', `${currentOrigin}/payment-success`);
@@ -499,6 +529,7 @@ export const initializeDirectCheckout = async (
     const finalUrl = checkoutUrl.toString();
     console.log('🔗 Direct checkout URL created:', finalUrl);
     console.log('💰 Amount is tied to backend order_id:', orderId);
+    console.log('🔧 Forcing v1 checkout mode to avoid v2 preferences API');
     
     // Show user notification about fallback
     console.log('ℹ️ Using direct checkout as fallback method');
