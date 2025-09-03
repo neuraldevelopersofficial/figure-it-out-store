@@ -215,6 +215,17 @@ class ApiClient {
     }
   }
 
+  async cleanupInvalidProducts() {
+    try {
+      return await this.request('/admin/products/cleanup', {
+        method: 'DELETE'
+      });
+    } catch (error) {
+      console.error('Error in cleanupInvalidProducts:', error);
+      throw error;
+    }
+  }
+
   async deleteProduct(id: string) {
     return this.request(`/admin/products/${id}`, {
       method: 'DELETE',

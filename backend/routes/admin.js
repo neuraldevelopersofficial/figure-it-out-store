@@ -395,36 +395,79 @@ router.put('/products/:id', authenticateToken, requireAdmin, async (req, res) =>
   }
 });
 
-// Delete all products (admin only) - MUST be defined BEFORE the :id route to avoid route conflicts
 // Delete all products
 router.delete('/products/all', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    // Try to use database first
-    const productsCollection = await getCollection(COLLECTIONS.PRODUCTS);
-    if (productsCollection) {
-      const result = await productsCollection.deleteMany({});
-      const deletedCount = result.deletedCount;
+    const store = require('../store/productsStore');
+    await store.init(); // Ensure store is initialized
+    
+    const col = await getProductsCollection();
+    if (col) {
+      // Delete all products from MongoDB collection
+      await col.deleteMany({});
+      return res.json({ success: true, message: 'All products deleted successfully' });
+    }
+    
+    // Fallback to in-memory store if database is not available
+    await store.deleteAll();
+    res.json({ success: true, message: 'All products deleted successfully' });
+  } catch (error) {
+    console.error('Delete all products error:', error);
+    res.status(500).json({ error: 'Failed to delete all products' });
+  }
+});
+
+// Cleanup invalid products (empty names, 0 price, 0 stock)
+router.delete('/products/cleanup', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const store = require('../store/productsStore');
+    await store.init(); // Ensure store is initialized
+    
+    const col = await getProductsCollection();
+    if (col) {
+      // Find and delete invalid products from MongoDB collection
+      const result = await col.deleteMany({
+        $or: [
+          { name: { $exists: false } },
+          { name: null },
+          { name: '' },
+          { price: { $lte: 0 } },
+          { stock_quantity: { $lte: 0 } }
+        ]
+      });
       
-      console.log(`Deleted ${deletedCount} products from database`);
-      return res.json({
-        success: true,
-        message: `Successfully deleted all products (${deletedCount} items removed)`
+      return res.json({ 
+        success: true, 
+        message: `Cleaned up ${result.deletedCount} invalid products`,
+        deletedCount: result.deletedCount
       });
     }
     
     // Fallback to in-memory store if database is not available
-    const store = require('../store/productsStore');
-    await store.init(); // Ensure store is initialized
-    const deletedCount = store.clearAll();
+    const products = await store.getAll();
+    const invalidProducts = products.filter(p => 
+      !p.name || p.name.trim() === '' || p.price <= 0 || p.stock_quantity <= 0
+    );
     
-    console.log(`Cleared ${deletedCount} products from in-memory store`);
-     return res.json({
-       success: true,
-       message: `Successfully deleted all products from in-memory store (${deletedCount} items removed)`
-     });
+    let deletedCount = 0;
+    for (const product of invalidProducts) {
+      try {
+        await store.delete(product.id);
+        deletedCount++;
+      } catch (error) {
+        console.error(`Failed to delete invalid product ${product.id}:`, error);
+      }
+    }
+    
+    res.json({ 
+      success: true, 
+      message: `Cleaned up ${deletedCount} invalid products`,
+      deletedCount
+    });
+    
   } catch (error) {
-    console.error('Delete all products error:', error);
-    res.status(500).json({ error: 'Failed to delete all products' });
+    console.error('Cleanup invalid products error:', error);
+    res.status(500).json({ error: 'Failed to cleanup invalid products' });
   }
 });
 

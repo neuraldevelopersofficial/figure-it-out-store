@@ -178,7 +178,21 @@ const AdminDashboard = () => {
       // Fetch recent products
       const productsResponse = await apiClient.getAdminProducts();
       if (productsResponse.success && Array.isArray(productsResponse.products)) {
-        const validProducts = productsResponse.products.filter(product => product && typeof product === 'object');
+        // Filter out invalid/incomplete products and clean the data
+        const validProducts = productsResponse.products
+          .filter(product => product && typeof product === 'object')
+          .filter(product => product.name && product.name.trim() !== '') // Remove products with empty names
+          .filter(product => product.price > 0) // Remove products with 0 price
+          .map(product => ({
+            ...product,
+            name: product.name?.trim() || 'Unnamed Product',
+            price: Number(product.price) || 0,
+            stock: Number(product.stock) || 0,
+            category: product.category || 'Uncategorized',
+            image: product.image || '/placeholder-product.jpg',
+            images: Array.isArray(product.images) ? product.images : []
+          }));
+        
         setRecentProducts(validProducts.slice(0, 5)); // Get latest 5 products for overview
         setAllProducts(validProducts); // Store all products
       } else {
@@ -341,6 +355,46 @@ const AdminDashboard = () => {
       });
       // Revert to add mode on error
       setBulkMode('add');
+    } finally {
+      setBulkUploading(false);
+    }
+  };
+
+  // Clean up invalid products
+  const handleCleanupInvalidProducts = async () => {
+    if (!window.confirm('This will remove all products with missing names, 0 price, or 0 stock. Continue?')) {
+      return;
+    }
+    
+    try {
+      setBulkUploading(true);
+      
+      // Use the new backend cleanup endpoint
+      const response = await apiClient.cleanupInvalidProducts();
+      
+      if (response.success) {
+        toast({
+          title: "Cleanup Complete",
+          description: response.message || `Removed ${response.deletedCount} invalid products.`,
+        });
+        
+        // Refresh the data
+        fetchAdminData();
+      } else {
+        toast({
+          title: "Cleanup Failed",
+          description: response.message || "Failed to clean up invalid products.",
+          variant: "destructive"
+        });
+      }
+      
+    } catch (error) {
+      console.error('Error during cleanup:', error);
+      toast({
+        title: "Cleanup Failed",
+        description: "Failed to clean up invalid products.",
+        variant: "destructive"
+      });
     } finally {
       setBulkUploading(false);
     }
@@ -1137,6 +1191,15 @@ const AdminDashboard = () => {
                       <Trash2 className="h-4 w-4 mr-2" />
                       Delete All
                     </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={handleCleanupInvalidProducts}
+                      disabled={bulkUploading}
+                      className="hover:bg-red-50 hover:text-red-700 hover:border-red-300"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Cleanup Invalid Products
+                    </Button>
                   </div>
                 </div>
               </CardHeader>
@@ -1253,6 +1316,22 @@ const AdminDashboard = () => {
 
                   {/* Product List */}
                   <div className="overflow-x-auto">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h3 className="text-lg font-semibold">All Products</h3>
+                        <p className="text-sm text-gray-600">
+                          Total: {allProducts.length} | 
+                          Valid: {allProducts.filter(p => p.name && p.price > 0 && p.stock > 0).length} | 
+                          Invalid: {allProducts.filter(p => !p.name || p.price <= 0 || p.stock <= 0).length}
+                        </p>
+                        {allProducts.filter(p => !p.name || p.price <= 0 || p.stock <= 0).length > 0 && (
+                          <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
+                            ⚠️ Found {allProducts.filter(p => !p.name || p.price <= 0 || p.stock <= 0).length} invalid products. 
+                            Use "Cleanup Invalid Products" to remove them.
+                          </div>
+                        )}
+                      </div>
+                    </div>
                     <table className="w-full">
                       <thead>
                         <tr className="border-b">
@@ -1273,17 +1352,25 @@ const AdminDashboard = () => {
                               <td className="p-2 font-medium text-gray-500">{index + 1}</td>
                               <td className="p-2">
                                 <div className="relative group">
-                                  <img 
-                                    src={product.image || '/placeholder-product.jpg'} 
-                                    alt={product.name}
-                                    className="w-12 h-12 object-cover rounded"
-                                    onError={(e) => {
-                                      const target = e.currentTarget as HTMLImageElement;
-                                      target.src = '/placeholder-product.jpg';
-                                    }}
-                                  />
+                                  {product.image && product.image !== '/placeholder-product.jpg' ? (
+                                    <img 
+                                      src={product.image} 
+                                      alt={product.name}
+                                      className="w-12 h-12 object-cover rounded border border-gray-200"
+                                      onError={(e) => {
+                                        const target = e.currentTarget as HTMLImageElement;
+                                        target.src = '/placeholder-image.png';
+                                        target.classList.add('bg-gray-100');
+                                        console.log(`Image failed to load for product: ${product.name}`);
+                                      }}
+                                    />
+                                  ) : (
+                                    <div className="w-12 h-12 bg-gray-100 rounded border border-gray-200 flex items-center justify-center">
+                                      <ImageIcon className="h-6 w-6 text-gray-400" />
+                                    </div>
+                                  )}
                                   {product.images && product.images.length > 0 && (
-                                    <div className="absolute top-0 right-0 bg-gray-800 text-white text-xs px-1 rounded-bl">
+                                    <div className="absolute top-0 right-0 bg-blue-600 text-white text-xs px-1 rounded-bl">
                                       +{product.images.length}
                                     </div>
                                   )}
@@ -1294,19 +1381,19 @@ const AdminDashboard = () => {
                                   )}
                                 </div>
                               </td>
-                              <td className="p-2 font-medium">{product.name}</td>
-                              <td className="p-2 text-sm text-gray-600">{product.category}</td>
-                              <td className="p-2">₹{product.price ? product.price.toLocaleString() : '0'}</td>
+                              <td className="p-2 font-medium text-gray-900">{product.name || 'Unnamed Product'}</td>
+                              <td className="p-2 text-sm text-gray-600">{product.category || 'Uncategorized'}</td>
+                              <td className="p-2 font-semibold text-green-600">₹{product.price ? product.price.toLocaleString() : '0'}</td>
                               <td className="p-2">
-                                <Badge variant={product.stock < 10 ? "destructive" : "secondary"}>
+                                <Badge variant={product.stock < 10 ? "destructive" : product.stock > 0 ? "secondary" : "outline"}>
                                   {product.stock}
                                 </Badge>
                               </td>
                               <td className="p-2">
-                              <Badge variant={product.stock > 0 ? "default" : "destructive"}>
-                                {product.stock > 0 ? "In Stock" : "Out of Stock"}
-                              </Badge>
-                            </td>
+                                <Badge variant={product.stock > 0 ? "default" : "destructive"}>
+                                  {product.stock > 0 ? "In Stock" : "Out of Stock"}
+                                </Badge>
+                              </td>
                             <td className="p-2">
                               <div className="flex space-x-2">
                                 <Button 

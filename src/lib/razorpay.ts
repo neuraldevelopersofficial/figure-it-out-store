@@ -183,25 +183,65 @@ export const initializePayment = async (
   try {
     console.log('🚀 Initializing Razorpay payment...');
     
-    // Add global error handler for network errors
-    const originalOnError = window.onerror;
+    // Intercept network requests to detect 400 errors
     let hasNetworkError = false;
+    let fallbackTriggered = false;
     
-    window.onerror = (message, source, lineno, colno, error) => {
-      if (message && typeof message === 'string' && (
-        message.includes('400') || 
-        message.includes('Bad Request') || 
-        message.includes('v2-entry.modern.js') ||
-        source?.includes('razorpay.com')
-      )) {
-        console.log('🌐 Network error detected, will use fallback:', message);
+    // Monitor console for 400 errors
+    const originalConsoleError = console.error;
+    console.error = function(...args) {
+      const message = args.join(' ');
+      if (message.includes('400') || message.includes('Bad Request') || message.includes('v2-entry.modern.js')) {
+        console.log('🔄 400 error detected in console, will trigger fallback');
         hasNetworkError = true;
       }
-      // Call original error handler if it exists
-      if (originalOnError) {
-        return originalOnError(message, source, lineno, colno, error);
+      return originalConsoleError.apply(this, args);
+    };
+    
+    // Intercept fetch requests
+    const originalFetch = window.fetch;
+    window.fetch = function(...args) {
+      const url = args[0];
+      if (typeof url === 'string' && url.includes('razorpay.com')) {
+        console.log('🌐 Intercepting Razorpay request:', url);
+        
+        return originalFetch.apply(this, args).then(response => {
+          if (response.status === 400) {
+            console.log('🔄 400 Bad Request detected in fetch, will trigger fallback');
+            hasNetworkError = true;
+          }
+          return response;
+        }).catch(error => {
+          console.log('🌐 Fetch error detected:', error);
+          hasNetworkError = true;
+          throw error;
+        });
       }
-      return false;
+      return originalFetch.apply(this, args);
+    };
+    
+    // Intercept XMLHttpRequest
+    const originalXHROpen = XMLHttpRequest.prototype.open;
+    const originalXHRSend = XMLHttpRequest.prototype.send;
+    
+    XMLHttpRequest.prototype.open = function(method, url, ...args) {
+      if (typeof url === 'string' && url.includes('razorpay.com')) {
+        console.log('🌐 Intercepting Razorpay XHR request:', url);
+        this._isRazorpayRequest = true;
+      }
+      return originalXHROpen.apply(this, [method, url, ...args]);
+    };
+    
+    XMLHttpRequest.prototype.send = function(...args) {
+      if (this._isRazorpayRequest) {
+        this.addEventListener('readystatechange', () => {
+          if (this.readyState === 4 && this.status === 400) {
+            console.log('🔄 400 Bad Request detected in XHR, will trigger fallback');
+            hasNetworkError = true;
+          }
+        });
+      }
+      return originalXHRSend.apply(this, args);
     };
     
     await loadRazorpayScript();
@@ -230,15 +270,21 @@ export const initializePayment = async (
       },
       handler: (response: any) => {
         console.log('✅ Payment completed successfully:', response);
-        // Restore original error handler
-        window.onerror = originalOnError;
+        // Restore original functions
+        window.fetch = originalFetch;
+        XMLHttpRequest.prototype.open = originalXHROpen;
+        XMLHttpRequest.prototype.send = originalXHRSend;
+        console.error = originalConsoleError;
         onSuccess(response);
       },
       modal: {
         ondismiss: () => {
           console.log('⚠️ Payment modal dismissed');
-          // Restore original error handler
-          window.onerror = originalOnError;
+          // Restore original functions
+          window.fetch = originalFetch;
+          XMLHttpRequest.prototype.open = originalXHROpen;
+          XMLHttpRequest.prototype.send = originalXHRSend;
+          console.error = originalConsoleError;
           onFailure(new Error('Payment cancelled'));
         },
       }
@@ -278,8 +324,9 @@ export const initializePayment = async (
       
       // Check for network errors after a short delay
       setTimeout(() => {
-        if (hasNetworkError) {
+        if (hasNetworkError && !fallbackTriggered) {
           console.log('🔄 Network error detected, triggering fallback...');
+          fallbackTriggered = true;
           showUserNotification('Network error detected, using alternative checkout method...', 'warning');
           
           // Close the modal if it's open
@@ -289,6 +336,12 @@ export const initializePayment = async (
             console.log('Modal already closed or not open');
           }
           
+          // Restore original functions
+          window.fetch = originalFetch;
+          XMLHttpRequest.prototype.open = originalXHROpen;
+          XMLHttpRequest.prototype.send = originalXHRSend;
+          console.error = originalConsoleError;
+          
           // Trigger fallback
           initializeDirectCheckout(
             orderId,
@@ -300,43 +353,58 @@ export const initializePayment = async (
             onSuccess,
             onFailure
           );
+        }
+      }, 1500); // Check after 1.5 seconds
+      
+      // Also add a more proactive check - if the modal doesn't show up after 2 seconds, use fallback
+      setTimeout(() => {
+        if (!fallbackTriggered) {
+          // Check if there are any Razorpay elements visible on the page
+          const razorpayElements = document.querySelectorAll('[class*="razorpay"], [id*="razorpay"]');
+          const hasRazorpayUI = razorpayElements.length > 0;
+          
+          if (!hasRazorpayUI && !hasNetworkError) {
+            console.log('🔄 Razorpay modal not visible, triggering fallback...');
+            fallbackTriggered = true;
+            showUserNotification('Payment modal not loading, using alternative checkout method...', 'warning');
+            
+            // Close the modal if it's open
+            try {
+              razorpay.close();
+            } catch (e) {
+              console.log('Modal already closed or not open');
+            }
+            
+            // Restore original functions
+            window.fetch = originalFetch;
+            XMLHttpRequest.prototype.open = originalXHROpen;
+            XMLHttpRequest.prototype.send = originalXHRSend;
+            console.error = originalConsoleError;
+            
+            // Trigger fallback
+            initializeDirectCheckout(
+              orderId,
+              amount,
+              currency,
+              customerName,
+              customerEmail,
+              customerPhone,
+              onSuccess,
+              onFailure
+            );
+          }
         }
       }, 2000); // Check after 2 seconds
-      
-      // Also add a more proactive check - if the modal doesn't show up after 3 seconds, use fallback
-      setTimeout(() => {
-        // Check if there are any Razorpay elements visible on the page
-        const razorpayElements = document.querySelectorAll('[class*="razorpay"], [id*="razorpay"]');
-        const hasRazorpayUI = razorpayElements.length > 0;
-        
-        if (!hasRazorpayUI && !hasNetworkError) {
-          console.log('🔄 Razorpay modal not visible, triggering fallback...');
-          showUserNotification('Payment modal not loading, using alternative checkout method...', 'warning');
-          
-          // Close the modal if it's open
-          try {
-            razorpay.close();
-          } catch (e) {
-            console.log('Modal already closed or not open');
-          }
-          
-          // Trigger fallback
-          initializeDirectCheckout(
-            orderId,
-            amount,
-            currency,
-            customerName,
-            customerEmail,
-            customerPhone,
-            onSuccess,
-            onFailure
-          );
-        }
-      }, 3000); // Check after 3 seconds
       
     } catch (openError) {
       console.error('❌ Error opening Razorpay modal:', openError);
       showUserNotification('Payment modal failed to open, trying alternative method...', 'warning');
+      
+      // Restore original functions
+      window.fetch = originalFetch;
+      XMLHttpRequest.prototype.open = originalXHROpen;
+      XMLHttpRequest.prototype.send = originalXHRSend;
+      console.error = originalConsoleError;
       
       // If modal opening fails, try direct checkout as fallback
       console.log('🔄 Falling back to direct checkout...');

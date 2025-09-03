@@ -5,6 +5,7 @@ import { useStore } from '@/context/StoreContext';
 import { apiClient } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { FallbackImage } from '@/components/ui/fallback-image';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
@@ -456,10 +457,11 @@ const Checkout: React.FC = () => {
                 {cartItems.map((item) => (
                   <div key={item.id} className="flex justify-between items-center">
                     <div className="flex items-center space-x-3">
-                      <img
+                      <FallbackImage
                         src={item.image}
                         alt={item.name}
                         className="w-12 h-12 object-cover rounded"
+                        fallbackSrc="https://via.placeholder.com/50"
                       />
                       <div>
                         <p className="font-medium">{item.name}</p>
