@@ -166,63 +166,122 @@ const Checkout: React.FC = () => {
         throw new Error(razorpayResponse.error || 'Failed to create payment order');
       }
 
-      // Import and use the proper Razorpay integration
-      const { initializePayment } = await import('@/lib/razorpay');
+      // Import and use the proper Razorpay integration with fallback
+      const { initializePayment, initializeDirectCheckout } = await import('@/lib/razorpay');
       
-      // Initialize Razorpay payment with proper integration
-      await initializePayment(
-        razorpayResponse.order_id,
-        razorpayResponse.amount,
-        razorpayResponse.currency || 'INR',
-        user.full_name,
-        user.email,
-        shippingAddress.phone || '',
-        async (paymentResponse: any) => {
-          try {
-            console.log('Payment successful:', paymentResponse);
-            
-            // Verify payment signature
-            const verificationResponse = await apiClient.verifyPayment({
-              razorpay_order_id: paymentResponse.razorpay_order_id,
-              razorpay_payment_id: paymentResponse.razorpay_payment_id,
-              razorpay_signature: paymentResponse.razorpay_signature
-            });
-
-            if (verificationResponse.success && verificationResponse.verified) {
-              // Update order status
-              await apiClient.updateOrderStatus(orderResponse.order.id, 'confirmed');
+      // Try the main Razorpay integration first
+      try {
+        await initializePayment(
+          razorpayResponse.order_id,
+          razorpayResponse.amount,
+          razorpayResponse.currency || 'INR',
+          user.full_name,
+          user.email,
+          shippingAddress.phone || '',
+          async (paymentResponse: any) => {
+            try {
+              console.log('Payment successful:', paymentResponse);
               
-              // Clear cart
-              clearCart();
-              
-              toast({
-                title: "Payment successful!",
-                description: "Your order has been placed successfully.",
+              // Verify payment signature
+              const verificationResponse = await apiClient.verifyPayment({
+                razorpay_order_id: paymentResponse.razorpay_order_id,
+                razorpay_payment_id: paymentResponse.razorpay_payment_id,
+                razorpay_signature: paymentResponse.razorpay_signature
               });
 
-              // Redirect to order confirmation
-              navigate('/orders');
-            } else {
-              throw new Error('Payment verification failed');
+              if (verificationResponse.success && verificationResponse.verified) {
+                // Update order status
+                await apiClient.updateOrderStatus(orderResponse.order.id, 'confirmed');
+                
+                // Clear cart
+                clearCart();
+                
+                toast({
+                  title: "Payment successful!",
+                  description: "Your order has been placed successfully.",
+                });
+
+                // Redirect to order confirmation
+                navigate('/orders');
+              } else {
+                throw new Error('Payment verification failed');
+              }
+            } catch (error) {
+              console.error('Payment verification error:', error);
+              toast({
+                title: "Payment verification failed",
+                description: "Please contact support for assistance.",
+                variant: "destructive"
+              });
             }
-          } catch (error) {
-            console.error('Payment verification error:', error);
+          },
+          (error: any) => {
+            console.error('Payment failed:', error);
             toast({
-              title: "Payment verification failed",
-              description: "Please contact support for assistance.",
+              title: "Payment failed",
+              description: error.message || "Payment was not completed",
               variant: "destructive"
             });
           }
-        },
-        (error: any) => {
-          console.error('Payment failed:', error);
-          toast({
-            title: "Payment failed",
-            description: error.message || "Payment was not completed",
-            variant: "destructive"
-          });
-        }
-      );
+        );
+      } catch (error) {
+        console.log('Main Razorpay integration failed, trying direct checkout...', error);
+        
+        // Fallback to direct checkout method
+        await initializeDirectCheckout(
+          razorpayResponse.order_id,
+          razorpayResponse.amount,
+          razorpayResponse.currency || 'INR',
+          user.full_name,
+          user.email,
+          shippingAddress.phone || '',
+          async (paymentResponse: any) => {
+            try {
+              console.log('Direct checkout payment successful:', paymentResponse);
+              
+              // Verify payment signature
+              const verificationResponse = await apiClient.verifyPayment({
+                razorpay_order_id: paymentResponse.razorpay_order_id,
+                razorpay_payment_id: paymentResponse.razorpay_payment_id,
+                razorpay_signature: paymentResponse.razorpay_signature
+              });
+
+              if (verificationResponse.success && verificationResponse.verified) {
+                // Update order status
+                await apiClient.updateOrderStatus(orderResponse.order.id, 'confirmed');
+                
+                // Clear cart
+                clearCart();
+                
+                toast({
+                  title: "Payment successful!",
+                  description: "Your order has been placed successfully via direct checkout.",
+                });
+
+                // Redirect to order confirmation
+                navigate('/orders');
+              } else {
+                throw new Error('Payment verification failed');
+              }
+            } catch (error) {
+              console.error('Direct checkout payment verification error:', error);
+              toast({
+                title: "Payment verification failed",
+                description: "Please contact support for assistance.",
+                variant: "destructive"
+              });
+            }
+          },
+          (error: any) => {
+            console.error('Direct checkout failed:', error);
+            toast({
+              title: "Payment failed",
+              description: "Both payment methods failed. Please contact support.",
+              variant: "destructive"
+            });
+          }
+        );
+      }
 
     } catch (error: any) {
       console.error('Checkout error:', error);

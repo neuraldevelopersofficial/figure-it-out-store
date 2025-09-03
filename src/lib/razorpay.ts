@@ -45,7 +45,7 @@ const clearExistingRazorpay = () => {
   }
 };
 
-// Load fresh Razorpay script with cache busting
+// Load fresh Razorpay script with explicit version and cache busting
 export const loadRazorpayScript = (): Promise<void> => {
   return new Promise((resolve, reject) => {
     // Clear any existing Razorpay instances and scripts
@@ -54,15 +54,16 @@ export const loadRazorpayScript = (): Promise<void> => {
     console.log('📦 Loading fresh Razorpay script...');
 
     const script = document.createElement('script');
-    // Use cache busting to ensure fresh script load
+    // Force latest version with explicit versioning and cache busting
     const timestamp = new Date().getTime();
-    script.src = `https://checkout.razorpay.com/v1/checkout.js?v=${timestamp}&cache=false`;
+    script.src = `https://checkout.razorpay.com/v1/checkout.js?v=1.6.36&t=${timestamp}&cache=false`;
     script.async = true;
     script.defer = true;
     
     // Add additional attributes to ensure fresh load
     script.setAttribute('data-timestamp', timestamp.toString());
     script.setAttribute('data-integration', 'modern-orders-api');
+    script.setAttribute('data-version', '1.6.36');
     
     script.onload = () => {
       console.log('✅ Razorpay script loaded successfully - LIVE PRODUCTION MODE');
@@ -141,14 +142,15 @@ export const initializePayment = async (
       throw new Error('Missing required payment parameters');
     }
 
-    // Ensure we're using the modern Razorpay orders API
+    // Create a minimal options object to force modern API usage
+    // The key is to use ONLY the essential parameters and avoid any legacy options
     const options = {
       key: RAZORPAY_CONFIG.key_id,
-      amount: Number(amount),    // ensure it's a number
+      amount: Number(amount),
       currency: currency || 'INR',
       name: 'FIGURE IT OUT',
       description: 'Anime Collectibles Purchase',
-      order_id: orderId, // Critical: use order_id for modern API
+      order_id: orderId, // This is critical - must use order_id
       prefill: {
         name: customerName,
         email: customerEmail,
@@ -166,12 +168,6 @@ export const initializePayment = async (
           console.log('⚠️ Payment modal dismissed');
           onFailure(new Error('Payment cancelled'));
         },
-      },
-      // Force modern API usage
-      notes: {
-        mode: 'live_production',
-        integration: 'modern_orders_api',
-        timestamp: new Date().toISOString()
       }
     };
 
@@ -181,7 +177,7 @@ export const initializePayment = async (
       currency: options.currency,
       order_id: options.order_id,
       mode: 'LIVE PRODUCTION',
-      api_version: 'v1_orders_modern'
+      api_version: 'v1.6.36_minimal'
     });
 
     // Ensure we're using the modern Razorpay instance
@@ -193,16 +189,71 @@ export const initializePayment = async (
     console.log('🔨 Creating Razorpay instance...');
     console.log('🔧 Razorpay constructor available:', !!(window as any).Razorpay);
     
+    // Create Razorpay instance with minimal options
     const razorpay = new (window as any).Razorpay(options);
     
     // Log the created instance
     console.log('✅ Razorpay instance created successfully');
     console.log('🚀 Opening payment modal...');
     
+    // Open payment modal
     razorpay.open();
     
   } catch (error) {
     console.error('❌ Error initializing payment:', error);
+    onFailure(error);
+  }
+};
+
+// Alternative method: Direct checkout without script loading
+export const initializeDirectCheckout = async (
+  orderId: string,
+  amount: number,
+  currency: string = 'INR',
+  customerName: string,
+  customerEmail: string,
+  customerPhone: string,
+  onSuccess: (response: any) => void,
+  onFailure: (error: any) => void
+) => {
+  try {
+    console.log('🚀 Initializing direct Razorpay checkout...');
+    
+    // Create checkout URL directly
+    const checkoutUrl = `https://checkout.razorpay.com/v1/checkout.html?key=${RAZORPAY_CONFIG.key_id}&amount=${amount}&currency=${currency}&name=FIGURE%20IT%20OUT&description=Anime%20Collectibles%20Purchase&order_id=${orderId}&prefill[name]=${encodeURIComponent(customerName)}&prefill[email]=${encodeURIComponent(customerEmail)}&prefill[contact]=${encodeURIComponent(customerPhone)}&theme[color]=%23dc2626`;
+    
+    console.log('🔗 Direct checkout URL created:', checkoutUrl);
+    
+    // Open in new window/tab
+    const checkoutWindow = window.open(checkoutUrl, '_blank', 'width=500,height=600');
+    
+    if (!checkoutWindow) {
+      throw new Error('Failed to open checkout window');
+    }
+    
+    // Listen for messages from checkout window
+    const messageHandler = (event: MessageEvent) => {
+      if (event.origin === 'https://checkout.razorpay.com') {
+        console.log('✅ Payment message received:', event.data);
+        onSuccess(event.data);
+        checkoutWindow.close();
+        window.removeEventListener('message', messageHandler);
+      }
+    };
+    
+    window.addEventListener('message', messageHandler);
+    
+    // Fallback: check if window is closed
+    const checkClosed = setInterval(() => {
+      if (checkoutWindow.closed) {
+        clearInterval(checkClosed);
+        window.removeEventListener('message', messageHandler);
+        onFailure(new Error('Checkout window closed'));
+      }
+    }, 1000);
+    
+  } catch (error) {
+    console.error('❌ Error initializing direct checkout:', error);
     onFailure(error);
   }
 };
