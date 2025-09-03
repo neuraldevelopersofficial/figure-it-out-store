@@ -169,10 +169,9 @@ export const createRazorpayOrder = async (amount: number, currency: string = 'IN
 };
 
 // Initialize Razorpay payment using latest orders API
-// ✅ Use amount + order_id returned from backend directly
+// ✅ Use order_id returned from backend directly - amount is tied to the order
 export const initializePayment = async (
   orderId: string,
-  amount: number, // this should already be in paise (from backend order)
   currency: string = 'INR',
   customerName: string,
   customerEmail: string,
@@ -247,19 +246,19 @@ export const initializePayment = async (
     await loadRazorpayScript();
 
     // Validate inputs
-    if (!orderId || !amount || !customerName || !customerEmail) {
+    if (!orderId || !customerName || !customerEmail) {
       throw new Error('Missing required payment parameters');
     }
 
     // Create modern options object with only essential parameters
     // Avoid deprecated parameters and use the latest API structure
+    // IMPORTANT: Do NOT include 'amount' when using 'order_id' - amount is tied to the backend order
     const options = {
       key: RAZORPAY_CONFIG.key_id,
-      amount: Number(amount),
       currency: currency || 'INR',
       name: 'FIGURE IT OUT',
       description: 'Anime Collectibles Purchase',
-      order_id: orderId,
+      order_id: orderId, // This contains the amount from backend order
       prefill: {
         name: customerName,
         email: customerEmail,
@@ -289,18 +288,24 @@ export const initializePayment = async (
         },
       }
       // Removed potentially problematic parameters:
+      // - amount (conflicts with order_id - amount is tied to backend order)
       // - notes (might cause API compatibility issues)
       // - retry (not supported in all versions)
     };
 
     console.log('🔧 Razorpay payment options:', {
       key: options.key,
-      amount: options.amount,
       currency: options.currency,
       order_id: options.order_id,
       mode: 'LIVE PRODUCTION',
-      api_version: 'latest'
+      api_version: 'latest',
+      note: 'Amount is tied to order_id from backend'
     });
+
+    // Log the exact options object being passed to Razorpay
+    console.log('🎯 Final Razorpay options object:', JSON.stringify(options, null, 2));
+    console.log('🔍 Order ID being used:', orderId);
+    console.log('💰 Amount is tied to backend order, not set in frontend options');
 
     // Ensure we're using the modern Razorpay instance
     if (!(window as any).Razorpay) {
@@ -345,7 +350,6 @@ export const initializePayment = async (
           // Trigger fallback
           initializeDirectCheckout(
             orderId,
-            amount,
             currency,
             customerName,
             customerEmail,
@@ -384,7 +388,6 @@ export const initializePayment = async (
             // Trigger fallback
             initializeDirectCheckout(
               orderId,
-              amount,
               currency,
               customerName,
               customerEmail,
@@ -410,7 +413,6 @@ export const initializePayment = async (
       console.log('🔄 Falling back to direct checkout...');
       await initializeDirectCheckout(
         orderId,
-        amount,
         currency,
         customerName,
         customerEmail,
@@ -439,7 +441,6 @@ export const initializePayment = async (
       try {
         await initializeDirectCheckout(
           orderId,
-          amount,
           currency,
           customerName,
           customerEmail,
@@ -463,7 +464,6 @@ export const initializePayment = async (
 // Alternative method: Direct checkout without script loading
 export const initializeDirectCheckout = async (
   orderId: string,
-  amount: number,
   currency: string = 'INR',
   customerName: string,
   customerEmail: string,
@@ -478,7 +478,7 @@ export const initializeDirectCheckout = async (
     // Create checkout URL directly with all necessary parameters
     const checkoutUrl = new URL('https://checkout.razorpay.com/v1/checkout.html');
     checkoutUrl.searchParams.set('key', RAZORPAY_CONFIG.key_id);
-    checkoutUrl.searchParams.set('amount', amount.toString());
+    // Note: amount is tied to order_id, so we don't need to set it separately
     checkoutUrl.searchParams.set('currency', currency);
     checkoutUrl.searchParams.set('name', 'FIGURE IT OUT');
     checkoutUrl.searchParams.set('description', 'Anime Collectibles Purchase');

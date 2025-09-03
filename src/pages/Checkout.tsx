@@ -174,7 +174,6 @@ const Checkout: React.FC = () => {
       try {
         await initializePayment(
           razorpayResponse.order_id,
-          razorpayResponse.amount,
           razorpayResponse.currency || 'INR',
           user.full_name,
           user.email,
@@ -231,7 +230,6 @@ const Checkout: React.FC = () => {
         // Fallback to direct checkout method
         await initializeDirectCheckout(
           razorpayResponse.order_id,
-          razorpayResponse.amount,
           razorpayResponse.currency || 'INR',
           user.full_name,
           user.email,
