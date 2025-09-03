@@ -1,7 +1,7 @@
 // Razorpay configuration
 export const RAZORPAY_CONFIG = {
-  key_id: 'rzp_test_R7AXdwnh3RUvQR',
-  key_secret: '8UkNGt4GrIudI8tA6cZL3XHz',
+  key_id: 'rzp_live_RD4Ia7eTGct90w',
+  key_secret: 'B18FWmc6yNaaVSQkPDULsJ2U',
   currency: 'INR',
 };
 

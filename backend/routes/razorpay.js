@@ -3,10 +3,10 @@ const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const router = express.Router();
 
-// Initialize Razorpay with your test keys
+// Initialize Razorpay with your live keys
 const razorpay = new Razorpay({
-  key_id: 'rzp_test_R7AXdwnh3RUvQR',
-  key_secret: '8UkNGt4GrIudI8tA6cZL3XHz'
+  key_id: 'rzp_live_RD4Ia7eTGct90w',
+  key_secret: 'B18FWmc6yNaaVSQkPDULsJ2U'
 });
 
 // Create Razorpay order
@@ -61,7 +61,7 @@ router.post('/verify-payment', async (req, res) => {
     
     // Generate expected signature
     const expectedSignature = crypto
-      .createHmac('sha256', '8UkNGt4GrIudI8tA6cZL3XHz')
+      .createHmac('sha256', 'B18FWmc6yNaaVSQkPDULsJ2U')
       .update(body.toString())
       .digest('hex');
 

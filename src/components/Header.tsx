@@ -103,9 +103,9 @@ const Header = () => {
             {/* Wishlist */}
             <Link to="/wishlist">
               <Button variant="ghost" size="sm" className="relative">
-                <Heart className="h-5 w-5 text-foreground" />
+                <Heart className="h-5 w-5 text-black" />
                 <Badge 
-                  className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center text-xs bg-brand-red transition-opacity"
+                  className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center text-xs bg-brand-red text-black transition-opacity"
                   style={{ opacity: state.wishlist.length > 0 ? 1 : 0 }}
                 >
                   {state.wishlist.length}
@@ -116,9 +116,9 @@ const Header = () => {
             {/* Cart */}
             <Link to="/cart">
               <Button variant="ghost" size="sm" className="relative">
-                <ShoppingCart className="h-5 w-5 text-foreground" />
+                <ShoppingCart className="h-5 w-5 text-black" />
                 <Badge 
-                  className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center text-xs bg-brand-red transition-opacity"
+                  className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center text-xs bg-brand-red text-black transition-opacity"
                   style={{ opacity: getCartItemCount() > 0 ? 1 : 0 }}
                 >
                   {getCartItemCount()}
@@ -132,7 +132,7 @@ const Header = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="relative">
                     <Avatar className="h-8 w-8">
-                      <AvatarFallback className="bg-brand-red text-white text-sm">
+                      <AvatarFallback className="bg-brand-red text-black text-sm">
                         {getUserInitials(user.full_name)}
                       </AvatarFallback>
                     </Avatar>

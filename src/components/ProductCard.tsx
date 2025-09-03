@@ -67,7 +67,7 @@ const allImages = [
         if (allImages.length > 1) {
           const interval = setInterval(() => {
             setCurrentImageIndex(prev => (prev + 1) % allImages.length);
-          }, 800); // Change image every 800ms for smoother transitions
+          }, 2000); // Change image every 2 seconds
           
           // Store interval ID to clear it on mouse leave
           // Use a unique property name based on product ID to avoid conflicts
