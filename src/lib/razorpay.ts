@@ -1,6 +1,6 @@
 // Simple Razorpay Integration
 export const RAZORPAY_CONFIG = {
-  key_id: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_R7AXdwnh3RUvQR',
+  key_id: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_RD4Ia7eTGct90w',
   currency: 'INR'
 };
 
