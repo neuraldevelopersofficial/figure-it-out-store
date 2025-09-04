@@ -42,7 +42,18 @@ router.post('/verify-payment', async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
+    console.log('🔍 Payment verification request:', {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature: razorpay_signature ? 'present' : 'missing'
+    });
+
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      console.log('❌ Missing payment details:', {
+        has_order_id: !!razorpay_order_id,
+        has_payment_id: !!razorpay_payment_id,
+        has_signature: !!razorpay_signature
+      });
       return res.status(400).json({ error: 'Missing payment details' });
     }
 
@@ -55,16 +66,25 @@ router.post('/verify-payment', async (req, res) => {
       .update(body)
       .digest('hex');
 
+    console.log('🔍 Signature verification:', {
+      body,
+      expectedSignature,
+      receivedSignature: razorpay_signature,
+      isAuthentic: expectedSignature === razorpay_signature
+    });
+
     // Verify signature
     const isAuthentic = expectedSignature === razorpay_signature;
 
     if (isAuthentic) {
+      console.log('✅ Payment verification successful');
       res.json({
         success: true,
         verified: true,
         message: 'Payment verified successfully'
       });
     } else {
+      console.log('❌ Payment verification failed - invalid signature');
       res.status(400).json({
         success: false,
         verified: false,
@@ -73,7 +93,7 @@ router.post('/verify-payment', async (req, res) => {
     }
 
   } catch (error) {
-    console.error('Payment verification error:', error);
+    console.error('❌ Payment verification error:', error);
     res.status(500).json({ error: 'Payment verification failed' });
   }
 });

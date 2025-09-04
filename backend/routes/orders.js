@@ -100,18 +100,27 @@ router.get('/', authenticateToken, async (req, res) => {
     console.log('Fetching orders for user:', { user_id: req.user.id });
     
     const col = await getOrdersCollection();
-    const userOrders = col ? 
-      await col.find({ 
-        $or: [
-          { user_id: req.user.id },
-          { userId: req.user.id }
-        ]
-      }).sort({ created_at: -1 }).toArray() : 
-      orders.filter(o => 
+    if (!col) {
+      console.log('⚠️ Database not available, using in-memory orders');
+      const userOrders = orders.filter(o => 
         o.user_id === req.user.id || o.userId === req.user.id
       ).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      
+      console.log('✅ Found orders in memory for user:', { user_id: req.user.id, count: userOrders.length });
+      return res.json({
+        success: true,
+        orders: userOrders
+      });
+    }
     
-    console.log('✅ Found orders for user:', { user_id: req.user.id, count: userOrders.length });
+    const userOrders = await col.find({ 
+      $or: [
+        { user_id: req.user.id },
+        { userId: req.user.id }
+      ]
+    }).sort({ created_at: -1 }).toArray();
+    
+    console.log('✅ Found orders in database for user:', { user_id: req.user.id, count: userOrders.length });
     
     res.json({
       success: true,
@@ -119,7 +128,7 @@ router.get('/', authenticateToken, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Orders fetch error:', error);
+    console.error('❌ Orders fetch error:', error);
     res.status(500).json({ error: 'Failed to fetch orders' });
   }
 });
@@ -280,6 +289,82 @@ router.post('/:id/confirm-payment', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Payment confirmation error:', error);
     res.status(500).json({ error: 'Failed to confirm payment' });
+  }
+});
+
+// Generate invoice for order
+router.get('/:id/invoice', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    console.log('Generating invoice for order:', { order_id: id, user_id: req.user.id });
+    
+    const col = await getOrdersCollection();
+    let order = null;
+    
+    if (col) {
+      order = await col.findOne({ 
+        id, 
+        $or: [
+          { user_id: req.user.id },
+          { userId: req.user.id }
+        ]
+      });
+    } else {
+      order = orders.find(o => 
+        o.id === id && (o.user_id === req.user.id || o.userId === req.user.id)
+      );
+    }
+    
+    if (!order) {
+      console.log('❌ Order not found for invoice generation:', { order_id: id, user_id: req.user.id });
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    // Generate invoice data
+    const subtotal = order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const shipping = subtotal > 2000 ? 0 : 99; // Free shipping above ₹2000
+    const tax = Math.round(subtotal * 0.18); // 18% GST
+    const total = subtotal + shipping + tax;
+
+    const invoice = {
+      orderId: order.id,
+      orderNumber: order.orderNumber || order.id,
+      date: order.created_at,
+      customer: {
+        name: order.shipping_address || 'Customer',
+        address: {
+          address: order.shipping_address,
+          city: order.shipping_city,
+          state: order.shipping_state,
+          pincode: order.shipping_pincode,
+          phone: order.shipping_phone
+        }
+      },
+      items: order.items.map(item => ({
+        ...item,
+        total: item.price * item.quantity
+      })),
+      summary: {
+        subtotal,
+        shipping,
+        tax,
+        total
+      },
+      paymentMethod: order.payment_method,
+      paymentStatus: order.payment_status,
+      status: order.status
+    };
+    
+    console.log('✅ Invoice generated successfully:', { order_id: id });
+    res.json({
+      success: true,
+      invoice
+    });
+
+  } catch (error) {
+    console.error('❌ Invoice generation error:', error);
+    res.status(500).json({ error: 'Failed to generate invoice' });
   }
 });
 

@@ -105,8 +105,8 @@ const Orders = () => {
   const fetchOrderDetails = async (orderId: string) => {
     try {
       const [orderResponse, invoiceResponse] = await Promise.all([
-        apiClient.get(`/user/orders/${orderId}`),
-        apiClient.get(`/user/orders/${orderId}/invoice`)
+        apiClient.getOrder(orderId),
+        apiClient.getOrderInvoice(orderId)
       ]);
 
       if (orderResponse.success) {

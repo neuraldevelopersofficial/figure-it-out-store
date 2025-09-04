@@ -1,18 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { useStore } from '@/context/StoreContext';
+import { useStore, Address } from '@/context/StoreContext';
 import { apiClient } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { initializePayment, verifyPayment } from '@/lib/razorpay';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { FallbackImage } from '@/components/ui/fallback-image';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { MapPin, Plus, Check } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
 const Checkout: React.FC = () => {
   const { user, isAdmin } = useAuth();
-  const { state, getCartTotal, clearCart } = useStore();
+  const { state, getCartTotal, clearCart, addresses } = useStore();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -25,6 +29,9 @@ const Checkout: React.FC = () => {
   });
   
   const [paymentMethod, setPaymentMethod] = useState('razorpay');
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [showAddressSelection, setShowAddressSelection] = useState(false);
+  const [useSavedAddress, setUseSavedAddress] = useState(false);
 
   const [loading, setLoading] = useState(false);
 
@@ -62,23 +69,61 @@ const Checkout: React.FC = () => {
       return;
     }
 
-    // Pre-fill shipping address from user profile
+    // Pre-fill shipping address from user profile or default address
     if (user) {
-      setShippingAddress({
-        address: user.address || '',
-        city: user.city || '',
-        state: user.state || '',
-        pincode: user.pincode || '',
-        phone: user.phone || ''
-      });
+      const defaultAddress = addresses.find(addr => addr.isDefault) || addresses[0];
+      if (defaultAddress && addresses.length > 0) {
+        setShippingAddress({
+          address: defaultAddress.addressLine1 || '',
+          city: defaultAddress.city || '',
+          state: defaultAddress.state || '',
+          pincode: defaultAddress.pincode || '',
+          phone: defaultAddress.phone || ''
+        });
+        setSelectedAddressId(defaultAddress.id);
+        setUseSavedAddress(true);
+      } else {
+        setShippingAddress({
+          address: user.address || '',
+          city: user.city || '',
+          state: user.state || '',
+          pincode: user.pincode || '',
+          phone: user.phone || ''
+        });
+      }
     }
-  }, [user, navigate, cartItems.length, toast]);
+  }, [user, navigate, cartItems.length, toast, addresses]);
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setShippingAddress(prev => ({
       ...prev,
       [e.target.name]: e.target.value
     }));
+  };
+
+  const handleAddressSelect = (address: Address) => {
+    setShippingAddress({
+      address: address.addressLine1 || '',
+      city: address.city || '',
+      state: address.state || '',
+      pincode: address.pincode || '',
+      phone: address.phone || ''
+    });
+    setSelectedAddressId(address.id);
+    setUseSavedAddress(true);
+    setShowAddressSelection(false);
+  };
+
+  const handleUseNewAddress = () => {
+    setUseSavedAddress(false);
+    setSelectedAddressId(null);
+    setShippingAddress({
+      address: '',
+      city: '',
+      state: '',
+      pincode: '',
+      phone: ''
+    });
   };
 
   const handleCheckout = async () => {
@@ -192,7 +237,7 @@ const Checkout: React.FC = () => {
             );
 
             if (verificationResponse.success && verificationResponse.verified) {
-              // Update order status
+              // Update order status using our database order ID (not Razorpay order ID)
               await apiClient.updateOrderStatus(orderResponse.order.id, 'confirmed');
               
               // Clear cart
@@ -200,7 +245,7 @@ const Checkout: React.FC = () => {
               
               toast({
                 title: "Payment successful!",
-                description: "Your order has been placed successfully.",
+                description: "Your order has been placed successfully. Invoice will be available in your orders.",
               });
 
               // Redirect to order confirmation
@@ -254,8 +299,89 @@ const Checkout: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Shipping Address */}
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">Shipping Address</h2>
-              
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold">Shipping Address</h2>
+                {addresses.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAddressSelection(!showAddressSelection)}
+                  >
+                    <MapPin className="h-4 w-4 mr-2" />
+                    {useSavedAddress ? 'Change Address' : 'Use Saved Address'}
+                  </Button>
+                )}
+              </div>
+
+              {/* Address Selection Modal */}
+              {showAddressSelection && addresses.length > 0 && (
+                <div className="mb-6 p-4 border rounded-lg bg-gray-50">
+                  <h3 className="font-medium mb-3">Select Address</h3>
+                  <div className="space-y-3">
+                    {addresses.map((address) => (
+                      <Card 
+                        key={address.id} 
+                        className={`cursor-pointer transition-colors ${
+                          selectedAddressId === address.id ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:bg-gray-100'
+                        }`}
+                        onClick={() => handleAddressSelect(address)}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="font-medium">{address.name}</span>
+                                {address.isDefault && (
+                                  <Badge variant="secondary" className="text-xs">Default</Badge>
+                                )}
+                                <Badge variant="outline" className="text-xs">
+                                  {address.addressType}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-gray-600 mb-1">{address.addressLine1}</p>
+                              {address.addressLine2 && (
+                                <p className="text-sm text-gray-600 mb-1">{address.addressLine2}</p>
+                              )}
+                              <p className="text-sm text-gray-600">
+                                {address.city}, {address.state} - {address.pincode}
+                              </p>
+                              {address.phone && (
+                                <p className="text-sm text-gray-600">Phone: {address.phone}</p>
+                              )}
+                            </div>
+                            {selectedAddressId === address.id && (
+                              <Check className="h-5 w-5 text-blue-600" />
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={handleUseNewAddress}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Use New Address
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Current Address Display */}
+              {useSavedAddress && selectedAddressId && (
+                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Check className="h-4 w-4 text-green-600" />
+                    <span className="text-sm font-medium text-green-800">Using Saved Address</span>
+                  </div>
+                  <p className="text-sm text-green-700">
+                    {addresses.find(addr => addr.id === selectedAddressId)?.name} - 
+                    {addresses.find(addr => addr.id === selectedAddressId)?.addressType}
+                  </p>
+                </div>
+              )}
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -268,6 +394,7 @@ const Checkout: React.FC = () => {
                     onChange={handleAddressChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
+                    disabled={useSavedAddress}
                   />
                 </div>
                 
@@ -283,6 +410,7 @@ const Checkout: React.FC = () => {
                       onChange={handleAddressChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
+                      disabled={useSavedAddress}
                     />
                   </div>
                   
@@ -296,6 +424,7 @@ const Checkout: React.FC = () => {
                       onChange={handleAddressChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
+                      disabled={useSavedAddress}
                     >
                       <option value="">Select State</option>
                       <option value="Andhra Pradesh">Andhra Pradesh</option>
@@ -343,6 +472,7 @@ const Checkout: React.FC = () => {
                       onChange={handleAddressChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
+                      disabled={useSavedAddress}
                     />
                   </div>
                   
@@ -356,6 +486,7 @@ const Checkout: React.FC = () => {
                       value={shippingAddress.phone}
                       onChange={handleAddressChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      disabled={useSavedAddress}
                     />
                   </div>
                 </div>

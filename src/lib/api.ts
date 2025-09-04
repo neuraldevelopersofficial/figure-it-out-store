@@ -176,6 +176,10 @@ class ApiClient {
     return this.request(`/orders/${id}`);
   }
 
+  async getOrderInvoice(id: string) {
+    return this.request(`/orders/${id}/invoice`);
+  }
+
   // Admin endpoints
   async getAdminStats() {
     return this.request('/admin/stats');
