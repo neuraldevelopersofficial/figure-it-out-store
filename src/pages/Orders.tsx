@@ -77,21 +77,39 @@ const Orders = () => {
   const [showOrderDetails, setShowOrderDetails] = useState(false);
 
   useEffect(() => {
+    console.log('🔄 Orders page useEffect triggered:', { user: user?.id, hasUser: !!user });
     if (!user) {
+      console.log('❌ No user, redirecting to login');
       navigate('/login');
       return;
     }
+    console.log('✅ User found, fetching orders');
+    // Force refresh orders when component mounts
+    setLoading(true);
     fetchOrders();
   }, [user, navigate]);
 
+  // Also fetch orders when component mounts (in case user navigates directly)
+  useEffect(() => {
+    if (user) {
+      console.log('🔄 Orders page mounted, fetching orders');
+      fetchOrders();
+    }
+  }, []);
+
   const fetchOrders = async () => {
     try {
+      console.log('🔄 Fetching orders for user:', user?.id);
       const response = await apiClient.get('/user/orders');
+      console.log('📥 Orders response:', response);
       if (response.success) {
+        console.log('✅ Orders fetched successfully:', response.orders);
         setOrders(response.orders);
+      } else {
+        console.error('❌ Orders fetch failed:', response.error);
       }
     } catch (error) {
-      console.error('Failed to fetch orders:', error);
+      console.error('❌ Failed to fetch orders:', error);
       toast({
         title: "Error",
         description: "Failed to fetch orders",

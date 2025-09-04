@@ -209,8 +209,8 @@ const Checkout: React.FC = () => {
             selectedAddress.addressLine2 || ''
           ].filter(Boolean).join(', ');
           
-          // If fullAddress is empty, try to use the address field as fallback
-          const finalAddress = fullAddress || selectedAddress.address || '';
+          // If fullAddress is empty, try to use the addressLine1 as fallback
+          const finalAddress = fullAddress || selectedAddress.addressLine1 || '';
           
           finalShippingAddress = {
             address: finalAddress,
@@ -227,7 +227,7 @@ const Checkout: React.FC = () => {
             finalAddress,
             addressLine1: selectedAddress.addressLine1,
             addressLine2: selectedAddress.addressLine2,
-            address: selectedAddress.address
+            address: selectedAddress.addressLine1
           });
         }
       }
@@ -292,13 +292,25 @@ const Checkout: React.FC = () => {
 
       console.log('✅ Order created successfully:', {
         orderId: orderResponse.order.id,
-        orderData: orderResponse.order
+        orderData: orderResponse.order,
+        status: orderResponse.order.status,
+        paymentMethod: orderResponse.order.payment_method
       });
 
       // For COD, skip Razorpay and complete the order directly
       if (paymentMethod === 'cod') {
-        // Update order status to confirmed for COD
-        await apiClient.updateOrderStatus(orderResponse.order.id, 'confirmed');
+        // Update order status to confirmed for COD (with small delay to ensure order is saved)
+        try {
+          console.log('🔄 Updating COD order status to confirmed for order:', orderResponse.order.id);
+          // Add small delay to ensure order is fully saved to database
+          await new Promise(resolve => setTimeout(resolve, 500));
+          const statusUpdateResponse = await apiClient.updateOrderStatus(orderResponse.order.id, 'confirmed');
+          console.log('✅ COD order status updated successfully:', statusUpdateResponse);
+        } catch (statusError) {
+          console.error('❌ Failed to update COD order status:', statusError);
+          // Don't fail the entire flow if status update fails
+          // The order was created successfully, so we should still proceed
+        }
         
         // Clear cart
         clearCart();
@@ -308,8 +320,11 @@ const Checkout: React.FC = () => {
           description: "Your Cash on Delivery order has been placed.",
         });
 
-        // Redirect to order confirmation
-        navigate('/orders');
+        // Redirect to order confirmation with a small delay to ensure order is saved
+        console.log('🔄 Redirecting to orders page after COD order');
+        setTimeout(() => {
+          navigate('/orders');
+        }, 1000);
         setLoading(false);
         return;
       }
@@ -335,6 +350,7 @@ const Checkout: React.FC = () => {
         shippingAddress.phone || '',
         async (paymentResponse: any) => {
           try {
+            console.log('🎉 Payment success callback triggered!');
             console.log('✅ Payment successful:', paymentResponse);
             
             // Verify payment signature
@@ -352,8 +368,11 @@ const Checkout: React.FC = () => {
               });
               
               try {
-                await apiClient.updateOrderStatus(orderResponse.order.id, 'confirmed');
-                console.log('✅ Order status updated successfully');
+                console.log('🔄 Updating order status to confirmed for order:', orderResponse.order.id);
+                // Add small delay to ensure order is fully saved to database
+                await new Promise(resolve => setTimeout(resolve, 500));
+                const statusUpdateResponse = await apiClient.updateOrderStatus(orderResponse.order.id, 'confirmed');
+                console.log('✅ Order status updated successfully:', statusUpdateResponse);
               } catch (statusError) {
                 console.error('❌ Failed to update order status:', statusError);
                 // Don't fail the entire flow if status update fails
@@ -368,8 +387,11 @@ const Checkout: React.FC = () => {
                 description: "Your order has been placed successfully. Invoice will be available in your orders.",
               });
 
-              // Redirect to order confirmation
-              navigate('/orders');
+              // Redirect to order confirmation with a small delay to ensure order is saved
+              console.log('🔄 Redirecting to orders page after successful payment');
+              setTimeout(() => {
+                navigate('/orders');
+              }, 1000);
             } else {
               throw new Error('Payment verification failed');
             }
@@ -383,12 +405,14 @@ const Checkout: React.FC = () => {
           }
         },
         (error: any) => {
+          console.log('💥 Payment failure callback triggered!');
           console.error('❌ Payment failed:', error);
           toast({
             title: "Payment failed",
             description: error.message || "Payment was not completed",
             variant: "destructive"
           });
+          setLoading(false);
         }
       );
 
