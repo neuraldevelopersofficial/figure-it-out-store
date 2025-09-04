@@ -41,7 +41,28 @@ router.post('/', authenticateToken, async (req, res) => {
   try {
     const { items, total_amount, shipping_address, shipping_city, shipping_state, shipping_pincode, shipping_phone, payment_method } = req.body;
 
+    console.log('🔍 Order creation request received:', {
+      hasItems: !!items,
+      itemsCount: items ? items.length : 0,
+      total_amount,
+      shipping_address,
+      shipping_city,
+      shipping_state,
+      shipping_pincode,
+      shipping_phone,
+      payment_method,
+      user_id: req.user.id
+    });
+
     if (!items || !total_amount || !shipping_address || !shipping_city || !shipping_state || !shipping_pincode) {
+      console.log('❌ Missing required fields:', {
+        items: !!items,
+        total_amount: !!total_amount,
+        shipping_address: !!shipping_address,
+        shipping_city: !!shipping_city,
+        shipping_state: !!shipping_state,
+        shipping_pincode: !!shipping_pincode
+      });
       return res.status(400).json({ error: 'Missing required order details' });
     }
     

@@ -190,13 +190,30 @@ const Checkout: React.FC = () => {
         const selectedAddress = addresses.find(addr => addr.id === selectedAddressId);
         if (selectedAddress) {
           finalShippingAddress = {
-            address: selectedAddress.addressLine1,
-            city: selectedAddress.city,
-            state: selectedAddress.state,
-            pincode: selectedAddress.pincode,
-            phone: selectedAddress.phone
+            address: selectedAddress.addressLine1 || selectedAddress.address || '',
+            city: selectedAddress.city || '',
+            state: selectedAddress.state || '',
+            pincode: selectedAddress.pincode || '',
+            phone: selectedAddress.phone || ''
           };
+          
+          console.log('🔍 Selected address data:', {
+            selectedAddress,
+            finalShippingAddress
+          });
         }
+      }
+
+      // Final validation of address data
+      if (!finalShippingAddress.address || !finalShippingAddress.city || !finalShippingAddress.state || !finalShippingAddress.pincode) {
+        console.error('❌ Final address validation failed:', finalShippingAddress);
+        toast({
+          title: "Address validation failed",
+          description: "Please ensure all address fields are properly filled.",
+          variant: "destructive"
+        });
+        setLoading(false);
+        return;
       }
 
       const orderData = {
@@ -214,7 +231,14 @@ const Checkout: React.FC = () => {
         useSavedAddress,
         selectedAddressId,
         finalShippingAddress,
-        orderData
+        orderData,
+        addressFields: {
+          address: finalShippingAddress.address,
+          city: finalShippingAddress.city,
+          state: finalShippingAddress.state,
+          pincode: finalShippingAddress.pincode,
+          phone: finalShippingAddress.phone
+        }
       });
 
       const orderResponse = await apiClient.createOrder(orderData);
