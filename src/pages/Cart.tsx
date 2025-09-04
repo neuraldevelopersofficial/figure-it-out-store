@@ -157,9 +157,7 @@ const Cart: React.FC = () => {
               Cart Items ({cartItems.length})
             </h2>
             
-            {cartItems.map((item) => {
-              console.log('🛒 Cart item image:', item.image, 'for product:', item.name);
-              return (
+            {cartItems.map((item) => (
               <div key={item.id} className="border border-border rounded-lg p-6">
                 <div className="flex gap-4">
                   {/* Product Image */}
@@ -169,7 +167,6 @@ const Cart: React.FC = () => {
                       alt={item.name}
                       className="w-full h-full object-cover"
                       fallbackSrc="/placeholder-image.png"
-                      debug={true}
                     />
                   </div>
 
@@ -242,8 +239,7 @@ const Cart: React.FC = () => {
                   </div>
                 </div>
               </div>
-              );
-            })}
+            ))}
 
             {/* Clear Cart */}
             <div className="text-center">

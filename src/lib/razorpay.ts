@@ -1,6 +1,6 @@
 // Simple Razorpay Integration
 export const RAZORPAY_CONFIG = {
-  key_id: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_RD4Ia7eTGct90w',
+  key_id: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_RD4Ia7eTGct90w',
   currency: 'INR'
 };
 
@@ -41,13 +41,24 @@ const loadRazorpayScript = (): Promise<void> => {
     (window as any).RAZORPAY_DISABLE_STANDARD_CHECKOUT = true;
 
     const script = document.createElement('script');
-    // Use the legacy Razorpay script to avoid Standard Checkout API
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    // Use a specific version of Razorpay script to avoid Standard Checkout API
+    script.src = 'https://cdn.razorpay.com/static/checkout/1.0.0/checkout.js';
+    script.setAttribute('data-razorpay-version', '1.0.0');
     script.onload = () => {
       console.log('✅ Razorpay script loaded successfully');
-      // Force classic checkout mode
+      // Force classic checkout mode by overriding the Razorpay constructor
       if ((window as any).Razorpay) {
         console.log('🔧 Razorpay loaded, version:', (window as any).Razorpay.version);
+        // Override the Razorpay constructor to force classic checkout
+        const originalRazorpay = (window as any).Razorpay;
+        (window as any).Razorpay = function(options) {
+          // Remove any parameters that might trigger Standard Checkout
+          const classicOptions = { ...options };
+          delete classicOptions.checkout;
+          delete classicOptions.method;
+          delete classicOptions.payment_capture;
+          return new originalRazorpay(classicOptions);
+        };
       }
       resolve();
     };

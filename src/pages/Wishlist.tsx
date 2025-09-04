@@ -81,9 +81,7 @@ const Wishlist = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Wishlist Items */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
-          {wishlistItems.map((item) => {
-            console.log('❤️ Wishlist item image:', item.image, 'for product:', item.name);
-            return (
+          {wishlistItems.map((item) => (
             <div key={item.id} className="relative group">
               {/* Wishlist Item Card */}
               <div className="bg-background border border-border rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300">
@@ -94,7 +92,6 @@ const Wishlist = () => {
                     alt={item.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     fallbackSrc="/placeholder-image.png"
-                    debug={true}
                   />
                   
                   {/* Overlay with actions */}
@@ -190,8 +187,7 @@ const Wishlist = () => {
                 </div>
               </div>
             </div>
-            );
-          })}
+          ))}
         </div>
 
         {/* Actions */}

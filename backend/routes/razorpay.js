@@ -5,8 +5,8 @@ const router = express.Router();
 
 // Initialize Razorpay
 const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || 'rzp_live_RD4Ia7eTGct90w',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || 'B18FWmc6yNaaVSQkPDULsJ2U'
+  key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_RD4Ia7eTGct90w',
+  key_secret: process.env.RAZORPAY_KEY_SECRET || 'test_secret_key_placeholder'
 });
 
 // Create order
@@ -51,7 +51,7 @@ router.post('/verify-payment', async (req, res) => {
     
     // Generate expected signature
     const expectedSignature = crypto
-      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || 'B18FWmc6yNaaVSQkPDULsJ2U')
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || 'test_secret_key_placeholder')
       .update(body)
       .digest('hex');
 
