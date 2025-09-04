@@ -16,7 +16,9 @@ import {
   Download,
   Sliders,
   X,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Trash,
+  AlertCircle
 } from "lucide-react";
 import { FallbackImage } from "@/components/ui/fallback-image";
 import { Button } from "@/components/ui/button";
@@ -128,6 +130,11 @@ const AdminDashboard = () => {
   const [selectedCarousel, setSelectedCarousel] = useState<Carousel | null>(null);
   const [showAddSlide, setShowAddSlide] = useState(false);
   const [selectedCarouselForSlide, setSelectedCarouselForSlide] = useState<Carousel | null>(null);
+  
+  // Order deletion state
+  const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
 
   // Redirect if not admin
   if (!isAdmin) {
@@ -542,6 +549,114 @@ const AdminDashboard = () => {
         variant: "destructive"
       });
     }
+  };
+
+  // Order deletion functions
+  const handleDeleteOrder = async (orderId: string) => {
+    try {
+      console.log('🔄 Admin deleting order:', { orderId });
+      const response = await apiClient.deleteOrderAdmin(orderId);
+      if (response.success) {
+        toast({
+          title: "Order Deleted",
+          description: `Order #${orderId} has been deleted successfully.`,
+        });
+        fetchAdminData(); // Refresh orders list
+        setShowDeleteConfirm(false);
+        setOrderToDelete(null);
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || `Failed to delete order #${orderId}.`,
+          variant: "destructive"
+        });
+      }
+    } catch (error: any) {
+      console.error('Error deleting order:', error);
+      
+      let errorMessage = `Failed to delete order #${orderId}.`;
+      
+      if (error.message?.includes('Order not found')) {
+        errorMessage = `Order #${orderId} not found. It may have already been deleted.`;
+      } else if (error.message?.includes('Failed to fetch')) {
+        errorMessage = `Network error: Unable to connect to the server. Please check your internet connection.`;
+      } else if (error.message?.includes('500')) {
+        errorMessage = `Server error: The server encountered an error while deleting the order.`;
+      }
+      
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleBulkDeleteOrders = async () => {
+    if (selectedOrders.length === 0) {
+      toast({
+        title: "No Orders Selected",
+        description: "Please select orders to delete.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      console.log('🔄 Admin bulk deleting orders:', { orderIds: selectedOrders });
+      const response = await apiClient.bulkDeleteOrdersAdmin(selectedOrders);
+      if (response.success) {
+        toast({
+          title: "Orders Deleted",
+          description: `${response.deletedCount || selectedOrders.length} orders have been deleted successfully.`,
+        });
+        fetchAdminData(); // Refresh orders list
+        setSelectedOrders([]);
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || `Failed to delete orders.`,
+          variant: "destructive"
+        });
+      }
+    } catch (error: any) {
+      console.error('Error bulk deleting orders:', error);
+      
+      let errorMessage = `Failed to delete orders.`;
+      
+      if (error.message?.includes('Failed to fetch')) {
+        errorMessage = `Network error: Unable to connect to the server. Please check your internet connection.`;
+      } else if (error.message?.includes('500')) {
+        errorMessage = `Server error: The server encountered an error while deleting the orders.`;
+      }
+      
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleSelectOrder = (orderId: string) => {
+    setSelectedOrders(prev => 
+      prev.includes(orderId) 
+        ? prev.filter(id => id !== orderId)
+        : [...prev, orderId]
+    );
+  };
+
+  const handleSelectAllOrders = () => {
+    if (selectedOrders.length === allOrders.length) {
+      setSelectedOrders([]);
+    } else {
+      setSelectedOrders(allOrders.map(order => order.id));
+    }
+  };
+
+  const confirmDeleteOrder = (orderId: string) => {
+    setOrderToDelete(orderId);
+    setShowDeleteConfirm(true);
   };
 
   // Carousel management functions
@@ -1073,12 +1188,45 @@ const AdminDashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
+                  {/* Bulk Actions */}
+                  {allOrders.length > 0 && (
+                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-4">
+                        <span className="text-sm text-gray-600">
+                          {selectedOrders.length} of {allOrders.length} orders selected
+                        </span>
+                        {selectedOrders.length > 0 && (
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={handleBulkDeleteOrders}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            <Trash className="h-4 w-4 mr-2" />
+                            Delete Selected ({selectedOrders.length})
+                          </Button>
+                        )}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        Select orders to delete dummy data
+                      </div>
+                    </div>
+                  )}
+                  
                   {/* Order List */}
                   {allOrders.length > 0 ? (
                     <div className="overflow-x-auto">
                       <table className="w-full">
                         <thead>
                           <tr className="border-b">
+                            <th className="text-left p-2">
+                              <input
+                                type="checkbox"
+                                checked={selectedOrders.length === allOrders.length && allOrders.length > 0}
+                                onChange={handleSelectAllOrders}
+                                className="rounded"
+                              />
+                            </th>
                             <th className="text-left p-2">Order ID</th>
                             <th className="text-left p-2">Customer</th>
                             <th className="text-left p-2">Amount</th>
@@ -1090,6 +1238,14 @@ const AdminDashboard = () => {
                         <tbody>
                           {allOrders.map((order) => (
                             <tr key={order.id} className="border-b hover:bg-gray-50">
+                              <td className="p-2">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedOrders.includes(order.id)}
+                                  onChange={() => handleSelectOrder(order.id)}
+                                  className="rounded"
+                                />
+                              </td>
                               <td className="p-2 font-mono text-sm">#{order.id}</td>
                               <td className="p-2">
                                 <div>
@@ -1131,6 +1287,14 @@ const AdminDashboard = () => {
                                       <SelectItem value="cancelled">Cancelled</SelectItem>
                                     </SelectContent>
                                   </Select>
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    className="hover:bg-red-50 hover:text-red-700"
+                                    onClick={() => confirmDeleteOrder(order.id)}
+                                  >
+                                    <Trash className="h-4 w-4" />
+                                  </Button>
                                 </div>
                               </td>
                             </tr>
@@ -1836,6 +2000,40 @@ const AdminDashboard = () => {
               onCancel={handleCancelSlideForm}
               defaultOrder={selectedCarouselForSlide.slides.length + 1}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center mb-4">
+              <AlertCircle className="h-6 w-6 text-red-600 mr-3" />
+              <h3 className="text-lg font-semibold text-gray-900">Delete Order</h3>
+            </div>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete order #{orderToDelete}? This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setOrderToDelete(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => orderToDelete && handleDeleteOrder(orderToDelete)}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                <Trash className="h-4 w-4 mr-2" />
+                Delete Order
+              </Button>
+            </div>
           </div>
         </div>
       )}

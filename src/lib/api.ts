@@ -217,6 +217,35 @@ class ApiClient {
     }
   }
 
+  async deleteOrderAdmin(orderId: string) {
+    console.log('🔄 Admin deleting order:', { orderId, endpoint: `/admin/orders/${orderId}` });
+    try {
+      const response = await this.request(`/admin/orders/${orderId}`, {
+        method: 'DELETE',
+      });
+      console.log('✅ Admin order deletion response:', response);
+      return response;
+    } catch (error: any) {
+      console.error('❌ Admin order deletion error:', error);
+      throw error;
+    }
+  }
+
+  async bulkDeleteOrdersAdmin(orderIds: string[]) {
+    console.log('🔄 Admin bulk deleting orders:', { orderIds, endpoint: `/admin/orders` });
+    try {
+      const response = await this.request(`/admin/orders`, {
+        method: 'DELETE',
+        body: JSON.stringify({ orderIds }),
+      });
+      console.log('✅ Admin bulk order deletion response:', response);
+      return response;
+    } catch (error: any) {
+      console.error('❌ Admin bulk order deletion error:', error);
+      throw error;
+    }
+  }
+
   async getOrders() {
     return this.request('/orders');
   }

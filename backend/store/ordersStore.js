@@ -381,6 +381,23 @@ async function updateOrderStatus(orderId, status, trackingNumber = null, estimat
   return order;
 }
 
+async function deleteOrder(orderId) {
+  try {
+    const collection = await getCollection(COLLECTIONS.ORDERS);
+    if (collection) {
+      const result = await collection.deleteOne({ id: orderId });
+      return result.deletedCount > 0;
+    }
+  } catch (error) {
+    console.error(`Error deleting order ${orderId} from DB:`, error);
+  }
+  
+  // Fallback to in-memory if DB fails
+  const before = orders.length;
+  orders = orders.filter(order => order.id !== orderId);
+  return orders.length < before;
+}
+
 // Review functions
 async function getReviewsByOrderId(orderId) {
   try {
@@ -517,6 +534,7 @@ module.exports = {
   getOrderById,
   createOrder,
   updateOrderStatus,
+  deleteOrder,
   getReviewsByOrderId,
   getReviewByProductAndUser,
   createReview,

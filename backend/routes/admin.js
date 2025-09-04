@@ -212,43 +212,244 @@ router.put('/orders/:id/status', authenticateToken, requireAdmin, async (req, re
 
     console.log('Admin updating order status:', { order_id: id, new_status: status, admin_id: req.user.id });
 
+    // Check if COLLECTIONS.ORDERS is defined
+    if (!COLLECTIONS.ORDERS) {
+      console.error('❌ COLLECTIONS.ORDERS is not defined');
+      return res.status(500).json({ error: 'Orders collection configuration not available' });
+    }
+
+    console.log('🔍 Getting orders collection:', COLLECTIONS.ORDERS);
     const ordersCollection = await getCollection(COLLECTIONS.ORDERS);
-    if (!ordersCollection) {
-      return res.status(500).json({ error: 'Orders collection not available' });
+    
+    if (ordersCollection) {
+      console.log('✅ Orders collection obtained successfully');
+      
+      // First, let's check if the order exists
+      const existingOrder = await ordersCollection.findOne({ id: id });
+      console.log('🔍 Admin order lookup result:', { 
+        order_id: id, 
+        found: !!existingOrder,
+        order_user_id: existingOrder?.user_id || existingOrder?.userId,
+        admin_id: req.user.id
+      });
+      
+      if (!existingOrder) {
+        console.log('❌ Order not found in database for admin update:', { order_id: id, admin_id: req.user.id });
+        return res.status(404).json({ error: 'Order not found' });
+      }
+      
+      // Update the order status (no user restrictions for admin)
+      console.log('🔄 Updating order status in database...');
+      const result = await ordersCollection.findOneAndUpdate(
+        { id: id },
+        { $set: { status, updated_at: new Date().toISOString() } },
+        { returnOriginal: false }
+      );
+      
+      console.log('🔍 Update result:', { 
+        success: !!result, 
+        hasValue: !!result?.value,
+        resultValue: result?.value ? 'present' : 'missing'
+      });
+      
+      if (!result || !result.value) {
+        console.log('❌ Failed to update order status in database:', { order_id: id, admin_id: req.user.id });
+        return res.status(500).json({ error: 'Failed to update order status' });
+      }
+      
+      console.log('✅ Admin order status updated in database:', { order_id: id, new_status: status });
+      return res.json({ success: true, message: 'Order status updated successfully', order: result.value });
+    } else {
+      console.log('⚠️ Database not available, using in-memory orders store');
+      
+      // Fallback to in-memory storage
+      const ordersStore = require('../store/ordersStore');
+      const order = ordersStore.getOrderById(id);
+      
+      if (!order) {
+        console.log('❌ Order not found in memory store:', { order_id: id, admin_id: req.user.id });
+        return res.status(404).json({ error: 'Order not found' });
+      }
+      
+      // Update order in memory store
+      order.status = status;
+      order.updated_at = new Date().toISOString();
+      
+      console.log('✅ Admin order status updated in memory:', { order_id: id, new_status: status });
+      return res.json({ success: true, message: 'Order status updated successfully', order: order });
     }
-    
-    // First, let's check if the order exists
-    const existingOrder = await ordersCollection.findOne({ id: id });
-    console.log('🔍 Admin order lookup result:', { 
-      order_id: id, 
-      found: !!existingOrder,
-      order_user_id: existingOrder?.user_id || existingOrder?.userId,
-      admin_id: req.user.id
-    });
-    
-    if (!existingOrder) {
-      console.log('❌ Order not found in database for admin update:', { order_id: id, admin_id: req.user.id });
-      return res.status(404).json({ error: 'Order not found' });
-    }
-    
-    // Update the order status (no user restrictions for admin)
-    const result = await ordersCollection.findOneAndUpdate(
-      { id: id },
-      { $set: { status, updated_at: new Date().toISOString() } },
-      { returnDocument: 'after' }
-    );
-    
-    if (!result.value) {
-      console.log('❌ Failed to update order status in database:', { order_id: id, admin_id: req.user.id });
-      return res.status(500).json({ error: 'Failed to update order status' });
-    }
-    
-    console.log('✅ Admin order status updated in database:', { order_id: id, new_status: status });
-    res.json({ success: true, message: 'Order status updated successfully', order: result.value });
 
   } catch (error) {
-    console.error('Admin order status update error:', error);
+    console.error('❌ Admin order status update error:', error);
+    console.error('❌ Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     res.status(500).json({ error: 'Failed to update order status' });
+  }
+});
+
+// Delete order for admin
+router.delete('/orders/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    console.log('Admin deleting order:', { order_id: id, admin_id: req.user.id });
+
+    // Check if COLLECTIONS.ORDERS is defined
+    if (!COLLECTIONS.ORDERS) {
+      console.error('❌ COLLECTIONS.ORDERS is not defined');
+      return res.status(500).json({ error: 'Orders collection configuration not available' });
+    }
+
+    console.log('🔍 Getting orders collection:', COLLECTIONS.ORDERS);
+    const ordersCollection = await getCollection(COLLECTIONS.ORDERS);
+    
+    if (ordersCollection) {
+      console.log('✅ Orders collection obtained successfully');
+      
+      // First, let's check if the order exists
+      const existingOrder = await ordersCollection.findOne({ id: id });
+      console.log('🔍 Admin order lookup for deletion:', { 
+        order_id: id, 
+        found: !!existingOrder,
+        order_user_id: existingOrder?.user_id || existingOrder?.userId,
+        admin_id: req.user.id
+      });
+      
+      if (!existingOrder) {
+        console.log('❌ Order not found in database for deletion:', { order_id: id, admin_id: req.user.id });
+        return res.status(404).json({ error: 'Order not found' });
+      }
+      
+      // Delete the order
+      console.log('🔄 Deleting order from database...');
+      const result = await ordersCollection.deleteOne({ id: id });
+      
+      console.log('🔍 Delete result:', { 
+        success: !!result, 
+        deletedCount: result?.deletedCount,
+        acknowledged: result?.acknowledged
+      });
+      
+      if (!result || result.deletedCount === 0) {
+        console.log('❌ Failed to delete order from database:', { order_id: id, admin_id: req.user.id });
+        return res.status(500).json({ error: 'Failed to delete order' });
+      }
+      
+      console.log('✅ Admin order deleted from database:', { order_id: id });
+      return res.json({ success: true, message: 'Order deleted successfully' });
+    } else {
+      console.log('⚠️ Database not available, using in-memory orders store');
+      
+      // Fallback to in-memory storage
+      const ordersStore = require('../store/ordersStore');
+      const order = ordersStore.getOrderById(id);
+      
+      if (!order) {
+        console.log('❌ Order not found in memory store for deletion:', { order_id: id, admin_id: req.user.id });
+        return res.status(404).json({ error: 'Order not found' });
+      }
+      
+      // Delete order from memory store
+      const deleted = ordersStore.deleteOrder(id);
+      
+      if (!deleted) {
+        console.log('❌ Failed to delete order from memory store:', { order_id: id, admin_id: req.user.id });
+        return res.status(500).json({ error: 'Failed to delete order' });
+      }
+      
+      console.log('✅ Admin order deleted from memory:', { order_id: id });
+      return res.json({ success: true, message: 'Order deleted successfully' });
+    }
+
+  } catch (error) {
+    console.error('❌ Admin order deletion error:', error);
+    console.error('❌ Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    res.status(500).json({ error: 'Failed to delete order' });
+  }
+});
+
+// Bulk delete orders for admin
+router.delete('/orders', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { orderIds } = req.body;
+    
+    if (!orderIds || !Array.isArray(orderIds) || orderIds.length === 0) {
+      return res.status(400).json({ error: 'Order IDs array is required' });
+    }
+    
+    console.log('Admin bulk deleting orders:', { order_ids: orderIds, admin_id: req.user.id });
+
+    // Check if COLLECTIONS.ORDERS is defined
+    if (!COLLECTIONS.ORDERS) {
+      console.error('❌ COLLECTIONS.ORDERS is not defined');
+      return res.status(500).json({ error: 'Orders collection configuration not available' });
+    }
+
+    console.log('🔍 Getting orders collection:', COLLECTIONS.ORDERS);
+    const ordersCollection = await getCollection(COLLECTIONS.ORDERS);
+    
+    if (ordersCollection) {
+      console.log('✅ Orders collection obtained successfully');
+      
+      // Delete multiple orders
+      console.log('🔄 Bulk deleting orders from database...');
+      const result = await ordersCollection.deleteMany({ id: { $in: orderIds } });
+      
+      console.log('🔍 Bulk delete result:', { 
+        success: !!result, 
+        deletedCount: result?.deletedCount,
+        acknowledged: result?.acknowledged
+      });
+      
+      console.log('✅ Admin bulk order deletion from database:', { 
+        order_ids: orderIds, 
+        deleted_count: result.deletedCount 
+      });
+      return res.json({ 
+        success: true, 
+        message: `${result.deletedCount} orders deleted successfully`,
+        deletedCount: result.deletedCount
+      });
+    } else {
+      console.log('⚠️ Database not available, using in-memory orders store');
+      
+      // Fallback to in-memory storage
+      const ordersStore = require('../store/ordersStore');
+      let deletedCount = 0;
+      
+      for (const orderId of orderIds) {
+        const deleted = ordersStore.deleteOrder(orderId);
+        if (deleted) {
+          deletedCount++;
+        }
+      }
+      
+      console.log('✅ Admin bulk order deletion from memory:', { 
+        order_ids: orderIds, 
+        deleted_count: deletedCount 
+      });
+      return res.json({ 
+        success: true, 
+        message: `${deletedCount} orders deleted successfully`,
+        deletedCount: deletedCount
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ Admin bulk order deletion error:', error);
+    console.error('❌ Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    res.status(500).json({ error: 'Failed to delete orders' });
   }
 });
 
