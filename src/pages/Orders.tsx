@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FallbackImage } from "@/components/ui/fallback-image";
 import { useAuth } from "@/context/AuthContext";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
@@ -39,7 +40,9 @@ interface Order {
   totalAmount: number;
   shippingAddress: {
     name: string;
-    address: string;
+    address?: string;
+    addressLine1?: string;
+    addressLine2?: string;
     city: string;
     state: string;
     pincode: string;
@@ -315,10 +318,11 @@ const Orders = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                     {order.items.slice(0, 3).map((item) => (
                       <div key={item.id} className="flex items-center gap-3">
-                        <img
+                        <FallbackImage
                           src={item.image}
                           alt={item.name}
                           className="w-12 h-12 object-cover rounded border"
+                          fallbackSrc="/placeholder-product.jpg"
                         />
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm truncate">{item.name}</p>
@@ -337,6 +341,16 @@ const Orders = () => {
 
                   <div className="flex items-center justify-between pt-4 border-t">
                     <div className="text-sm text-gray-600">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge className={getPaymentStatusColor(order.paymentStatus || 'pending')} variant="outline">
+                          {getPaymentStatusText(order.paymentStatus || 'pending')}
+                        </Badge>
+                        <span className="text-xs text-gray-500">
+                          {order.paymentMethod === 'razorpay' ? 'Online' : 
+                           order.paymentMethod === 'cod' ? 'COD' : 
+                           order.paymentMethod || 'Unknown'}
+                        </span>
+                      </div>
                       {order.trackingNumber && (
                         <span>Tracking: {order.trackingNumber}</span>
                       )}
@@ -352,7 +366,7 @@ const Orders = () => {
                       )}
                     </div>
                     <div className="text-lg font-semibold">
-                      Total: {formatPrice(order.totalAmount || order.total_amount || 0)}
+                      Total: {formatPrice(order.totalAmount || 0)}
                     </div>
                   </div>
                 </CardContent>
@@ -481,6 +495,21 @@ const OrderDetails = ({
     return reviews.find(review => review.productId === productId);
   };
 
+  // Add defensive check for order
+  if (!order) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">Order not found</p>
+          <Button variant="outline" onClick={onBack} className="mt-4">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Orders
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -492,16 +521,16 @@ const OrderDetails = ({
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                Order #{order.orderNumber}
+                Order #{order?.orderNumber || order?.id || 'Unknown'}
               </h1>
               <p className="text-gray-600">
-                Placed on {new Date(order.created_at).toLocaleDateString()}
+                Placed on {order?.created_at ? new Date(order.created_at).toLocaleDateString() : 'Unknown date'}
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <Badge className={`${getStatusColor(order.status)} flex items-center gap-1`}>
-                {getStatusIcon(order.status)}
-                {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+              <Badge className={`${getStatusColor(order?.status || 'placed')} flex items-center gap-1`}>
+                {getStatusIcon(order?.status || 'placed')}
+                {(order?.status || 'placed').charAt(0).toUpperCase() + (order?.status || 'placed').slice(1)}
               </Badge>
               {invoice && (
                 <Button variant="outline" onClick={downloadInvoice}>
@@ -522,27 +551,28 @@ const OrderDetails = ({
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {order.items.map((item) => {
-                    const existingReview = getExistingReview(item.productId);
+                  {order?.items && order.items.length > 0 ? (order.items.map((item) => {
+                    const existingReview = getExistingReview(item?.productId);
                     return (
-                      <div key={item.id} className="flex items-start gap-4 p-4 border rounded-lg">
-                        <img
-                          src={item.image}
-                          alt={item.name}
+                      <div key={item?.id || Math.random()} className="flex items-start gap-4 p-4 border rounded-lg">
+                        <FallbackImage
+                          src={item?.image || '/placeholder-product.jpg'}
+                          alt={item?.name || 'Product'}
                           className="w-20 h-20 object-cover rounded border"
+                          fallbackSrc="/placeholder-product.jpg"
                         />
                         <div className="flex-1">
-                          <h3 className="font-medium text-lg">{item.name}</h3>
-                          <p className="text-gray-600 capitalize">{item.category.replace('-', ' ')}</p>
+                          <h3 className="font-medium text-lg">{item?.name || 'Product'}</h3>
+                          <p className="text-gray-600 capitalize">{(item?.category || '').replace('-', ' ')}</p>
                           <p className="text-sm text-gray-500">
-                            Quantity: {item.quantity} × {formatPrice(item.price)}
+                            Quantity: {item?.quantity || 0} × {formatPrice(item?.price || 0)}
                           </p>
                           <p className="font-semibold mt-2">
-                            Total: {formatPrice(item.price * item.quantity)}
+                            Total: {formatPrice((item?.price || 0) * (item?.quantity || 0))}
                           </p>
 
                           {/* Review Section for Delivered Orders */}
-                          {order.status === 'delivered' && (
+                          {order?.status === 'delivered' && (
                             <div className="mt-4 pt-4 border-t">
                               {existingReview ? (
                                 <div className="bg-green-50 p-3 rounded">
@@ -567,7 +597,7 @@ const OrderDetails = ({
                                 </div>
                               ) : (
                                 <div>
-                                  {showReviewForm === item.productId ? (
+                                  {showReviewForm === item?.productId ? (
                                     <div className="space-y-3">
                                       <div>
                                         <label className="block text-sm font-medium mb-2">Rating</label>
@@ -598,7 +628,7 @@ const OrderDetails = ({
                                       <div className="flex gap-2">
                                         <Button
                                           size="sm"
-                                          onClick={() => submitReview(item.productId)}
+                                          onClick={() => submitReview(item?.productId)}
                                         >
                                           Submit Review
                                         </Button>
@@ -615,7 +645,7 @@ const OrderDetails = ({
                                     <Button
                                       size="sm"
                                       variant="outline"
-                                      onClick={() => setShowReviewForm(item.productId)}
+                                      onClick={() => setShowReviewForm(item?.productId)}
                                     >
                                       <Star className="h-4 w-4 mr-2" />
                                       Write Review
@@ -628,7 +658,11 @@ const OrderDetails = ({
                         </div>
                       </div>
                     );
-                  })}
+                  })) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <p>No items found in this order</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -646,19 +680,19 @@ const OrderDetails = ({
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span>Subtotal</span>
-                      <span>{formatPrice(invoice.summary.subtotal)}</span>
+                      <span>{formatPrice(invoice.summary?.subtotal || 0)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Shipping</span>
-                      <span>{formatPrice(invoice.summary.shipping)}</span>
+                      <span>{formatPrice(invoice.summary?.shipping || 0)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Tax</span>
-                      <span>{formatPrice(invoice.summary.tax)}</span>
+                      <span>{formatPrice(invoice.summary?.tax || 0)}</span>
                     </div>
                     <div className="border-t pt-2 flex justify-between font-semibold text-lg">
                       <span>Total</span>
-                      <span>{formatPrice(invoice.summary.total)}</span>
+                      <span>{formatPrice(invoice.summary?.total || 0)}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -672,11 +706,60 @@ const OrderDetails = ({
               </CardHeader>
               <CardContent>
                 <div className="text-sm space-y-1">
-                  <p className="font-medium">{order.shippingAddress.name}</p>
-                  <p>{order.shippingAddress.address}</p>
-                  <p>{order.shippingAddress.city}, {order.shippingAddress.state}</p>
-                  <p>{order.shippingAddress.pincode}</p>
-                  <p>{order.shippingAddress.phone}</p>
+                  <p className="font-medium">{order?.shippingAddress?.name || 'Customer'}</p>
+                  <p>{order?.shippingAddress?.address || order?.shippingAddress?.addressLine1 || ''}</p>
+                  {order?.shippingAddress?.addressLine2 && (
+                    <p>{order.shippingAddress.addressLine2}</p>
+                  )}
+                  <p>{order?.shippingAddress?.city || ''}, {order?.shippingAddress?.state || ''}</p>
+                  <p>{order?.shippingAddress?.pincode || ''}</p>
+                  <p>{order?.shippingAddress?.phone || ''}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Payment Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Payment Information</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Payment Method</span>
+                    <Badge variant="outline" className="capitalize">
+                      {order?.paymentMethod === 'razorpay' ? 'Online Payment' : 
+                       order?.paymentMethod === 'cod' ? 'Cash on Delivery' : 
+                       order?.paymentMethod || 'Unknown'}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Payment Status</span>
+                    <Badge className={getPaymentStatusColor(order?.paymentStatus || 'pending')}>
+                      {getPaymentStatusText(order?.paymentStatus || 'pending')}
+                    </Badge>
+                  </div>
+                  {order?.paymentStatus === 'pending' && order?.paymentMethod === 'cod' && (
+                    <div className="bg-yellow-50 p-3 rounded-lg">
+                      <p className="text-sm text-yellow-800">
+                        <strong>COD Order:</strong> Payment will be collected upon delivery
+                      </p>
+                    </div>
+                  )}
+                  {order?.paymentStatus === 'completed' && (
+                    <div className="bg-green-50 p-3 rounded-lg">
+                      <p className="text-sm text-green-800">
+                        <strong>Payment Completed:</strong> Your payment has been processed successfully
+                      </p>
+                    </div>
+                  )}
+                  {order?.paymentStatus === 'failed' && (
+                    <div className="bg-red-50 p-3 rounded-lg">
+                      <p className="text-sm text-red-800">
+                        <strong>Payment Failed:</strong> Please contact support for assistance
+                      </p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -689,17 +772,17 @@ const OrderDetails = ({
               <CardContent>
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <Badge className={getStatusColor(order.status)}>
-                      {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                    <Badge className={getStatusColor(order?.status || 'placed')}>
+                      {(order?.status || 'placed').charAt(0).toUpperCase() + (order?.status || 'placed').slice(1)}
                     </Badge>
                   </div>
-                  {order.trackingNumber && (
+                  {order?.trackingNumber && (
                     <div>
                       <p className="text-sm font-medium">Tracking Number</p>
                       <p className="text-sm text-gray-600">{order.trackingNumber}</p>
                     </div>
                   )}
-                  {order.estimatedDelivery && order.status !== 'delivered' && (
+                  {order?.estimatedDelivery && order?.status !== 'delivered' && (
                     <div>
                       <p className="text-sm font-medium">Expected Delivery</p>
                       <p className="text-sm text-gray-600">
@@ -707,7 +790,7 @@ const OrderDetails = ({
                       </p>
                     </div>
                   )}
-                  {order.actualDelivery && (
+                  {order?.actualDelivery && (
                     <div>
                       <p className="text-sm font-medium text-green-600">Delivered On</p>
                       <p className="text-sm text-green-600">
@@ -763,6 +846,36 @@ const formatPrice = (price: number) => {
     style: 'currency',
     currency: 'INR'
   }).format(price);
+};
+
+const getPaymentStatusColor = (status: string) => {
+  switch (status) {
+    case 'completed':
+      return 'bg-green-100 text-green-800';
+    case 'pending':
+      return 'bg-yellow-100 text-yellow-800';
+    case 'failed':
+      return 'bg-red-100 text-red-800';
+    case 'refunded':
+      return 'bg-blue-100 text-blue-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+};
+
+const getPaymentStatusText = (status: string) => {
+  switch (status) {
+    case 'completed':
+      return 'Completed';
+    case 'pending':
+      return 'Pending';
+    case 'failed':
+      return 'Failed';
+    case 'refunded':
+      return 'Refunded';
+    default:
+      return 'Unknown';
+  }
 };
 
 export default Orders;
