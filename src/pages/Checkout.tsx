@@ -73,8 +73,14 @@ const Checkout: React.FC = () => {
     if (user) {
       const defaultAddress = addresses.find(addr => addr.isDefault) || addresses[0];
       if (defaultAddress && addresses.length > 0) {
+        // Build complete address from addressLine1 and addressLine2
+        const fullAddress = [
+          defaultAddress.addressLine1 || '',
+          defaultAddress.addressLine2 || ''
+        ].filter(Boolean).join(', ');
+        
         setShippingAddress({
-          address: defaultAddress.addressLine1 || '',
+          address: fullAddress || '',
           city: defaultAddress.city || '',
           state: defaultAddress.state || '',
           pincode: defaultAddress.pincode || '',
@@ -102,8 +108,14 @@ const Checkout: React.FC = () => {
   };
 
   const handleAddressSelect = (address: Address) => {
+    // Build complete address from addressLine1 and addressLine2
+    const fullAddress = [
+      address.addressLine1 || '',
+      address.addressLine2 || ''
+    ].filter(Boolean).join(', ');
+    
     setShippingAddress({
-      address: address.addressLine1 || '',
+      address: fullAddress || '',
       city: address.city || '',
       state: address.state || '',
       pincode: address.pincode || '',
@@ -189,8 +201,14 @@ const Checkout: React.FC = () => {
       if (useSavedAddress && selectedAddressId) {
         const selectedAddress = addresses.find(addr => addr.id === selectedAddressId);
         if (selectedAddress) {
+          // Build complete address from addressLine1 and addressLine2
+          const fullAddress = [
+            selectedAddress.addressLine1 || '',
+            selectedAddress.addressLine2 || ''
+          ].filter(Boolean).join(', ');
+          
           finalShippingAddress = {
-            address: selectedAddress.addressLine1 || selectedAddress.address || '',
+            address: fullAddress || '',
             city: selectedAddress.city || '',
             state: selectedAddress.state || '',
             pincode: selectedAddress.pincode || '',
@@ -199,7 +217,8 @@ const Checkout: React.FC = () => {
           
           console.log('🔍 Selected address data:', {
             selectedAddress,
-            finalShippingAddress
+            finalShippingAddress,
+            fullAddress
           });
         }
       }
@@ -246,6 +265,11 @@ const Checkout: React.FC = () => {
       if (!orderResponse.success) {
         throw new Error(orderResponse.error || 'Failed to create order');
       }
+
+      console.log('✅ Order created successfully:', {
+        orderId: orderResponse.order.id,
+        orderData: orderResponse.order
+      });
 
       // For COD, skip Razorpay and complete the order directly
       if (paymentMethod === 'cod') {
@@ -298,7 +322,19 @@ const Checkout: React.FC = () => {
 
             if (verificationResponse.success && verificationResponse.verified) {
               // Update order status using our database order ID (not Razorpay order ID)
-              await apiClient.updateOrderStatus(orderResponse.order.id, 'confirmed');
+              console.log('🔄 Updating order status:', {
+                orderId: orderResponse.order.id,
+                status: 'confirmed'
+              });
+              
+              try {
+                await apiClient.updateOrderStatus(orderResponse.order.id, 'confirmed');
+                console.log('✅ Order status updated successfully');
+              } catch (statusError) {
+                console.error('❌ Failed to update order status:', statusError);
+                // Don't fail the entire flow if status update fails
+                // The payment was successful, so we should still proceed
+              }
               
               // Clear cart
               clearCart();

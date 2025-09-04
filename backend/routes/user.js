@@ -75,13 +75,53 @@ router.put('/profile', authenticateToken, async (req, res) => {
 });
 
 // Get user orders
-router.get('/orders', authenticateToken, (req, res) => {
+router.get('/orders', authenticateToken, async (req, res) => {
   try {
-    const orders = ordersStore.getOrdersByUserId(req.user.id);
+    console.log('Fetching orders for user via user route:', { user_id: req.user.id });
+    
+    // Use the same logic as the orders route
+    const { getCollection, COLLECTIONS } = require('../config/database');
+    
+    async function getOrdersCollection() {
+      try {
+        const db = await require('../config/database').getDatabase();
+        if (!db) return null;
+        return await getCollection(COLLECTIONS.ORDERS);
+      } catch (e) {
+        return null;
+      }
+    }
+    
+    const col = await getOrdersCollection();
+    if (!col) {
+      console.log('⚠️ Database not available, using in-memory orders');
+      const orders = ordersStore.getOrdersByUserId(req.user.id);
+      return res.json({
+        success: true,
+        orders: orders.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+      });
+    }
+    
+    // Try to find orders with better error handling
+    let userOrders = [];
+    try {
+      userOrders = await col.find({ 
+        $or: [
+          { user_id: req.user.id },
+          { userId: req.user.id }
+        ]
+      }).sort({ created_at: -1 }).toArray();
+    } catch (dbError) {
+      console.error('❌ Database query error:', dbError);
+      // Fallback to in-memory orders
+      userOrders = ordersStore.getOrdersByUserId(req.user.id);
+    }
+    
+    console.log('✅ Found orders for user via user route:', { user_id: req.user.id, count: userOrders.length });
     
     res.json({
       success: true,
-      orders: orders.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+      orders: userOrders
     });
   } catch (error) {
     console.error('Orders fetch error:', error);

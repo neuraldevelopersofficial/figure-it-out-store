@@ -134,14 +134,24 @@ router.get('/', authenticateToken, async (req, res) => {
       });
     }
     
-    const userOrders = await col.find({ 
-      $or: [
-        { user_id: req.user.id },
-        { userId: req.user.id }
-      ]
-    }).sort({ created_at: -1 }).toArray();
+    // Try to find orders with better error handling
+    let userOrders = [];
+    try {
+      userOrders = await col.find({ 
+        $or: [
+          { user_id: req.user.id },
+          { userId: req.user.id }
+        ]
+      }).sort({ created_at: -1 }).toArray();
+    } catch (dbError) {
+      console.error('❌ Database query error:', dbError);
+      // Fallback to in-memory orders
+      userOrders = orders.filter(o => 
+        o.user_id === req.user.id || o.userId === req.user.id
+      ).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    }
     
-    console.log('✅ Found orders in database for user:', { user_id: req.user.id, count: userOrders.length });
+    console.log('✅ Found orders for user:', { user_id: req.user.id, count: userOrders.length });
     
     res.json({
       success: true,
@@ -205,6 +215,15 @@ router.put('/:id/status', authenticateToken, async (req, res) => {
 
     const col = await getOrdersCollection();
     if (col) {
+      // First, let's check if the order exists
+      const existingOrder = await col.findOne({ id: id });
+      console.log('🔍 Order lookup result:', { 
+        order_id: id, 
+        found: !!existingOrder,
+        order_user_id: existingOrder?.user_id || existingOrder?.userId,
+        request_user_id: req.user.id
+      });
+      
       // Try to find order by ID and either user_id or userId field
       const result = await col.findOneAndUpdate(
         { 
