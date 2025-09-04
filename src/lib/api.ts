@@ -129,25 +129,10 @@ class ApiClient {
   }
 
   // Razorpay endpoints
-  async createRazorpayOrder(amount: number, currency: string = 'INR') {
+  async createRazorpayOrder(amount: number) {
     return this.request('/razorpay/create-order', {
       method: 'POST',
-      body: JSON.stringify({ amount, currency }),
-    });
-  }
-
-  async verifyPayment(paymentData: {
-    razorpay_order_id: string;
-    razorpay_payment_id: string;
-    razorpay_signature: string;
-    method?: string; // Add optional method parameter
-  }) {
-    console.log('🔍 API Client - verifyPayment called with data:', paymentData);
-    console.log('📤 Method parameter value:', paymentData.method);
-    
-    return this.request('/razorpay/verify-payment', {
-      method: 'POST',
-      body: JSON.stringify(paymentData),
+      body: JSON.stringify({ amount, currency: 'INR' }),
     });
   }
 

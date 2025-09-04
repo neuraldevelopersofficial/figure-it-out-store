@@ -161,7 +161,6 @@ const Checkout: React.FC = () => {
       }
       
       // For Razorpay, create payment order using backend
-      console.log('🛒 Creating Razorpay order via backend...');
       const razorpayResponse = await apiClient.createRazorpayOrder(cartTotal);
       
       if (!razorpayResponse.success) {
@@ -174,15 +173,12 @@ const Checkout: React.FC = () => {
         currency: razorpayResponse.currency
       });
 
-      // Import and use the simplified Razorpay integration
-      const { initializePayment } = await import('@/lib/razorpay');
+      // Import and use the simple Razorpay integration
+      const { initializePayment, verifyPayment } = await import('@/lib/razorpay');
       
-      // Initialize Razorpay payment with default UI
-      console.log('🚀 Initializing Razorpay payment...');
-      
+      // Initialize Razorpay payment
       await initializePayment(
         razorpayResponse.order_id,
-        razorpayResponse.currency || 'INR',
         user.full_name,
         user.email,
         shippingAddress.phone || '',
@@ -190,22 +186,14 @@ const Checkout: React.FC = () => {
           try {
             console.log('✅ Payment successful:', paymentResponse);
             
-            // Verify payment signature with backend
-            console.log('🔍 Verifying payment signature...');
-            const verificationData = {
-              razorpay_order_id: paymentResponse.razorpay_order_id,
-              razorpay_payment_id: paymentResponse.razorpay_payment_id,
-              razorpay_signature: paymentResponse.razorpay_signature,
-              method: 'custom_form' // Use custom_form for custom payment form
-            };
-            
-            console.log('📤 Sending verification request with data:', verificationData);
-            
-            const verificationResponse = await apiClient.verifyPayment(verificationData);
+            // Verify payment signature
+            const verificationResponse = await verifyPayment(
+              paymentResponse.razorpay_order_id,
+              paymentResponse.razorpay_payment_id,
+              paymentResponse.razorpay_signature
+            );
 
             if (verificationResponse.success && verificationResponse.verified) {
-              console.log('✅ Payment verification successful');
-              
               // Update order status
               await apiClient.updateOrderStatus(orderResponse.order.id, 'confirmed');
               
@@ -220,7 +208,6 @@ const Checkout: React.FC = () => {
               // Redirect to order confirmation
               navigate('/orders');
             } else {
-              console.error('❌ Payment verification failed:', verificationResponse);
               throw new Error('Payment verification failed');
             }
           } catch (error) {
