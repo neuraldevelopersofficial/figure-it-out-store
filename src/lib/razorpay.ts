@@ -1,6 +1,6 @@
 // Simple Razorpay Integration
 export const RAZORPAY_CONFIG = {
-  key_id: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_RD4Ia7eTGct90w',
+  key_id: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_R7AXdwnh3RUvQR',
   currency: 'INR'
 };
 
@@ -40,10 +40,11 @@ const loadRazorpayScript = (): Promise<void> => {
     (window as any).RAZORPAY_USE_CLASSIC_CHECKOUT = true;
     (window as any).RAZORPAY_DISABLE_STANDARD_CHECKOUT = true;
     (window as any).RAZORPAY_CLASSIC_CHECKOUT_ONLY = true;
+    (window as any).RAZORPAY_LEGACY_CHECKOUT = true;
 
     const script = document.createElement('script');
     // Use a specific version of Razorpay script to avoid Standard Checkout API
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js?version=1.0.0';
     script.setAttribute('data-razorpay-version', '1.0.0');
     script.onload = () => {
       console.log('✅ Razorpay script loaded successfully');
