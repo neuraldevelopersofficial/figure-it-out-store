@@ -18,6 +18,7 @@ import {
   X,
   Image as ImageIcon
 } from "lucide-react";
+import { FallbackImage } from "@/components/ui/fallback-image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -698,25 +699,12 @@ const AdminDashboard = () => {
                   <span className="text-sm font-medium">Preview</span>
                 </div>
                 <div className="aspect-video bg-white rounded border overflow-hidden">
-                  <img 
+                  <FallbackImage 
                     src={slideData.image}
                     alt="Slide preview" 
                     className="w-full h-full object-cover"
-                    onError={(e) => {
-                      const target = e.currentTarget as HTMLImageElement;
-                      target.style.display = 'none';
-                      const nextElement = target.nextElementSibling as HTMLElement;
-                      if (nextElement) {
-                        nextElement.style.display = 'flex';
-                      }
-                    }}
+                    fallbackSrc="/placeholder-image.png"
                   />
-                  <div className="hidden w-full h-full items-center justify-center text-gray-400 text-sm">
-                    <div className="text-center">
-                      <ImageIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                      <p>Image not available</p>
-                    </div>
-                  </div>
                 </div>
               </div>
             )}
@@ -1353,16 +1341,11 @@ const AdminDashboard = () => {
                               <td className="p-2">
                                 <div className="relative group">
                                   {product.image && product.image !== '/placeholder-product.jpg' ? (
-                                    <img 
+                                    <FallbackImage 
                                       src={product.image} 
                                       alt={product.name}
                                       className="w-12 h-12 object-cover rounded border border-gray-200"
-                                      onError={(e) => {
-                                        const target = e.currentTarget as HTMLImageElement;
-                                        target.src = '/placeholder-image.png';
-                                        target.classList.add('bg-gray-100');
-                                        console.log(`Image failed to load for product: ${product.name}`);
-                                      }}
+                                      fallbackSrc="/placeholder-image.png"
                                     />
                                   ) : (
                                     <div className="w-12 h-12 bg-gray-100 rounded border border-gray-200 flex items-center justify-center">

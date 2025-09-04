@@ -35,35 +35,13 @@ const loadRazorpayScript = (): Promise<void> => {
       return;
     }
 
-    // Set global variable to force classic checkout
-    (window as any).RAZORPAY_FORCE_CLASSIC_CHECKOUT = true;
-    (window as any).RAZORPAY_USE_CLASSIC_CHECKOUT = true;
-    (window as any).RAZORPAY_DISABLE_STANDARD_CHECKOUT = true;
-    (window as any).RAZORPAY_CLASSIC_CHECKOUT_ONLY = true;
-    (window as any).RAZORPAY_LEGACY_CHECKOUT = true;
-
     const script = document.createElement('script');
-    // Use a specific version of Razorpay script to avoid Standard Checkout API
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js?version=1.0.0';
-    script.setAttribute('data-razorpay-version', '1.0.0');
+    // Use the classic Razorpay script (avoid v2 Standard Checkout)
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
     script.onload = () => {
       console.log('✅ Razorpay script loaded successfully');
-      // Force classic checkout mode by overriding the Razorpay constructor
       if ((window as any).Razorpay) {
         console.log('🔧 Razorpay loaded, version:', (window as any).Razorpay.version);
-        // Override the Razorpay constructor to force classic checkout
-        const originalRazorpay = (window as any).Razorpay;
-        (window as any).Razorpay = function(options) {
-          // Remove any parameters that might trigger Standard Checkout
-          const classicOptions = { ...options };
-          delete classicOptions.checkout;
-          delete classicOptions.method;
-          delete classicOptions.payment_capture;
-          // Force classic checkout by adding specific parameters
-          classicOptions.classic_checkout = true;
-          classicOptions.standard_checkout = false;
-          return new originalRazorpay(classicOptions);
-        };
       }
       resolve();
     };
@@ -112,7 +90,9 @@ export const initializePayment = async (
       },
       notes: {
         source: 'figureitoutstore'
-      }
+      },
+      // Force classic checkout by avoiding v2 parameters
+      payment_capture: 1
     };
 
     console.log('🔧 Razorpay options:', options);
