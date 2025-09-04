@@ -4,6 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useStore } from '@/context/StoreContext';
 import { apiClient } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+import { initializePayment, verifyPayment } from '@/lib/razorpay';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { FallbackImage } from '@/components/ui/fallback-image';
 import Header from '@/components/Header';
@@ -173,9 +174,6 @@ const Checkout: React.FC = () => {
         currency: razorpayResponse.currency
       });
 
-      // Import and use the simple Razorpay integration
-      const { initializePayment, verifyPayment } = await import('@/lib/razorpay');
-      
       // Initialize Razorpay payment
       await initializePayment(
         razorpayResponse.order_id,
