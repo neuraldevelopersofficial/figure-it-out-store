@@ -39,10 +39,11 @@ const loadRazorpayScript = (): Promise<void> => {
     (window as any).RAZORPAY_FORCE_CLASSIC_CHECKOUT = true;
     (window as any).RAZORPAY_USE_CLASSIC_CHECKOUT = true;
     (window as any).RAZORPAY_DISABLE_STANDARD_CHECKOUT = true;
+    (window as any).RAZORPAY_CLASSIC_CHECKOUT_ONLY = true;
 
     const script = document.createElement('script');
     // Use a specific version of Razorpay script to avoid Standard Checkout API
-    script.src = 'https://cdn.razorpay.com/static/checkout/1.0.0/checkout.js';
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
     script.setAttribute('data-razorpay-version', '1.0.0');
     script.onload = () => {
       console.log('✅ Razorpay script loaded successfully');
@@ -57,6 +58,9 @@ const loadRazorpayScript = (): Promise<void> => {
           delete classicOptions.checkout;
           delete classicOptions.method;
           delete classicOptions.payment_capture;
+          // Force classic checkout by adding specific parameters
+          classicOptions.classic_checkout = true;
+          classicOptions.standard_checkout = false;
           return new originalRazorpay(classicOptions);
         };
       }
