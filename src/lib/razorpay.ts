@@ -36,9 +36,16 @@ const loadRazorpayScript = (): Promise<void> => {
     }
 
     const script = document.createElement('script');
+    // Use the classic checkout script to avoid standard checkout API issues
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error('Failed to load Razorpay'));
+    script.onload = () => {
+      console.log('✅ Razorpay script loaded successfully');
+      resolve();
+    };
+    script.onerror = () => {
+      console.error('❌ Failed to load Razorpay script');
+      reject(new Error('Failed to load Razorpay'));
+    };
     document.body.appendChild(script);
   });
 };
@@ -55,9 +62,13 @@ export const initializePayment = async (
   try {
     await loadRazorpayScript();
 
+    // Validate order ID
+    if (!orderId || orderId.trim() === '') {
+      throw new Error('Invalid order ID provided');
+    }
+
     const options = {
       key: RAZORPAY_CONFIG.key_id,
-      amount: 0, // Amount is tied to order_id
       currency: 'INR',
       name: 'FIGURE IT OUT',
       description: 'Anime Collectibles Purchase',
@@ -73,13 +84,30 @@ export const initializePayment = async (
       handler: onSuccess,
       modal: {
         ondismiss: () => onFailure(new Error('Payment cancelled')),
+      },
+      notes: {
+        source: 'figureitoutstore'
       }
     };
 
+    console.log('🔧 Razorpay options:', options);
+    console.log('🔧 Razorpay key:', RAZORPAY_CONFIG.key_id);
+    console.log('🔧 Order ID:', orderId);
+    console.log('🔧 Customer details:', { customerName, customerEmail, customerPhone });
+
+    // Use the new Razorpay constructor with single object parameter
     const razorpay = new (window as any).Razorpay(options);
-    razorpay.open();
+    
+    // Add error handling for the open method
+    try {
+      razorpay.open();
+    } catch (openError) {
+      console.error('❌ Razorpay open error:', openError);
+      onFailure(openError);
+    }
 
   } catch (error) {
+    console.error('❌ Razorpay initialization error:', error);
     onFailure(error);
   }
 };
