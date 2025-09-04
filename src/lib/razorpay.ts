@@ -35,9 +35,15 @@ const loadRazorpayScript = (): Promise<void> => {
       return;
     }
 
+    // Set global variable to force classic checkout
+    (window as any).RAZORPAY_FORCE_CLASSIC_CHECKOUT = true;
+    (window as any).RAZORPAY_USE_CLASSIC_CHECKOUT = true;
+
     const script = document.createElement('script');
-    // Use the classic checkout script to avoid standard checkout API issues
+    // Use the legacy Razorpay script to avoid Standard Checkout API
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.setAttribute('data-razorpay-version', '1');
+    script.setAttribute('data-razorpay-classic', 'true');
     script.onload = () => {
       console.log('✅ Razorpay script loaded successfully');
       resolve();
@@ -87,6 +93,10 @@ export const initializePayment = async (
       },
       notes: {
         source: 'figureitoutstore'
+      },
+      // Force classic checkout mode
+      checkout: {
+        method: 'classic'
       }
     };
 
@@ -95,7 +105,7 @@ export const initializePayment = async (
     console.log('🔧 Order ID:', orderId);
     console.log('🔧 Customer details:', { customerName, customerEmail, customerPhone });
 
-    // Use the new Razorpay constructor with single object parameter
+    // Use the Razorpay constructor with single object parameter
     const razorpay = new (window as any).Razorpay(options);
     
     // Add error handling for the open method
