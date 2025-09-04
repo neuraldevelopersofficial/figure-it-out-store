@@ -180,8 +180,8 @@ const Orders = () => {
   };
 
   const filteredOrders = orders.filter(order => {
-    const matchesSearch = order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.items.some(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesSearch = (order.orderNumber || order.id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         order.items.some(item => (item.name || '').toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -290,7 +290,7 @@ const Orders = () => {
                   <div className="flex items-start justify-between mb-4">
                     <div>
                       <h3 className="font-semibold text-lg mb-1">
-                        Order #{order.orderNumber}
+                        Order #{order.orderNumber || order.id}
                       </h3>
                       <p className="text-sm text-gray-500">
                         Placed on {formatDate(order.created_at)}
@@ -352,7 +352,7 @@ const Orders = () => {
                       )}
                     </div>
                     <div className="text-lg font-semibold">
-                      Total: {formatPrice(order.totalAmount)}
+                      Total: {formatPrice(order.totalAmount || order.total_amount || 0)}
                     </div>
                   </div>
                 </CardContent>
