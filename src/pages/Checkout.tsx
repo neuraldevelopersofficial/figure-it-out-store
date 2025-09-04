@@ -146,13 +146,26 @@ const Checkout: React.FC = () => {
     }
 
     // Validate shipping address
-    if (!shippingAddress.address || !shippingAddress.city || !shippingAddress.state || !shippingAddress.pincode) {
+    if (!useSavedAddress && (!shippingAddress.address || !shippingAddress.city || !shippingAddress.state || !shippingAddress.pincode)) {
       toast({
         title: "Incomplete shipping address",
         description: "Please fill in all required shipping address fields.",
         variant: "destructive"
       });
       return;
+    }
+
+    // Additional validation for saved addresses
+    if (useSavedAddress && selectedAddressId) {
+      const selectedAddress = addresses.find(addr => addr.id === selectedAddressId);
+      if (!selectedAddress) {
+        toast({
+          title: "Invalid address selection",
+          description: "Please select a valid address or use a new address.",
+          variant: "destructive"
+        });
+        return;
+      }
     }
 
     setLoading(true);
@@ -170,16 +183,39 @@ const Checkout: React.FC = () => {
       }
 
       // Create order in backend
+      let finalShippingAddress = shippingAddress;
+      
+      // If using saved address, get the complete address data
+      if (useSavedAddress && selectedAddressId) {
+        const selectedAddress = addresses.find(addr => addr.id === selectedAddressId);
+        if (selectedAddress) {
+          finalShippingAddress = {
+            address: selectedAddress.addressLine1,
+            city: selectedAddress.city,
+            state: selectedAddress.state,
+            pincode: selectedAddress.pincode,
+            phone: selectedAddress.phone
+          };
+        }
+      }
+
       const orderData = {
         items: cartItems,
         total_amount: cartTotal,
-        shipping_address: shippingAddress.address,
-        shipping_city: shippingAddress.city,
-        shipping_state: shippingAddress.state,
-        shipping_pincode: shippingAddress.pincode,
-        shipping_phone: shippingAddress.phone,
+        shipping_address: finalShippingAddress.address,
+        shipping_city: finalShippingAddress.city,
+        shipping_state: finalShippingAddress.state,
+        shipping_pincode: finalShippingAddress.pincode,
+        shipping_phone: finalShippingAddress.phone,
         payment_method: paymentMethod
       };
+
+      console.log('🔍 Order data being sent:', {
+        useSavedAddress,
+        selectedAddressId,
+        finalShippingAddress,
+        orderData
+      });
 
       const orderResponse = await apiClient.createOrder(orderData);
       
