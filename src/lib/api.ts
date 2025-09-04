@@ -161,11 +161,32 @@ class ApiClient {
     });
   }
   
-  async updateOrderStatus(orderId: string, status: string) {
-    return this.request(`/orders/${orderId}/status`, {
-      method: 'PUT',
-      body: JSON.stringify({ status }),
-    });
+  async updateOrderStatus(orderId: string, status: string, retryCount = 0) {
+    console.log('🔄 Updating order status:', { orderId, status, endpoint: `/orders/${orderId}/status`, retryCount });
+    try {
+      const response = await this.request(`/orders/${orderId}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status }),
+      });
+      console.log('✅ Order status update response:', response);
+      return response;
+    } catch (error: any) {
+      console.error('❌ Order status update error:', error);
+      
+      // Retry logic for network errors
+      if (retryCount < 2 && (
+        error.message?.includes('Failed to fetch') || 
+        error.message?.includes('502') || 
+        error.message?.includes('503') ||
+        error.message?.includes('504')
+      )) {
+        console.log(`🔄 Retrying order status update (attempt ${retryCount + 1}/2)...`);
+        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1))); // Exponential backoff
+        return this.updateOrderStatus(orderId, status, retryCount + 1);
+      }
+      
+      throw error;
+    }
   }
 
   async getOrders() {

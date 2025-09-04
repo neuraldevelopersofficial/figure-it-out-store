@@ -370,13 +370,28 @@ const Checkout: React.FC = () => {
               try {
                 console.log('🔄 Updating order status to confirmed for order:', orderResponse.order.id);
                 // Add small delay to ensure order is fully saved to database
-                await new Promise(resolve => setTimeout(resolve, 500));
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 const statusUpdateResponse = await apiClient.updateOrderStatus(orderResponse.order.id, 'confirmed');
                 console.log('✅ Order status updated successfully:', statusUpdateResponse);
-              } catch (statusError) {
+              } catch (statusError: any) {
                 console.error('❌ Failed to update order status:', statusError);
+                
+                // Log specific error details for debugging
+                if (statusError.message?.includes('Order not found')) {
+                  console.error('❌ Order not found in database:', orderResponse.order.id);
+                } else if (statusError.message?.includes('Failed to fetch')) {
+                  console.error('❌ Network error during status update');
+                } else if (statusError.message?.includes('502')) {
+                  console.error('❌ Server error during status update');
+                }
+                
                 // Don't fail the entire flow if status update fails
                 // The payment was successful, so we should still proceed
+                toast({
+                  title: "Payment Successful",
+                  description: "Your payment was processed, but there was an issue updating the order status. Please contact support if needed.",
+                  variant: "default"
+                });
               }
               
               // Clear cart

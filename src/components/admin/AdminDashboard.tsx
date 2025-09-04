@@ -503,6 +503,7 @@ const AdminDashboard = () => {
 
   const handleUpdateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
+      console.log('🔄 Admin updating order status:', { orderId, newStatus });
       const response = await apiClient.updateOrderStatus(orderId, newStatus);
       if (response.success) {
         toast({
@@ -517,11 +518,25 @@ const AdminDashboard = () => {
           variant: "destructive"
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating order status:', error);
+      
+      // Provide more specific error messages
+      let errorMessage = `Failed to update order status for #${orderId}.`;
+      
+      if (error.message?.includes('Order not found')) {
+        errorMessage = `Order #${orderId} not found. It may have been deleted or the ID is incorrect.`;
+      } else if (error.message?.includes('Failed to fetch')) {
+        errorMessage = `Network error: Unable to connect to the server. Please check your internet connection.`;
+      } else if (error.message?.includes('502')) {
+        errorMessage = `Server error: The server is temporarily unavailable. Please try again later.`;
+      } else if (error.message?.includes('404')) {
+        errorMessage = `Order #${orderId} not found. Please refresh the page and try again.`;
+      }
+      
       toast({
         title: "Error",
-        description: `Failed to update order status for #${orderId}.`,
+        description: errorMessage,
         variant: "destructive"
       });
     }
