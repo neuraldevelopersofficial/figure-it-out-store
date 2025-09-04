@@ -201,14 +201,19 @@ const Checkout: React.FC = () => {
       if (useSavedAddress && selectedAddressId) {
         const selectedAddress = addresses.find(addr => addr.id === selectedAddressId);
         if (selectedAddress) {
+          console.log('🔍 Raw selected address:', selectedAddress);
+          
           // Build complete address from addressLine1 and addressLine2
           const fullAddress = [
             selectedAddress.addressLine1 || '',
             selectedAddress.addressLine2 || ''
           ].filter(Boolean).join(', ');
           
+          // If fullAddress is empty, try to use the address field as fallback
+          const finalAddress = fullAddress || selectedAddress.address || '';
+          
           finalShippingAddress = {
-            address: fullAddress || '',
+            address: finalAddress,
             city: selectedAddress.city || '',
             state: selectedAddress.state || '',
             pincode: selectedAddress.pincode || '',
@@ -218,7 +223,11 @@ const Checkout: React.FC = () => {
           console.log('🔍 Selected address data:', {
             selectedAddress,
             finalShippingAddress,
-            fullAddress
+            fullAddress,
+            finalAddress,
+            addressLine1: selectedAddress.addressLine1,
+            addressLine2: selectedAddress.addressLine2,
+            address: selectedAddress.address
           });
         }
       }
@@ -226,6 +235,21 @@ const Checkout: React.FC = () => {
       // Final validation of address data
       if (!finalShippingAddress.address || !finalShippingAddress.city || !finalShippingAddress.state || !finalShippingAddress.pincode) {
         console.error('❌ Final address validation failed:', finalShippingAddress);
+        
+        // If using saved address and it's invalid, fall back to manual address
+        if (useSavedAddress) {
+          console.log('🔄 Falling back to manual address entry');
+          setUseSavedAddress(false);
+          setSelectedAddressId(null);
+          toast({
+            title: "Address issue detected",
+            description: "Please enter your address manually.",
+            variant: "destructive"
+          });
+          setLoading(false);
+          return;
+        }
+        
         toast({
           title: "Address validation failed",
           description: "Please ensure all address fields are properly filled.",

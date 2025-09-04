@@ -159,28 +159,102 @@ router.get('/orders/:orderId', authenticateToken, (req, res) => {
 });
 
 // Get order invoice
-router.get('/orders/:orderId/invoice', authenticateToken, (req, res) => {
+router.get('/orders/:orderId/invoice', authenticateToken, async (req, res) => {
   try {
     const { orderId } = req.params;
-    const order = ordersStore.getOrderById(orderId);
+    
+    console.log('Generating invoice for order via user route:', { order_id: orderId, user_id: req.user.id });
+    
+    // Use the same logic as the orders route
+    const { getCollection, COLLECTIONS } = require('../config/database');
+    
+    async function getOrdersCollection() {
+      try {
+        const db = await require('../config/database').getDatabase();
+        if (!db) return null;
+        return await getCollection(COLLECTIONS.ORDERS);
+      } catch (e) {
+        return null;
+      }
+    }
+    
+    const col = await getOrdersCollection();
+    let order = null;
+    
+    if (col) {
+      order = await col.findOne({ 
+        id: orderId, 
+        $or: [
+          { user_id: req.user.id },
+          { userId: req.user.id }
+        ]
+      });
+    } else {
+      // Fallback to in-memory storage
+      order = ordersStore.getOrderById(orderId);
+      if (order && order.userId !== req.user.id) {
+        order = null; // Access denied
+      }
+    }
     
     if (!order) {
+      console.log('❌ Order not found for invoice generation:', { order_id: orderId, user_id: req.user.id });
       return res.status(404).json({ error: 'Order not found' });
     }
 
-    // Verify order belongs to user
-    if (order.userId !== req.user.id) {
-      return res.status(403).json({ error: 'Access denied' });
-    }
-
-    const invoice = ordersStore.generateInvoice(orderId);
+    // Generate invoice data
+    const subtotal = order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const shipping = subtotal > 2000 ? 0 : 99; // Free shipping above ₹2000
+    const tax = Math.round(subtotal * 0.18); // 18% GST
+    const calculatedTotal = subtotal + shipping + tax;
     
+    // Use the order's total_amount if it exists, otherwise use calculated total
+    const total = order.total_amount || order.totalAmount || calculatedTotal;
+
+    const invoice = {
+      orderId: order.id,
+      orderNumber: order.orderNumber || order.id,
+      date: order.created_at,
+      customer: {
+        name: order.shipping_address || order.shippingAddress?.name || 'Customer',
+        address: {
+          address: order.shipping_address || order.shippingAddress?.addressLine1 || '',
+          city: order.shipping_city || order.shippingAddress?.city || '',
+          state: order.shipping_state || order.shippingAddress?.state || '',
+          pincode: order.shipping_pincode || order.shippingAddress?.pincode || '',
+          phone: order.shipping_phone || order.shippingAddress?.phone || ''
+        }
+      },
+      items: order.items.map(item => ({
+        ...item,
+        total: item.price * item.quantity
+      })),
+      summary: {
+        subtotal,
+        shipping,
+        tax,
+        total
+      },
+      paymentMethod: order.payment_method || order.paymentMethod,
+      paymentStatus: order.payment_status || order.paymentStatus,
+      status: order.status
+    };
+    
+    console.log('✅ Invoice generated successfully via user route:', { 
+      order_id: orderId,
+      subtotal,
+      shipping,
+      tax,
+      calculatedTotal,
+      orderTotal: order.total_amount || order.totalAmount,
+      finalTotal: total
+    });
     res.json({
       success: true,
       invoice
     });
   } catch (error) {
-    console.error('Invoice generation error:', error);
+    console.error('❌ Invoice generation error:', error);
     res.status(500).json({ error: 'Failed to generate invoice' });
   }
 });

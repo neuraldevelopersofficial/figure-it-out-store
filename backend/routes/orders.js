@@ -365,7 +365,10 @@ router.get('/:id/invoice', authenticateToken, async (req, res) => {
     const subtotal = order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const shipping = subtotal > 2000 ? 0 : 99; // Free shipping above ₹2000
     const tax = Math.round(subtotal * 0.18); // 18% GST
-    const total = subtotal + shipping + tax;
+    const calculatedTotal = subtotal + shipping + tax;
+    
+    // Use the order's total_amount if it exists, otherwise use calculated total
+    const total = order.total_amount || order.totalAmount || calculatedTotal;
 
     const invoice = {
       orderId: order.id,
@@ -396,7 +399,15 @@ router.get('/:id/invoice', authenticateToken, async (req, res) => {
       status: order.status
     };
     
-    console.log('✅ Invoice generated successfully:', { order_id: id });
+    console.log('✅ Invoice generated successfully:', { 
+      order_id: id,
+      subtotal,
+      shipping,
+      tax,
+      calculatedTotal,
+      orderTotal: order.total_amount || order.totalAmount,
+      finalTotal: total
+    });
     res.json({
       success: true,
       invoice

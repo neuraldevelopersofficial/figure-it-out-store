@@ -285,15 +285,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
                   addresses.push({
                     id: addr.id || '',
                     name: addr.name || '',
-                    addressLine1: addr.address || '',
-                    addressLine2: addr.address_line2 || '',
+                    addressLine1: addr.addressLine1 || addr.address || '',
+                    addressLine2: addr.addressLine2 || addr.address_line2 || '',
                     landmark: addr.landmark || '',
                     city: addr.city || '',
                     state: addr.state || '',
                     pincode: addr.pincode || '',
                     phone: addr.phone || '',
-                    isDefault: addr.is_default || false,
-                    addressType: addr.address_type || 'Home'
+                    isDefault: addr.isDefault || addr.is_default || false,
+                    addressType: addr.addressType || addr.address_type || 'Home'
                   });
                 }
               });
