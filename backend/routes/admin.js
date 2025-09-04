@@ -200,6 +200,58 @@ router.get('/orders', authenticateToken, requireAdmin, async (req, res) => {
   }
 });
 
+// Update order status for admin (no user restrictions)
+router.put('/orders/:id/status', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    
+    if (!status) {
+      return res.status(400).json({ error: 'Status is required' });
+    }
+
+    console.log('Admin updating order status:', { order_id: id, new_status: status, admin_id: req.user.id });
+
+    const ordersCollection = await getCollection(COLLECTIONS.ORDERS);
+    if (!ordersCollection) {
+      return res.status(500).json({ error: 'Orders collection not available' });
+    }
+    
+    // First, let's check if the order exists
+    const existingOrder = await ordersCollection.findOne({ id: id });
+    console.log('🔍 Admin order lookup result:', { 
+      order_id: id, 
+      found: !!existingOrder,
+      order_user_id: existingOrder?.user_id || existingOrder?.userId,
+      admin_id: req.user.id
+    });
+    
+    if (!existingOrder) {
+      console.log('❌ Order not found in database for admin update:', { order_id: id, admin_id: req.user.id });
+      return res.status(404).json({ error: 'Order not found' });
+    }
+    
+    // Update the order status (no user restrictions for admin)
+    const result = await ordersCollection.findOneAndUpdate(
+      { id: id },
+      { $set: { status, updated_at: new Date().toISOString() } },
+      { returnDocument: 'after' }
+    );
+    
+    if (!result.value) {
+      console.log('❌ Failed to update order status in database:', { order_id: id, admin_id: req.user.id });
+      return res.status(500).json({ error: 'Failed to update order status' });
+    }
+    
+    console.log('✅ Admin order status updated in database:', { order_id: id, new_status: status });
+    res.json({ success: true, message: 'Order status updated successfully', order: result.value });
+
+  } catch (error) {
+    console.error('Admin order status update error:', error);
+    res.status(500).json({ error: 'Failed to update order status' });
+  }
+});
+
 // Helper to access products collection or null
 async function getProductsCollection() {
   try {

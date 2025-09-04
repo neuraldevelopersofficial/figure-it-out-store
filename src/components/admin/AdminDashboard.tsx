@@ -504,7 +504,7 @@ const AdminDashboard = () => {
   const handleUpdateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
       console.log('🔄 Admin updating order status:', { orderId, newStatus });
-      const response = await apiClient.updateOrderStatus(orderId, newStatus);
+      const response = await apiClient.updateOrderStatusAdmin(orderId, newStatus);
       if (response.success) {
         toast({
           title: "Order Status Updated",
@@ -532,6 +532,8 @@ const AdminDashboard = () => {
         errorMessage = `Server error: The server is temporarily unavailable. Please try again later.`;
       } else if (error.message?.includes('404')) {
         errorMessage = `Order #${orderId} not found. Please refresh the page and try again.`;
+      } else if (error.message?.includes('403')) {
+        errorMessage = `Access denied: You don't have permission to update this order.`;
       }
       
       toast({
