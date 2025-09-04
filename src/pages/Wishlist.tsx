@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Heart, ShoppingCart, ArrowLeft, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { FallbackImage } from "@/components/ui/fallback-image";
 import { useStore } from "@/context/StoreContext";
 import ProductCard from "@/components/ProductCard";
 import Header from "@/components/Header";
@@ -86,10 +87,11 @@ const Wishlist = () => {
               <div className="bg-background border border-border rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300">
                 {/* Image Container */}
                 <div className="relative aspect-square overflow-hidden">
-                  <img
+                  <FallbackImage
                     src={item.image}
                     alt={item.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    fallbackSrc="/placeholder-image.png"
                   />
                   
                   {/* Overlay with actions */}

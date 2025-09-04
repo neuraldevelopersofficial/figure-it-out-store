@@ -8,6 +8,7 @@ import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { FallbackImage } from '@/components/ui/fallback-image';
 import { 
   ArrowLeft, 
   Plus, 
@@ -161,10 +162,11 @@ const Cart: React.FC = () => {
                 <div className="flex gap-4">
                   {/* Product Image */}
                   <div className="w-24 h-24 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                    <img
+                    <FallbackImage
                       src={item.image}
                       alt={item.name}
                       className="w-full h-full object-cover"
+                      fallbackSrc="/placeholder-image.png"
                     />
                   </div>
 
