@@ -9,7 +9,6 @@ const CategorySection = () => {
       name: "Anime Figures",
       description: "Premium collectible figures",
       icon: Sparkles,
-      count: "150+",
       gradient: "from-blue-500 to-purple-600"
     },
     {
@@ -17,7 +16,6 @@ const CategorySection = () => {
       name: "Keychains",
       description: "Unique anime accessories",
       icon: Zap,
-      count: "200+",
       gradient: "from-pink-500 to-red-500"
     }
   ];
@@ -57,10 +55,9 @@ const CategorySection = () => {
                     {category.description}
                   </p>
                   
-                  {/* Product count */}
-                  <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-                    <span>{category.count} Products</span>
-                    <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  {/* Arrow indicator */}
+                  <div className="flex items-center justify-center">
+                    <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform text-gray-500" />
                   </div>
                 </div>
               </Link>
