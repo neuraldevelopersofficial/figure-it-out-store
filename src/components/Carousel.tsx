@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import OptimizedImage from "@/components/ui/optimized-image";
 
 interface CarouselSlide {
   id: string;
@@ -100,17 +99,17 @@ const Carousel = ({
                 </div>
               )}
               
-              <OptimizedImage
+              <img
                 src={slide.image}
                 alt={slide.title}
                 className={`w-full h-full object-cover transition-opacity duration-500 ${
                   imagesLoaded[index] ? 'opacity-100' : 'opacity-0'
                 }`}
-                priority={index === 0} // First slide has priority
-                lazy={index > 0} // Lazy load other slides
-                placeholder="blur"
                 onLoad={() => handleImageLoad(index)}
-                onError={() => handleImageLoad(index)} // Also mark as loaded on error
+                onError={() => {
+                  console.error('Image failed to load:', slide.image);
+                  handleImageLoad(index);
+                }}
               />
               {slide.overlay && (
                 <div className="absolute inset-0 bg-black/40" />
