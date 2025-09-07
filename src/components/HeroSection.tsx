@@ -33,16 +33,15 @@ const HeroSection = () => {
 
   useEffect(() => {
     const fetchHeroCarousel = async () => {
-      try {
-        // Temporarily disable API call due to CORS issues
-        // const response = await apiClient.get('/carousels/hero');
-        // console.log('Hero carousel API response:', response);
-        // if (response && response.success && response.carousel) {
-        //   setHeroCarousel(response.carousel);
-        // } else {
-          console.log('Using fallback carousel (API disabled due to CORS)');
-          // Fallback to default slides if API fails
-          setHeroCarousel({
+      // Temporarily disable API call due to CORS issues
+      // const response = await apiClient.get('/carousels/hero');
+      // console.log('Hero carousel API response:', response);
+      // if (response && response.success && response.carousel) {
+      //   setHeroCarousel(response.carousel);
+      // } else {
+        console.log('Using fallback carousel (API disabled due to CORS)');
+        // Fallback to default slides if API fails
+        setHeroCarousel({
             id: "fallback",
             name: "hero",
             title: "Hero Carousel",
