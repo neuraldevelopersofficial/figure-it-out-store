@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
 
 interface CarouselSlide {
   id: string;
@@ -111,43 +110,9 @@ const Carousel = ({
                   handleImageLoad(index);
                 }}
               />
-              {slide.overlay && (
-                <div className="absolute inset-0 bg-black/40" />
-              )}
             </div>
 
-            {/* Content */}
-            <div className="relative z-10 flex items-center justify-center h-full text-center text-white">
-              <div className="max-w-4xl mx-auto px-4">
-                <h2 className={`text-4xl md:text-6xl font-bold mb-4 transition-all duration-700 ${
-                  imagesLoaded[index] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-                }`}>
-                  {slide.title}
-                </h2>
-                {slide.subtitle && (
-                  <p className={`text-xl md:text-2xl mb-8 text-gray-200 transition-all duration-700 delay-200 ${
-                    imagesLoaded[index] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-                  }`}>
-                    {slide.subtitle}
-                  </p>
-                )}
-                {slide.ctaText && slide.ctaLink && (
-                  <div className={`transition-all duration-700 delay-400 ${
-                    imagesLoaded[index] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-                  }`}>
-                    <Button 
-                      size="lg" 
-                      className="bg-brand-red hover:bg-brand-red-dark text-white text-lg px-8 py-3"
-                      asChild
-                    >
-                      <Link to={slide.ctaLink}>
-                        {slide.ctaText}
-                      </Link>
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
+            {/* Content removed - banners now show only images */}
           </div>
         ))}
       </div>
