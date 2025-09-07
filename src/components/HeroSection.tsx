@@ -34,13 +34,13 @@ const HeroSection = () => {
   useEffect(() => {
     const fetchHeroCarousel = async () => {
       try {
-        const response = await apiClient.get('/carousels/hero');
-        if (response.success) {
-          setHeroCarousel(response.carousel);
-        }
-      } catch (error) {
-        console.error('Failed to fetch hero carousel:', error);
-        // Fallback to default slides if API fails
+        // Always use fallback carousel with new images for now
+        // const response = await apiClient.get('/carousels/hero');
+        // if (response.success) {
+        //   setHeroCarousel(response.carousel);
+        // }
+        
+        // Force use of fallback carousel with updated images
         setHeroCarousel({
           id: "fallback",
           name: "hero",
@@ -48,7 +48,7 @@ const HeroSection = () => {
           slides: [
             {
               id: "1",
-              image: "/banners/homepage1.jpg?v=2025-01-07-3",
+              image: "/banners/homepage1.jpg?v=2025-01-07-4",
               title: "",
               subtitle: "",
               ctaText: "",
@@ -58,7 +58,7 @@ const HeroSection = () => {
             },
             {
               id: "2", 
-              image: "/banners/homepage2.jpg?v=2025-01-07-3",
+              image: "/banners/homepage2.jpg?v=2025-01-07-4",
               title: "",
               subtitle: "",
               ctaText: "",
@@ -68,7 +68,7 @@ const HeroSection = () => {
             },
             {
               id: "3",
-              image: "/banners/homepage3.jpg?v=2025-01-07-3", 
+              image: "/banners/homepage3.jpg?v=2025-01-07-4", 
               title: "",
               subtitle: "",
               ctaText: "",
@@ -78,7 +78,7 @@ const HeroSection = () => {
             },
             {
               id: "4",
-              image: "/banners/homepage4.jpg?v=2025-01-07-3",
+              image: "/banners/homepage4.jpg?v=2025-01-07-4",
               title: "",
               subtitle: "",
               ctaText: "",
@@ -88,7 +88,7 @@ const HeroSection = () => {
             },
             {
               id: "5",
-              image: "/banners/homepage5.jpg?v=2025-01-07-3",
+              image: "/banners/homepage5.jpg?v=2025-01-07-4",
               title: "",
               subtitle: "",
               ctaText: "",
@@ -98,7 +98,7 @@ const HeroSection = () => {
             },
             {
               id: "6",
-              image: "/banners/homepage6.jpg?v=2025-01-07-3",
+              image: "/banners/homepage6.jpg?v=2025-01-07-4",
               title: "",
               subtitle: "",
               ctaText: "",
@@ -108,7 +108,7 @@ const HeroSection = () => {
             },
             {
               id: "7",
-              image: "/banners/homepage7.jpg?v=2025-01-07-3",
+              image: "/banners/homepage7.jpg?v=2025-01-07-4",
               title: "",
               subtitle: "",
               ctaText: "",
@@ -118,7 +118,7 @@ const HeroSection = () => {
             },
             {
               id: "8",
-              image: "/banners/homepage8.jpg?v=2025-01-07-3",
+              image: "/banners/homepage8.jpg?v=2025-01-07-4",
               title: "",
               subtitle: "",
               ctaText: "",
@@ -128,7 +128,7 @@ const HeroSection = () => {
             },
             {
               id: "9",
-              image: "/banners/homepage9.jpg?v=2025-01-07-3",
+              image: "/banners/homepage9.jpg?v=2025-01-07-4",
               title: "",
               subtitle: "",
               ctaText: "",
@@ -138,7 +138,7 @@ const HeroSection = () => {
             },
             {
               id: "10",
-              image: "/banners/homepage10.jpg?v=2025-01-07-3",
+              image: "/banners/homepage10.jpg?v=2025-01-07-4",
               title: "",
               subtitle: "",
               ctaText: "",
@@ -148,7 +148,7 @@ const HeroSection = () => {
             },
             {
               id: "11",
-              image: "/banners/homepage11.jpg?v=2025-01-07-3",
+              image: "/banners/homepage11.jpg?v=2025-01-07-4",
               title: "",
               subtitle: "",
               ctaText: "",
@@ -159,7 +159,7 @@ const HeroSection = () => {
           ],
           autoPlay: true,
           interval: 4000,
-          height: "h-screen",
+          height: "h-[80vh]",
           isActive: true
         });
       } finally {

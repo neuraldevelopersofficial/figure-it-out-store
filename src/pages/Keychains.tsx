@@ -39,7 +39,7 @@ const Keychains = () => {
   const keychainSlides = [
     {
       id: "1",
-      image: "/banners/keychain1.jpg?v=2025-01-07-3",
+      image: "/banners/keychain1.jpg?v=2025-01-07-4",
       title: "",
       subtitle: "",
       ctaText: "",
@@ -48,7 +48,7 @@ const Keychains = () => {
     },
     {
       id: "2",
-      image: "/banners/keychain2.jpg?v=2025-01-07-3",
+      image: "/banners/keychain2.jpg?v=2025-01-07-4",
       title: "",
       subtitle: "",
       ctaText: "",
@@ -110,7 +110,7 @@ const Keychains = () => {
       <section className="mb-8">
         <Carousel 
           slides={keychainSlides} 
-          height="h-screen"
+          height="h-[70vh]"
           autoPlay={true}
           interval={4000}
         />
