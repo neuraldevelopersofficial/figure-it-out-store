@@ -138,8 +138,8 @@ const KeychainShowcase = () => {
               {keychainProducts.slice(currentIndex, currentIndex + itemsToShow).map((product, index) => (
                 <div key={product.id} className="relative group flex-shrink-0">
                   <Link to={`/product/${product.id}`} className="block">
-                    {/* Responsive Image Card */}
-                    <div className="relative w-64 sm:w-72 md:w-80 lg:w-96 bg-white rounded-2xl overflow-hidden shadow-xl group-hover:shadow-2xl transition-all duration-500 group-hover:scale-105 group-hover:-translate-y-1" style={{aspectRatio: '16/9'}}>
+                    {/* Vertical Image Card */}
+                    <div className="relative w-48 sm:w-56 md:w-64 lg:w-72 bg-white rounded-2xl overflow-hidden shadow-xl group-hover:shadow-2xl transition-all duration-500 group-hover:scale-105 group-hover:-translate-y-1" style={{aspectRatio: '3/4'}}>
                       <OptimizedImage
                         src={product.image}
                         alt={product.name}

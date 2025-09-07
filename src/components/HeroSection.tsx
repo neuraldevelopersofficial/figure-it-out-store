@@ -48,7 +48,7 @@ const HeroSection = () => {
           slides: [
             {
               id: "1",
-              image: "/banners/homepage1.jpg?v=2025-01-07",
+              image: "/banners/homepage1.jpg?v=2025-01-07-2",
               title: "Discover Amazing Anime Collectibles",
               subtitle: "From iconic figures to unique keychains, find your perfect piece",
               ctaText: "Shop Now",
@@ -58,7 +58,7 @@ const HeroSection = () => {
             },
             {
               id: "2", 
-              image: "/banners/homepage2.jpg?v=2025-01-07",
+              image: "/banners/homepage2.jpg?v=2025-01-07-2",
               title: "Premium Quality Figures",
               subtitle: "Handcrafted with attention to every detail",
               ctaText: "Explore Anime Figures",
@@ -68,7 +68,7 @@ const HeroSection = () => {
             },
             {
               id: "3",
-              image: "/banners/homepage3.jpg?v=2025-01-07", 
+              image: "/banners/homepage3.jpg?v=2025-01-07-2", 
               title: "Express Your Fandom",
               subtitle: "Show off your love for anime with our exclusive collection",
               ctaText: "Browse Keychains",
@@ -78,7 +78,7 @@ const HeroSection = () => {
             },
             {
               id: "4",
-              image: "/banners/homepage4.jpg?v=2025-01-07",
+              image: "/banners/homepage4.jpg?v=2025-01-07-2",
               title: "Exclusive Collections",
               subtitle: "Limited edition items you won't find anywhere else",
               ctaText: "View Collections",
@@ -88,7 +88,7 @@ const HeroSection = () => {
             },
             {
               id: "5",
-              image: "/banners/homepage5.jpg?v=2025-01-07",
+              image: "/banners/homepage5.jpg?v=2025-01-07-2",
               title: "New Arrivals Weekly",
               subtitle: "Fresh additions to our collection every week",
               ctaText: "See What's New",
@@ -98,7 +98,7 @@ const HeroSection = () => {
             },
             {
               id: "6",
-              image: "/banners/homepage6.jpg?v=2025-01-07",
+              image: "/banners/homepage6.jpg?v=2025-01-07-2",
               title: "Anime Merchandise",
               subtitle: "From your favorite series to hidden gems",
               ctaText: "Explore All",
@@ -108,7 +108,7 @@ const HeroSection = () => {
             },
             {
               id: "7",
-              image: "/banners/homepage7.jpg?v=2025-01-07",
+              image: "/banners/homepage7.jpg?v=2025-01-07-2",
               title: "Collector's Paradise",
               subtitle: "Find rare and exclusive anime collectibles",
               ctaText: "Start Collecting",
@@ -118,7 +118,7 @@ const HeroSection = () => {
             },
             {
               id: "8",
-              image: "/banners/homepage8.jpg?v=2025-01-07",
+              image: "/banners/homepage8.jpg?v=2025-01-07-2",
               title: "Perfect Gifts",
               subtitle: "Find the ideal present for anime lovers",
               ctaText: "Shop Gifts",
@@ -128,7 +128,7 @@ const HeroSection = () => {
             },
             {
               id: "9",
-              image: "/banners/homepage9.jpg?v=2025-01-07",
+              image: "/banners/homepage9.jpg?v=2025-01-07-2",
               title: "Fan Favorites",
               subtitle: "Most loved items from our community",
               ctaText: "View Favorites",
@@ -138,7 +138,7 @@ const HeroSection = () => {
             },
             {
               id: "10",
-              image: "/banners/homepage10.jpg?v=2025-01-07",
+              image: "/banners/homepage10.jpg?v=2025-01-07-2",
               title: "Quality Guaranteed",
               subtitle: "Premium materials and authentic designs",
               ctaText: "Learn More",
@@ -148,7 +148,7 @@ const HeroSection = () => {
             },
             {
               id: "11",
-              image: "/banners/homepage11.jpg?v=2025-01-07",
+              image: "/banners/homepage11.jpg?v=2025-01-07-2",
               title: "Join Our Community",
               subtitle: "Connect with fellow anime enthusiasts",
               ctaText: "Get Started",
