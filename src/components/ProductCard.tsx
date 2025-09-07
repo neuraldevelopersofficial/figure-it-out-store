@@ -25,11 +25,36 @@ const ProductCard = ({ product, showQuickView = true, delay = 0 }: ProductCardPr
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [wishlistAnimation, setWishlistAnimation] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useStore();
+  const { addToCart, addToWishlist, removeFromWishlist, isInWishlist, getReviewsForProduct } = useStore();
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const isWishlisted = isInWishlist(product.id);
+  
+  // Get reviews and calculate average rating
+  const reviews = getReviewsForProduct(product.id);
+  const averageRating = reviews.length > 0 
+    ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length 
+    : 0;
+
+  // Star rating component for display
+  const StarRating = ({ value, size = "sm" }: { value: number; size?: "sm" | "md" }) => {
+    const starSize = size === "sm" ? "h-3 w-3" : "h-4 w-4";
+    return (
+      <div className="flex gap-0.5">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            className={`${starSize} ${
+              star <= value
+                ? 'text-yellow-400 fill-yellow-400'
+                : 'text-gray-300'
+            }`}
+          />
+        ))}
+      </div>
+    );
+  };
 
   // Combine all images for cycling (same as ProductDetail page)
   const allImages = [product.image, ...(product.images || [])].filter(Boolean);
@@ -311,6 +336,16 @@ const ProductCard = ({ product, showQuickView = true, delay = 0 }: ProductCardPr
             </span>
           )}
         </div>
+
+        {/* Rating Display - Only show if there are reviews */}
+        {reviews.length > 0 && (
+          <div className="flex items-center gap-2 mb-3">
+            <StarRating value={Math.round(averageRating)} size="sm" />
+            <span className="text-xs text-gray-600">
+              {averageRating.toFixed(1)} ({reviews.length})
+            </span>
+          </div>
+        )}
 
 
         {/* Stock Status */}
