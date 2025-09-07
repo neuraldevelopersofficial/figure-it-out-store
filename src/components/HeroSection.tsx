@@ -40,6 +40,131 @@ const HeroSection = () => {
         } else {
           // Fallback to default slides if API fails
           setHeroCarousel({
+            id: "fallback",
+            name: "hero",
+            title: "Hero Carousel",
+            slides: [
+              {
+                id: "1",
+                image: "/banners/homepage1.jpg?v=2025-01-07-5",
+                title: "",
+                subtitle: "",
+                ctaText: "",
+                ctaLink: "",
+                overlay: false,
+                order: 1
+              },
+              {
+                id: "2", 
+                image: "/banners/homepage2.jpg?v=2025-01-07-5",
+                title: "",
+                subtitle: "",
+                ctaText: "",
+                ctaLink: "",
+                overlay: false,
+                order: 2
+              },
+              {
+                id: "3",
+                image: "/banners/homepage3.jpg?v=2025-01-07-5", 
+                title: "",
+                subtitle: "",
+                ctaText: "",
+                ctaLink: "",
+                overlay: false,
+                order: 3
+              },
+              {
+                id: "4",
+                image: "/banners/homepage4.jpg?v=2025-01-07-5",
+                title: "",
+                subtitle: "",
+                ctaText: "",
+                ctaLink: "",
+                overlay: false,
+                order: 4
+              },
+              {
+                id: "5",
+                image: "/banners/homepage5.jpg?v=2025-01-07-5",
+                title: "",
+                subtitle: "",
+                ctaText: "",
+                ctaLink: "",
+                overlay: false,
+                order: 5
+              },
+              {
+                id: "6",
+                image: "/banners/homepage6.jpg?v=2025-01-07-5",
+                title: "",
+                subtitle: "",
+                ctaText: "",
+                ctaLink: "",
+                overlay: false,
+                order: 6
+              },
+              {
+                id: "7",
+                image: "/banners/homepage7.jpg?v=2025-01-07-5",
+                title: "",
+                subtitle: "",
+                ctaText: "",
+                ctaLink: "",
+                overlay: false,
+                order: 7
+              },
+              {
+                id: "8",
+                image: "/banners/homepage8.jpg?v=2025-01-07-5",
+                title: "",
+                subtitle: "",
+                ctaText: "",
+                ctaLink: "",
+                overlay: false,
+                order: 8
+              },
+              {
+                id: "9",
+                image: "/banners/homepage9.jpg?v=2025-01-07-5",
+                title: "",
+                subtitle: "",
+                ctaText: "",
+                ctaLink: "",
+                overlay: false,
+                order: 9
+              },
+              {
+                id: "10",
+                image: "/banners/homepage10.jpg?v=2025-01-07-5",
+                title: "",
+                subtitle: "",
+                ctaText: "",
+                ctaLink: "",
+                overlay: false,
+                order: 10
+              },
+              {
+                id: "11",
+                image: "/banners/homepage11.jpg?v=2025-01-07-5",
+                title: "",
+                subtitle: "",
+                ctaText: "",
+                ctaLink: "",
+                overlay: false,
+                order: 11
+              }
+            ],
+            autoPlay: true,
+            interval: 4000,
+            height: "h-[80vh]",
+            isActive: true
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch hero carousel:', error);
+        // Fallback to default slides if API fails
+        setHeroCarousel({
           id: "fallback",
           name: "hero",
           title: "Hero Carousel",
