@@ -35,9 +35,11 @@ const HeroSection = () => {
     const fetchHeroCarousel = async () => {
       try {
         const response = await apiClient.get('/carousels/hero');
-        if (response.success) {
+        console.log('Hero carousel API response:', response);
+        if (response && response.success && response.carousel) {
           setHeroCarousel(response.carousel);
         } else {
+          console.log('API failed, using fallback carousel');
           // Fallback to default slides if API fails
           setHeroCarousel({
             id: "fallback",
@@ -163,6 +165,7 @@ const HeroSection = () => {
         }
       } catch (error) {
         console.error('Failed to fetch hero carousel:', error);
+        console.log('Using fallback carousel due to error');
         // Fallback to default slides if API fails
         setHeroCarousel({
           id: "fallback",
@@ -310,9 +313,11 @@ const HeroSection = () => {
   }
 
   if (!heroCarousel) {
+    console.log('HeroSection: No carousel data, returning null');
     return null;
   }
 
+  console.log('HeroSection: Rendering carousel with', heroCarousel.slides?.length, 'slides');
   return (
     <section className="relative">
       {/* Hero Carousel */}
