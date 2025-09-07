@@ -1,0 +1,191 @@
+/* Custom animations for the store */
+
+/* Pulse animation for buttons */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(220, 38, 38, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+  }
+}
+
+.animate-pulse-button {
+  animation: pulse 2s infinite;
+}
+
+/* Fade in animation for page elements */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* Staggered fade in for multiple elements */
+.stagger-fade-in > * {
+  opacity: 0;
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.stagger-fade-in > *:nth-child(1) { animation-delay: 0.1s; }
+.stagger-fade-in > *:nth-child(2) { animation-delay: 0.2s; }
+.stagger-fade-in > *:nth-child(3) { animation-delay: 0.3s; }
+.stagger-fade-in > *:nth-child(4) { animation-delay: 0.4s; }
+.stagger-fade-in > *:nth-child(5) { animation-delay: 0.5s; }
+.stagger-fade-in > *:nth-child(6) { animation-delay: 0.6s; }
+.stagger-fade-in > *:nth-child(7) { animation-delay: 0.7s; }
+.stagger-fade-in > *:nth-child(8) { animation-delay: 0.8s; }
+
+/* Logo fade in/out animation */
+@keyframes logoFade {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(0.95);
+  }
+}
+
+/* Logo hover animation */
+@keyframes logoHover {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  25% {
+    transform: rotate(5deg) scale(1.1);
+  }
+  50% {
+    transform: rotate(0deg) scale(1.15);
+  }
+  75% {
+    transform: rotate(-5deg) scale(1.1);
+  }
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+.animate-logo-float {
+  animation: logoFade 8s ease-in-out infinite !important;
+}
+
+.animate-logo-hover:hover {
+  animation: logoHover 0.6s ease-in-out;
+}
+
+/* Search box gradient border animation */
+@keyframes gradientBorder {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.search-box-gradient {
+  position: relative;
+  padding: 2px;
+  border-radius: 25px;
+  background: linear-gradient(
+    45deg,
+    #fca5a5,
+    #ffffff,
+    #374151,
+    #ffffff,
+    #fca5a5
+  );
+  background-size: 400% 400%;
+  animation: gradientBorder 3s ease infinite;
+}
+
+.search-box-gradient::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  background: white;
+  border-radius: 23px;
+  z-index: 1;
+}
+
+.search-box-gradient input {
+  position: relative;
+  z-index: 2;
+  background: transparent !important;
+  border-radius: 23px;
+}
+
+/* Product card gradient hover animation */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.product-card-gradient {
+  background: transparent;
+  transition: all 0.3s ease;
+}
+
+.product-card-gradient:hover {
+  background: linear-gradient(
+    45deg,
+    #fee2e2,
+    #fce7f3,
+    #ede9fe,
+    #fee2e2,
+    #fce7f3,
+    #ede9fe
+  );
+  background-size: 400% 400%;
+  animation: gradientShift 2s ease infinite;
+  box-shadow: 
+    0 0 20px rgba(239, 68, 68, 0.3),
+    0 0 40px rgba(236, 72, 153, 0.2),
+    0 0 60px rgba(139, 92, 246, 0.1),
+    0 0 0 2px rgba(239, 68, 68, 0.4);
+  border-color: rgba(239, 68, 68, 0.6);
+}
+
+/* Wishlist button pop-up animation */
+@keyframes wishlistPop {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.3);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.wishlist-pop-animation {
+  animation: wishlistPop 0.6s ease-in-out;
+}

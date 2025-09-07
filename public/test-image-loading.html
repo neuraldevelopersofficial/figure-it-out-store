@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Loading Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .image-test {
+            display: inline-block;
+            margin: 10px;
+            text-align: center;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            width: 200px;
+        }
+        .image-test img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+        .image-test .status {
+            margin-top: 5px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .loading { color: orange; }
+        .instructions {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🖼️ Image Loading Test</h1>
+        
+        <div class="instructions">
+            <h3>Instructions:</h3>
+            <p>This page tests if all the product images are loading correctly.</p>
+            <p>Check the status below each image - they should all show "✅ Loaded"</p>
+            <p>If any show "❌ Failed", those images are not accessible.</p>
+        </div>
+
+        <h2>Testing Product Images:</h2>
+        
+        <div class="image-test">
+            <img id="img-1" src="/naruto-figure.jpg" alt="Naruto Figure" onload="updateStatus(1, 'success')" onerror="updateStatus(1, 'error')">
+            <div class="status loading" id="status-1">Loading...</div>
+            <div>naruto-figure.jpg</div>
+        </div>
+
+        <div class="image-test">
+            <img id="img-2" src="/hero-figures.jpg" alt="Hero Figures" onload="updateStatus(2, 'success')" onerror="updateStatus(2, 'error')">
+            <div class="status loading" id="status-2">Loading...</div>
+            <div>hero-figures.jpg</div>
+        </div>
+
+        <div class="image-test">
+            <img id="img-3" src="/anime-banner2.jpeg" alt="Anime Banner 2" onload="updateStatus(3, 'success')" onerror="updateStatus(3, 'error')">
+            <div class="status loading" id="status-3">Loading...</div>
+            <div>anime-banner2.jpeg</div>
+        </div>
+
+        <div class="image-test">
+            <img id="img-4" src="/goku-keychain.jpg" alt="Goku Keychain" onload="updateStatus(4, 'success')" onerror="updateStatus(4, 'error')">
+            <div class="status loading" id="status-4">Loading...</div>
+            <div>goku-keychain.jpg</div>
+        </div>
+
+        <div class="image-test">
+            <img id="img-5" src="/keychain-slide1.jpg" alt="Keychain Slide 1" onload="updateStatus(5, 'success')" onerror="updateStatus(5, 'error')">
+            <div class="status loading" id="status-5">Loading...</div>
+            <div>keychain-slide1.jpg</div>
+        </div>
+
+        <div class="image-test">
+            <img id="img-6" src="/keychain-slide2.jpg" alt="Keychain Slide 2" onload="updateStatus(6, 'success')" onerror="updateStatus(6, 'error')">
+            <div class="status loading" id="status-6">Loading...</div>
+            <div>keychain-slide2.jpg</div>
+        </div>
+
+        <div class="image-test">
+            <img id="img-7" src="/keychain-slide3.jpg" alt="Keychain Slide 3" onload="updateStatus(7, 'success')" onerror="updateStatus(7, 'error')">
+            <div class="status loading" id="status-7">Loading...</div>
+            <div>keychain-slide3.jpg</div>
+        </div>
+
+        <div class="image-test">
+            <img id="img-8" src="/levi-figure.jpg" alt="Levi Figure" onload="updateStatus(8, 'success')" onerror="updateStatus(8, 'error')">
+            <div class="status loading" id="status-8">Loading...</div>
+            <div>levi-figure.jpg</div>
+        </div>
+
+        <div class="image-test">
+            <img id="img-9" src="/anime-banner3.jpg" alt="Anime Banner 3" onload="updateStatus(9, 'success')" onerror="updateStatus(9, 'error')">
+            <div class="status loading" id="status-9">Loading...</div>
+            <div>anime-banner3.jpg</div>
+        </div>
+
+        <div class="image-test">
+            <img id="img-10" src="/pikachu-keychain.jpg" alt="Pikachu Keychain" onload="updateStatus(10, 'success')" onerror="updateStatus(10, 'error')">
+            <div class="status loading" id="status-10">Loading...</div>
+            <div>pikachu-keychain.jpg</div>
+        </div>
+
+        <div class="image-test">
+            <img id="img-11" src="/luffy-figure.jpg" alt="Luffy Figure" onload="updateStatus(11, 'success')" onerror="updateStatus(11, 'error')">
+            <div class="status loading" id="status-11">Loading...</div>
+            <div>luffy-figure.jpg</div>
+        </div>
+
+        <div class="image-test">
+            <img id="img-12" src="/placeholder-image.png" alt="Placeholder" onload="updateStatus(12, 'success')" onerror="updateStatus(12, 'error')">
+            <div class="status loading" id="status-12">Loading...</div>
+            <div>placeholder-image.png</div>
+        </div>
+    </div>
+
+    <script>
+        function updateStatus(imageId, status) {
+            const statusElement = document.getElementById(`status-${imageId}`);
+            if (status === 'success') {
+                statusElement.textContent = '✅ Loaded';
+                statusElement.className = 'status success';
+            } else if (status === 'error') {
+                statusElement.textContent = '❌ Failed';
+                statusElement.className = 'status error';
+            }
+        }
+
+        // Test image cycling functionality
+        function testImageCycling() {
+            console.log('Testing image cycling...');
+            
+            const testImages = [
+                '/naruto-figure.jpg',
+                '/hero-figures.jpg', 
+                '/anime-banner2.jpeg'
+            ];
+            
+            let currentIndex = 0;
+            const testImg = document.getElementById('img-1');
+            
+            const interval = setInterval(() => {
+                currentIndex = (currentIndex + 1) % testImages.length;
+                testImg.src = testImages[currentIndex];
+                console.log(`Cycling to image ${currentIndex + 1}: ${testImages[currentIndex]}`);
+            }, 1000);
+            
+            // Stop after 10 seconds
+            setTimeout(() => {
+                clearInterval(interval);
+                console.log('Image cycling test completed');
+            }, 10000);
+        }
+
+        // Start the cycling test after 3 seconds
+        setTimeout(testImageCycling, 3000);
+
+        console.log('Image loading test page loaded. Check the status of each image above.');
+    </script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "buildCommand": "npm run vercel-build",
+        "installCommand": "npm ci --legacy-peer-deps"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "[^\\.]*",
+      "dest": "/index.html",
+      "status": 200
+    }
+  ],
+  "env": {
+    "VITE_API_URL": "https://api.figureitoutstore.in/api"
+  }
+}
