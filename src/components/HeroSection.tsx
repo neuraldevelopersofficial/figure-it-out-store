@@ -289,8 +289,8 @@ const HeroSection = () => {
       //     isActive: true
       //   });
       // } finally {
-        setLoading(false);
       // }
+      setLoading(false);
     };
 
     fetchHeroCarousel();
