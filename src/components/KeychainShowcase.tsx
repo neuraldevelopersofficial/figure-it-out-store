@@ -12,6 +12,9 @@ const KeychainShowcase = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [itemsToShow, setItemsToShow] = useState(3);
+  
+  // Force cache refresh
+  const cacheVersion = "2025-01-07-3";
 
   useEffect(() => {
     const fetchKeychains = async () => {
@@ -102,7 +105,7 @@ const KeychainShowcase = () => {
 
   return (
     <section className="py-16 bg-gray-50 overflow-hidden">
-      <div className="container mx-auto px-4 max-w-full">
+      <div className="container mx-auto px-4 max-w-full overflow-x-hidden">
         {/* Section Header */}
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
