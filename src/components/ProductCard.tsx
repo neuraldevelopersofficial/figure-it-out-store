@@ -113,6 +113,16 @@ const ProductCard = ({ product, showQuickView = true, delay = 0 }: ProductCardPr
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    if (!product.inStock) {
+      toast({
+        title: "Out of stock",
+        description: "This product is currently out of stock.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     addToCart(product);
     toast({
       title: "Added to cart",

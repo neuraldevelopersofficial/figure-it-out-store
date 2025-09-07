@@ -67,6 +67,18 @@ const Cart: React.FC = () => {
 
   const handleQuantityChange = (itemId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
+    
+    // Find the cart item to check stock
+    const cartItem = cartItems.find(item => item.id === itemId);
+    if (cartItem && cartItem.stockQuantity && newQuantity > cartItem.stockQuantity) {
+      toast({
+        title: "Insufficient Stock",
+        description: `Only ${cartItem.stockQuantity} items available for ${cartItem.name}.`,
+        variant: "destructive"
+      });
+      return;
+    }
+    
     updateCartQuantity(itemId, newQuantity);
   };
 
@@ -231,7 +243,7 @@ const Cart: React.FC = () => {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                          disabled={item.quantity >= 10}
+                          disabled={item.quantity >= 10 || (item.stockQuantity && item.quantity >= item.stockQuantity)}
                           className="px-3 py-1"
                         >
                           <Plus className="h-4 w-4" />

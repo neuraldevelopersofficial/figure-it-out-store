@@ -113,21 +113,72 @@ const ProductDetail = () => {
   };
 
   const handleAddToCart = () => {
-    addToCart(product);
     const { toast } = useToast();
+    
+    // Check stock availability
+    if (!product.inStock) {
+      toast({
+        title: "Out of Stock",
+        description: "This product is currently out of stock.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Check if requested quantity exceeds available stock
+    if (product.stockQuantity && quantity > product.stockQuantity) {
+      toast({
+        title: "Insufficient Stock",
+        description: `Only ${product.stockQuantity} items available. Please reduce quantity.`,
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Add to cart with the selected quantity
+    for (let i = 0; i < quantity; i++) {
+      addToCart(product);
+    }
+    
     toast({
       title: "Added to Cart",
-      description: `${product.name} has been added to your cart.`,
+      description: `${quantity} x ${product.name} has been added to your cart.`,
       variant: "default"
     });
   };
 
   const handleBuyNow = () => {
-    addToCart(product);
     const { toast } = useToast();
+    
+    // Check stock availability
+    if (!product.inStock) {
+      toast({
+        title: "Out of Stock",
+        description: "This product is currently out of stock.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Check if requested quantity exceeds available stock
+    if (product.stockQuantity && quantity > product.stockQuantity) {
+      toast({
+        title: "Insufficient Stock",
+        description: `Only ${product.stockQuantity} items available. Please reduce quantity.`,
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Add to cart with the selected quantity
+    for (let i = 0; i < quantity; i++) {
+      addToCart(product);
+    }
+    
     toast({
       title: "Added to Cart",
-      description: `${product.name} has been added to your cart. Redirecting to checkout...`,
+      description: `${quantity} x ${product.name} has been added to your cart. Redirecting to checkout...`,
+      variant: "default"
     });
     
     // Navigate to checkout after a short delay
@@ -236,13 +287,26 @@ const ProductDetail = () => {
                   value={quantity} 
                   onChange={(e) => setQuantity(Number(e.target.value))}
                   className="w-full p-2 border border-gray-300 rounded text-sm appearance-none bg-white"
+                  disabled={!product.inStock}
                 >
-                  {[1,2,3,4,5].map(num => (
-                    <option key={num} value={num}>{num}</option>
-                  ))}
+                  {(() => {
+                    const maxQuantity = product.stockQuantity ? Math.min(product.stockQuantity, 10) : 10;
+                    const quantities = [];
+                    for (let i = 1; i <= maxQuantity; i++) {
+                      quantities.push(i);
+                    }
+                    return quantities.map(num => (
+                      <option key={num} value={num}>{num}</option>
+                    ));
+                  })()}
                 </select>
                 <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
               </div>
+              {product.stockQuantity && (
+                <p className="text-xs text-gray-500">
+                  {product.stockQuantity} items available
+                </p>
+              )}
             </div>
 
             {/* Buy Now and Add to Cart Buttons */}
@@ -269,7 +333,12 @@ const ProductDetail = () => {
             <div className="flex items-center gap-2">
               <div className={`w-2 h-2 rounded-full ${product.inStock ? 'bg-green-500' : 'bg-red-500'}`} />
               <span className={`text-sm ${product.inStock ? 'text-green-600' : 'text-red-600'}`}>
-                {product.inStock ? 'In Stock' : 'Out of Stock'}
+                {product.inStock 
+                  ? (product.stockQuantity 
+                      ? `${product.stockQuantity} in Stock` 
+                      : 'In Stock')
+                  : 'Out of Stock'
+                }
               </span>
             </div>
 

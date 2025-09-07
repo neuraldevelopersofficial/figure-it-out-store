@@ -15,6 +15,7 @@ export interface Product {
   discount?: number;
   description?: string;
   inStock?: boolean;
+  stockQuantity?: number;
 }
 
 interface CartItem extends Product {

@@ -394,13 +394,13 @@ export function mapApiProduct(p: any) {
     image: p.image ?? '',
     images: Array.isArray(p.images) ? p.images : [],
     category: p.category ?? '',
-    rating: Number(p.rating ?? 0),
-    reviews: Number(p.reviews ?? 0),
+    powerPoints: Number(p.powerPoints ?? 50),
     isNew: Boolean(p.is_new ?? false),
     isOnSale: Boolean(p.is_on_sale ?? false),
     discount: p.discount !== undefined && p.discount !== null ? Number(p.discount) : undefined,
     description: p.description ?? '',
     inStock: typeof p.in_stock === 'boolean' ? p.in_stock : (p.stock_quantity !== undefined ? Number(p.stock_quantity) > 0 : true),
+    stockQuantity: p.stock_quantity !== undefined ? Number(p.stock_quantity) : undefined,
   };
 }
 
