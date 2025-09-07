@@ -48,7 +48,7 @@ const HeroSection = () => {
           slides: [
             {
               id: "1",
-              image: "/hero-figures.jpg",
+              image: "/banners/homepage1.jpg",
               title: "Discover Amazing Anime Collectibles",
               subtitle: "From iconic figures to unique keychains, find your perfect piece",
               ctaText: "Shop Now",
@@ -58,7 +58,7 @@ const HeroSection = () => {
             },
             {
               id: "2", 
-              image: "/anime-banner2.jpeg",
+              image: "/banners/homepage2.jpg",
               title: "Premium Quality Figures",
               subtitle: "Handcrafted with attention to every detail",
               ctaText: "Explore Anime Figures",
@@ -68,17 +68,97 @@ const HeroSection = () => {
             },
             {
               id: "3",
-              image: "/keychain-slide1.jpg", 
+              image: "/banners/homepage3.jpg", 
               title: "Express Your Fandom",
               subtitle: "Show off your love for anime with our exclusive collection",
               ctaText: "Browse Keychains",
               ctaLink: "/keychains",
               overlay: true,
               order: 3
+            },
+            {
+              id: "4",
+              image: "/banners/homepage4.jpg",
+              title: "Exclusive Collections",
+              subtitle: "Limited edition items you won't find anywhere else",
+              ctaText: "View Collections",
+              ctaLink: "/all-products",
+              overlay: true,
+              order: 4
+            },
+            {
+              id: "5",
+              image: "/banners/homepage5.jpg",
+              title: "New Arrivals Weekly",
+              subtitle: "Fresh additions to our collection every week",
+              ctaText: "See What's New",
+              ctaLink: "/all-products",
+              overlay: true,
+              order: 5
+            },
+            {
+              id: "6",
+              image: "/banners/homepage6.jpg",
+              title: "Anime Merchandise",
+              subtitle: "From your favorite series to hidden gems",
+              ctaText: "Explore All",
+              ctaLink: "/all-products",
+              overlay: true,
+              order: 6
+            },
+            {
+              id: "7",
+              image: "/banners/homepage7.jpg",
+              title: "Collector's Paradise",
+              subtitle: "Find rare and exclusive anime collectibles",
+              ctaText: "Start Collecting",
+              ctaLink: "/anime-figures",
+              overlay: true,
+              order: 7
+            },
+            {
+              id: "8",
+              image: "/banners/homepage8.jpg",
+              title: "Perfect Gifts",
+              subtitle: "Find the ideal present for anime lovers",
+              ctaText: "Shop Gifts",
+              ctaLink: "/all-products",
+              overlay: true,
+              order: 8
+            },
+            {
+              id: "9",
+              image: "/banners/homepage9.jpg",
+              title: "Fan Favorites",
+              subtitle: "Most loved items from our community",
+              ctaText: "View Favorites",
+              ctaLink: "/all-products",
+              overlay: true,
+              order: 9
+            },
+            {
+              id: "10",
+              image: "/banners/homepage10.jpg",
+              title: "Quality Guaranteed",
+              subtitle: "Premium materials and authentic designs",
+              ctaText: "Learn More",
+              ctaLink: "/about",
+              overlay: true,
+              order: 10
+            },
+            {
+              id: "11",
+              image: "/banners/homepage11.jpg",
+              title: "Join Our Community",
+              subtitle: "Connect with fellow anime enthusiasts",
+              ctaText: "Get Started",
+              ctaLink: "/signup",
+              overlay: true,
+              order: 11
             }
           ],
           autoPlay: true,
-          interval: 6000,
+          interval: 4000,
           height: "h-[600px]",
           isActive: true
         });

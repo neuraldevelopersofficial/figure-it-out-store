@@ -272,17 +272,35 @@ class ApiClient {
   }
 
   async createProduct(productData: any) {
-    return this.request('/admin/products', {
+    const response = await this.request('/admin/products', {
       method: 'POST',
       body: JSON.stringify(productData),
     });
+    
+    // Debug: Log successful product creation
+    if (response && response.success) {
+      console.log('✅ Product created successfully:', { productName: productData.name, response });
+    } else {
+      console.log('❌ Product creation failed:', { productName: productData.name, response });
+    }
+    
+    return response;
   }
 
   async updateProduct(id: string, productData: any) {
-    return this.request(`/admin/products/${id}`, {
+    const response = await this.request(`/admin/products/${id}`, {
       method: 'PUT',
       body: JSON.stringify(productData),
     });
+    
+    // Debug: Log successful product updates
+    if (response && response.success) {
+      console.log('✅ Product updated successfully:', { id, productName: productData.name, response });
+    } else {
+      console.log('❌ Product update failed:', { id, productName: productData.name, response });
+    }
+    
+    return response;
   }
 
   async deleteAllProducts() {

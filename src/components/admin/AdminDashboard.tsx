@@ -257,31 +257,30 @@ const AdminDashboard = () => {
       if (selectedProduct) {
         // Update existing product
         response = await apiClient.updateProduct(selectedProduct.id, product);
-        if (response.success) {
-          toast({
-            title: "Product Updated",
-            description: `Product "${product.name}" updated successfully.`,
-          });
-        }
       } else {
         // Create new product
         response = await apiClient.createProduct(product);
-        if (response.success) {
-          toast({
-            title: "Product Added",
-            description: `Product "${product.name}" added successfully.`,
-          });
-        }
       }
       
-      if (response.success) {
+      // Debug: Log the response to understand the structure
+      console.log('Product operation response:', response);
+      
+      if (response && response.success) {
+        // Show success message
+        toast({
+          title: selectedProduct ? "Product Updated" : "Product Added",
+          description: `Product "${product.name}" ${selectedProduct ? 'updated' : 'added'} successfully.`,
+        });
+        
+        // Close form and refresh data
         setShowAddProduct(false);
         setSelectedProduct(null);
         fetchAdminData(); // Refresh products list
       } else {
+        // Show error message
         toast({
           title: "Error",
-          description: response.message || `Failed to ${selectedProduct ? 'update' : 'add'} product.`,
+          description: response?.message || `Failed to ${selectedProduct ? 'update' : 'add'} product.`,
           variant: "destructive"
         });
       }

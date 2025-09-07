@@ -39,7 +39,7 @@ const Keychains = () => {
   const keychainSlides = [
     {
       id: "1",
-      image: "/keychain-slide1.jpg", // Replace with actual images
+      image: "/banners/keychain1.jpg",
       title: "Anime Keychains",
       subtitle: "Express your fandom with unique accessories",
       ctaText: "Shop All Keychains",
@@ -48,19 +48,10 @@ const Keychains = () => {
     },
     {
       id: "2",
-      image: "/keychain-slide2.jpg",
+      image: "/banners/keychain2.jpg",
       title: "Limited Edition Designs",
       subtitle: "Exclusive keychains from your favorite series",
       ctaText: "View Limited Editions",
-      ctaLink: "#products-grid",
-      overlay: true
-    },
-    {
-      id: "3",
-      image: "/keychain-slide3.jpg",
-      title: "Perfect Gifts",
-      subtitle: "Find the perfect present for anime lovers",
-      ctaText: "Shop Gifts",
       ctaLink: "#products-grid",
       overlay: true
     }
@@ -121,7 +112,7 @@ const Keychains = () => {
           slides={keychainSlides} 
           height="h-[500px]"
           autoPlay={true}
-          interval={5000}
+          interval={4000}
         />
       </section>
 
