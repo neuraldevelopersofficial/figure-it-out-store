@@ -11,6 +11,7 @@ const KeychainShowcase = () => {
   const [keychainProducts, setKeychainProducts] = useState<Product[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [itemsToShow, setItemsToShow] = useState(3);
 
   useEffect(() => {
     const fetchKeychains = async () => {
@@ -43,18 +44,35 @@ const KeychainShowcase = () => {
     fetchKeychains();
   }, []);
 
+  // Handle responsive items count
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setItemsToShow(1);
+      } else if (window.innerWidth < 1024) {
+        setItemsToShow(2);
+      } else {
+        setItemsToShow(3);
+      }
+    };
+
+    handleResize(); // Set initial value
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % keychainProducts.length);
+    setCurrentIndex((prev) => (prev + itemsToShow) % keychainProducts.length);
   };
 
   const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + keychainProducts.length) % keychainProducts.length);
+    setCurrentIndex((prev) => (prev - itemsToShow + keychainProducts.length) % keychainProducts.length);
   };
 
   if (isLoading) {
     return (
-      <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
+      <section className="py-16 bg-gray-50 overflow-hidden">
+        <div className="container mx-auto px-4 max-w-full">
           <div className="text-center mb-12">
             <div className="relative">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -83,8 +101,8 @@ const KeychainShowcase = () => {
   }
 
   return (
-    <section className="py-16 bg-gray-50">
-      <div className="container mx-auto px-4">
+    <section className="py-16 bg-gray-50 overflow-hidden">
+      <div className="container mx-auto px-4 max-w-full">
         {/* Section Header */}
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -93,35 +111,35 @@ const KeychainShowcase = () => {
         </div>
 
         {/* Keychain Showcase Carousel */}
-        <div className="relative max-w-7xl mx-auto">
+        <div className="relative w-full max-w-6xl mx-auto overflow-hidden">
           {/* Navigation Arrows */}
           <Button
             variant="ghost"
             size="sm"
-            className="absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg rounded-full w-10 h-10 sm:w-12 sm:h-12 p-0"
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg rounded-full w-10 h-10 p-0"
             onClick={prevSlide}
           >
-            <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6 text-gray-700" />
+            <ChevronLeft className="h-5 w-5 text-gray-700" />
           </Button>
           
           <Button
             variant="ghost"
             size="sm"
-            className="absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg rounded-full w-10 h-10 sm:w-12 sm:h-12 p-0"
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg rounded-full w-10 h-10 p-0"
             onClick={nextSlide}
           >
-            <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6 text-gray-700" />
+            <ChevronRight className="h-5 w-5 text-gray-700" />
           </Button>
 
           {/* Main Showcase Container */}
-          <div className="relative px-4 sm:px-8 lg:px-16">
-            <div className="flex justify-center items-center space-x-4 sm:space-x-6 md:space-x-8 lg:space-x-12">
-              {/* Display 3 keychains at a time with distant spacing */}
-              {keychainProducts.slice(currentIndex, currentIndex + 3).map((product, index) => (
+          <div className="relative px-8 sm:px-12">
+            <div className="flex justify-center items-center gap-3 sm:gap-4 md:gap-6 lg:gap-8">
+              {/* Display responsive number of keychains */}
+              {keychainProducts.slice(currentIndex, currentIndex + itemsToShow).map((product, index) => (
                 <div key={product.id} className="relative group flex-shrink-0">
                   <Link to={`/product/${product.id}`} className="block">
-                    {/* Rectangular Image Card with Rounded Corners */}
-                    <div className="relative w-80 sm:w-96 md:w-[28rem] lg:w-[32rem] bg-white rounded-3xl overflow-hidden shadow-xl group-hover:shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:-translate-y-2" style={{aspectRatio: '16/9'}}>
+                    {/* Responsive Image Card */}
+                    <div className="relative w-64 sm:w-72 md:w-80 lg:w-96 bg-white rounded-2xl overflow-hidden shadow-xl group-hover:shadow-2xl transition-all duration-500 group-hover:scale-105 group-hover:-translate-y-1" style={{aspectRatio: '16/9'}}>
                       <OptimizedImage
                         src={product.image}
                         alt={product.name}
@@ -143,12 +161,12 @@ const KeychainShowcase = () => {
 
           {/* Dots Indicator */}
           <div className="flex justify-center mt-6 space-x-2">
-            {Array.from({ length: Math.ceil(keychainProducts.length / 3) }).map((_, index) => (
+            {Array.from({ length: Math.ceil(keychainProducts.length / itemsToShow) }).map((_, index) => (
               <button
                 key={index}
-                onClick={() => setCurrentIndex(index * 3)}
+                onClick={() => setCurrentIndex(index * itemsToShow)}
                 className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                  Math.floor(currentIndex / 3) === index
+                  Math.floor(currentIndex / itemsToShow) === index
                     ? 'bg-red-500 scale-125'
                     : 'bg-gray-300 hover:bg-gray-400'
                 }`}
