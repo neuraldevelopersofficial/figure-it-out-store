@@ -39,7 +39,7 @@ const Keychains = () => {
   const keychainSlides = [
     {
       id: "1",
-      image: "/banners/keychain1.jpg",
+      image: "/banners/keychain1.jpg?v=2025-01-07",
       title: "Anime Keychains",
       subtitle: "Express your fandom with unique accessories",
       ctaText: "Shop All Keychains",
@@ -48,7 +48,7 @@ const Keychains = () => {
     },
     {
       id: "2",
-      image: "/banners/keychain2.jpg",
+      image: "/banners/keychain2.jpg?v=2025-01-07",
       title: "Limited Edition Designs",
       subtitle: "Exclusive keychains from your favorite series",
       ctaText: "View Limited Editions",
