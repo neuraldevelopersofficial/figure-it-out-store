@@ -170,7 +170,7 @@ const AnimeFigures = () => {
       <section className="mb-8">
         <Carousel 
           slides={animeFigureSlides} 
-          height="h-[500px]"
+          height="h-screen"
           autoPlay={true}
           interval={4000}
         />

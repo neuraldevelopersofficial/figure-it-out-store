@@ -110,7 +110,7 @@ const Keychains = () => {
       <section className="mb-8">
         <Carousel 
           slides={keychainSlides} 
-          height="h-[500px]"
+          height="h-screen"
           autoPlay={true}
           interval={4000}
         />

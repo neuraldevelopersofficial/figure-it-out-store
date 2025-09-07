@@ -159,7 +159,7 @@ const HeroSection = () => {
           ],
           autoPlay: true,
           interval: 4000,
-          height: "h-[600px]",
+          height: "h-screen",
           isActive: true
         });
       } finally {
