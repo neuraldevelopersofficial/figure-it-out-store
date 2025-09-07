@@ -19,20 +19,28 @@ const SearchResults = () => {
   const [priceRange, setPriceRange] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchResults, setSearchResults] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     (async () => {
       if (query) {
+        setIsLoading(true);
         try {
           const resp = await apiClient.searchProducts(query);
           if (resp && resp.success) {
             setSearchResults(mapApiProducts(resp.products));
+          } else {
+            setSearchResults([]);
           }
         } catch (e) {
           console.error('Search failed', e);
+          setSearchResults([]);
+        } finally {
+          setIsLoading(false);
         }
       } else {
         setSearchResults([]);
+        setIsLoading(false);
       }
     })();
   }, [query]);
@@ -198,7 +206,21 @@ const SearchResults = () => {
           </div>
 
           {/* Products Grid/List */}
-          {filteredResults.length > 0 ? (
+          {isLoading ? (
+            <div className="text-center py-16">
+              <div className="relative inline-block">
+                {/* Main loading circle */}
+                <div className="w-12 h-12 border-4 border-gray-300 border-t-red-500 rounded-full animate-spin mx-auto mb-4"></div>
+                
+                {/* Floating particles */}
+                <div className="absolute -top-1 -left-1 w-2 h-2 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                <div className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                <div className="absolute -bottom-1 -left-1 w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
+                <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+              </div>
+              <p className="text-gray-600">Searching for "{query}"...</p>
+            </div>
+          ) : filteredResults.length > 0 ? (
             <div className={
               viewMode === "grid" 
                 ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
