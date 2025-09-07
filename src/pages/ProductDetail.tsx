@@ -21,6 +21,9 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   
+  // Cache busting - force fresh deployment
+  console.log('ProductDetail loaded - v2025-01-07-6 (Power score removed, Reviews added)');
+  
   // Product state
   
   const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useStore();

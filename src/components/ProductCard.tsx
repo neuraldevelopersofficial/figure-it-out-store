@@ -19,6 +19,9 @@ interface ProductCardProps {
 
 const ProductCard = ({ product, showQuickView = true, delay = 0 }: ProductCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
+  
+  // Cache busting - force fresh deployment
+  console.log('ProductCard loaded - v2025-01-07-6 (Power score removed)');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [wishlistAnimation, setWishlistAnimation] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);

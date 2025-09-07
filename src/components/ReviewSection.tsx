@@ -15,6 +15,9 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({ productId }) => {
   const { user } = useAuth();
   const { toast } = useToast();
   
+  // Cache busting - force fresh deployment
+  console.log('ReviewSection loaded - v2025-01-07-6');
+  
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
