@@ -309,21 +309,6 @@ const ProductCard = ({ product, showQuickView = true, delay = 0 }: ProductCardPr
           )}
         </div>
 
-        {/* Power Score Bar */}
-        <div className="space-y-1 mb-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-700">Power Score</span>
-            <span className="text-xs text-gray-500 font-medium">
-              {product.powerPoints || 50}/100
-            </span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-1.5">
-            <div 
-              className="bg-gradient-to-r from-red-400 via-yellow-400 to-green-500 h-1.5 rounded-full transition-all duration-500"
-              style={{ width: `${((product.powerPoints || 50) / 100) * 100}%` }}
-            ></div>
-          </div>
-        </div>
 
         {/* Stock Status */}
         {!product.inStock && (

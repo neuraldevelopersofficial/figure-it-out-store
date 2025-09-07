@@ -394,7 +394,6 @@ export function mapApiProduct(p: any) {
     image: p.image ?? '',
     images: Array.isArray(p.images) ? p.images : [],
     category: p.category ?? '',
-    powerPoints: Number(p.powerPoints ?? 50),
     isNew: Boolean(p.is_new ?? false),
     isOnSale: Boolean(p.is_on_sale ?? false),
     discount: p.discount !== undefined && p.discount !== null ? Number(p.discount) : undefined,

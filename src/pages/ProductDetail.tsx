@@ -14,6 +14,7 @@ import { FallbackImage } from "@/components/ui/fallback-image";
 import LoadingState from "@/components/ui/LoadingState";
 import { useToast } from "@/hooks/use-toast";
 import { PageTransition } from "@/components/ui/page-transition";
+import ReviewSection from "@/components/ReviewSection";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -262,21 +263,6 @@ const ProductDetail = () => {
               <p className="text-sm text-gray-500">Online Exclusive</p>
             </div>
 
-            {/* Power Score Bar */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-900">Power Score</span>
-                <span className="text-sm text-gray-600 font-medium">
-                  {product.powerPoints || 50}/100
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-3">
-                <div 
-                  className="bg-gradient-to-r from-red-400 via-yellow-400 to-green-500 h-3 rounded-full transition-all duration-500"
-                  style={{ width: `${((product.powerPoints || 50) / 100) * 100}%` }}
-                ></div>
-              </div>
-            </div>
 
 
             {/* Quantity Selector */}
@@ -360,6 +346,13 @@ const ProductDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* Reviews Section */}
+      <section className="py-12 bg-white">
+        <div className="container mx-auto px-4">
+          <ReviewSection productId={product.id} />
+        </div>
+      </section>
 
       {/* Related Products */}
       {relatedProducts.length > 0 && (

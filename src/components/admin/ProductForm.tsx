@@ -36,8 +36,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
     description: '',
     stock: '',
     image: '',
-    allImages: '', // Single field for all images including main image
-    powerPoints: ''
+    allImages: '' // Single field for all images including main image
   });
 
   useEffect(() => {
@@ -51,8 +50,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
         description: product.description || '',
         stock: product.stock.toString(),
         image: product.image || '',
-        allImages: allImages.join(', '),
-        powerPoints: product.powerPoints?.toString() || ''
+        allImages: allImages.join(', ')
       });
     } else {
       setFormData({
@@ -62,8 +60,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
         description: '',
         stock: '',
         image: '',
-        allImages: '',
-        powerPoints: ''
+        allImages: ''
       });
     }
   }, [product]);
@@ -185,23 +182,6 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
                 />
               </div>
 
-              <div>
-                <Label htmlFor="powerPoints">Power Score *</Label>
-                <Input
-                  id="powerPoints"
-                  type="number"
-                  value={formData.powerPoints}
-                  onChange={(e) => handleChange('powerPoints', e.target.value)}
-                  placeholder="50"
-                  min="1"
-                  max="100"
-                  step="1"
-                  required
-                />
-                <div className="text-xs text-gray-500 mt-1">
-                  Rate the product's power level from 1 to 100 (default: 50)
-                </div>
-              </div>
             </div>
 
             <div>

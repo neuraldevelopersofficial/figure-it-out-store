@@ -9,7 +9,6 @@ export interface Product {
   image: string;
   images?: string[];
   category: string;
-  powerPoints: number;
   isNew?: boolean;
   isOnSale?: boolean;
   discount?: number;
@@ -20,6 +19,17 @@ export interface Product {
 
 interface CartItem extends Product {
   quantity: number;
+}
+
+export interface Review {
+  id: string;
+  productId: string;
+  userId: string;
+  userName: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Address {
@@ -46,6 +56,7 @@ interface StoreState {
   currentUserId: string | null; // Track current user
   addresses: Address[];
   selectedAddress: Address | null;
+  reviews: Review[];
 }
 
 type StoreAction =
@@ -59,7 +70,9 @@ type StoreAction =
   | { type: 'SET_CART'; payload: CartItem[] }
   | { type: 'SET_USER'; payload: string | null }
   | { type: 'SET_ADDRESSES'; payload: Address[] }
-  | { type: 'SET_SELECTED_ADDRESS'; payload: Address | null };
+  | { type: 'SET_SELECTED_ADDRESS'; payload: Address | null }
+  | { type: 'ADD_REVIEW'; payload: Review }
+  | { type: 'SET_REVIEWS'; payload: Review[] };
 
 const initialState: StoreState = {
   cart: [],
@@ -67,7 +80,8 @@ const initialState: StoreState = {
   userLocation: null,
   currentUserId: null,
   addresses: [],
-  selectedAddress: null
+  selectedAddress: null,
+  reviews: []
 };
 
 function storeReducer(state: StoreState, action: StoreAction): StoreState {
@@ -155,6 +169,18 @@ function storeReducer(state: StoreState, action: StoreAction): StoreState {
         selectedAddress: action.payload
       };
     
+    case 'ADD_REVIEW':
+      return {
+        ...state,
+        reviews: [...state.reviews, action.payload]
+      };
+    
+    case 'SET_REVIEWS':
+      return {
+        ...state,
+        reviews: action.payload
+      };
+    
     default:
       return state;
   }
@@ -177,6 +203,8 @@ interface StoreContextType {
   selectedAddress: Address | null;
   setAddresses: (addresses: Address[]) => void;
   setSelectedAddress: (address: Address | null) => void;
+  addReview: (review: Omit<Review, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  getReviewsForProduct: (productId: string) => Review[];
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -368,6 +396,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return state.cart.reduce((total, item) => total + item.quantity, 0);
   }, [state.cart]);
 
+  const addReview = useCallback((reviewData: Omit<Review, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const review: Review = {
+      ...reviewData,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    dispatch({ type: 'ADD_REVIEW', payload: review });
+  }, []);
+
+  const getReviewsForProduct = useCallback((productId: string) => {
+    return state.reviews.filter(review => review.productId === productId);
+  }, [state.reviews]);
+
   const value: StoreContextType = {
     state,
     dispatch,
@@ -384,7 +426,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     addresses: state.addresses,
     selectedAddress: state.selectedAddress,
     setAddresses,
-    setSelectedAddress
+    setSelectedAddress,
+    addReview,
+    getReviewsForProduct
   };
 
   return (
