@@ -41,7 +41,7 @@ const AnimeFigures = () => {
   const animeFigureSlides = [
     {
       id: "1",
-      image: "/banners/figurine1.jpg?v=2025-01-07-4",
+      image: "/banners/figurine1.jpg?v=2025-01-07-5",
       title: "",
       subtitle: "",
       ctaText: "",
@@ -50,7 +50,7 @@ const AnimeFigures = () => {
     },
     {
       id: "2",
-      image: "/banners/figurine2.jpg?v=2025-01-07-4",
+      image: "/banners/figurine2.jpg?v=2025-01-07-5",
       title: "",
       subtitle: "",
       ctaText: "",
@@ -59,7 +59,7 @@ const AnimeFigures = () => {
     },
     {
       id: "3",
-      image: "/banners/figurine3.jpg?v=2025-01-07-4",
+      image: "/banners/figurine3.jpg?v=2025-01-07-5",
       title: "",
       subtitle: "",
       ctaText: "",

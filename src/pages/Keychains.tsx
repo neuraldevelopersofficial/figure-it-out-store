@@ -39,7 +39,7 @@ const Keychains = () => {
   const keychainSlides = [
     {
       id: "1",
-      image: "/banners/keychain1.jpg?v=2025-01-07-4",
+      image: "/banners/keychain1.jpg?v=2025-01-07-5",
       title: "",
       subtitle: "",
       ctaText: "",
@@ -48,7 +48,7 @@ const Keychains = () => {
     },
     {
       id: "2",
-      image: "/banners/keychain2.jpg?v=2025-01-07-4",
+      image: "/banners/keychain2.jpg?v=2025-01-07-5",
       title: "",
       subtitle: "",
       ctaText: "",

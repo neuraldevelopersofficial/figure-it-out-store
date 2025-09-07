@@ -9,19 +9,99 @@ let carousels = [
     slides: [
       {
         id: "1",
-        image: "/hero-figures.jpg",
-        title: "Discover Amazing Anime Collectibles",
-        subtitle: "From iconic figures to unique keychains, find your perfect piece",
-        overlay: true,
+        image: "/banners/homepage1.jpg?v=2025-01-07-5",
+        title: "",
+        subtitle: "",
+        overlay: false,
         order: 1
+      },
+      {
+        id: "2",
+        image: "/banners/homepage2.jpg?v=2025-01-07-5",
+        title: "",
+        subtitle: "",
+        overlay: false,
+        order: 2
+      },
+      {
+        id: "3",
+        image: "/banners/homepage3.jpg?v=2025-01-07-5",
+        title: "",
+        subtitle: "",
+        overlay: false,
+        order: 3
+      },
+      {
+        id: "4",
+        image: "/banners/homepage4.jpg?v=2025-01-07-5",
+        title: "",
+        subtitle: "",
+        overlay: false,
+        order: 4
+      },
+      {
+        id: "5",
+        image: "/banners/homepage5.jpg?v=2025-01-07-5",
+        title: "",
+        subtitle: "",
+        overlay: false,
+        order: 5
+      },
+      {
+        id: "6",
+        image: "/banners/homepage6.jpg?v=2025-01-07-5",
+        title: "",
+        subtitle: "",
+        overlay: false,
+        order: 6
+      },
+      {
+        id: "7",
+        image: "/banners/homepage7.jpg?v=2025-01-07-5",
+        title: "",
+        subtitle: "",
+        overlay: false,
+        order: 7
+      },
+      {
+        id: "8",
+        image: "/banners/homepage8.jpg?v=2025-01-07-5",
+        title: "",
+        subtitle: "",
+        overlay: false,
+        order: 8
+      },
+      {
+        id: "9",
+        image: "/banners/homepage9.jpg?v=2025-01-07-5",
+        title: "",
+        subtitle: "",
+        overlay: false,
+        order: 9
+      },
+      {
+        id: "10",
+        image: "/banners/homepage10.jpg?v=2025-01-07-5",
+        title: "",
+        subtitle: "",
+        overlay: false,
+        order: 10
+      },
+      {
+        id: "11",
+        image: "/banners/homepage11.jpg?v=2025-01-07-5",
+        title: "",
+        subtitle: "",
+        overlay: false,
+        order: 11
       }
     ],
     autoPlay: true,
-    interval: 6000,
-    height: "h-[600px]",
+    interval: 4000,
+    height: "h-[80vh]",
     isActive: true,
     created_at: "2024-01-01T00:00:00.000Z",
-    updated_at: "2024-01-01T00:00:00.000Z"
+    updated_at: "2025-01-07T00:00:00.000Z"
   },
   {
     id: "2",
@@ -51,19 +131,35 @@ let carousels = [
     slides: [
       {
         id: "1",
-        image: "/anime-banner3.jpg",
-        title: "Premium Anime Figures",
-        subtitle: "High-quality collectibles from your favorite series",
-        overlay: true,
+        image: "/banners/figurine1.jpg?v=2025-01-07-5",
+        title: "",
+        subtitle: "",
+        overlay: false,
         order: 1
+      },
+      {
+        id: "2",
+        image: "/banners/figurine2.jpg?v=2025-01-07-5",
+        title: "",
+        subtitle: "",
+        overlay: false,
+        order: 2
+      },
+      {
+        id: "3",
+        image: "/banners/figurine3.jpg?v=2025-01-07-5",
+        title: "",
+        subtitle: "",
+        overlay: false,
+        order: 3
       }
     ],
     autoPlay: true,
-    interval: 5000,
-    height: "h-[400px]",
+    interval: 4000,
+    height: "h-[70vh]",
     isActive: true,
     created_at: "2024-01-01T00:00:00.000Z",
-    updated_at: "2024-01-01T00:00:00.000Z"
+    updated_at: "2025-01-07T00:00:00.000Z"
   },
   {
     id: "4",
@@ -72,19 +168,27 @@ let carousels = [
     slides: [
       {
         id: "1",
-        image: "/keychain-slide1.jpg",
-        title: "Anime Keychains",
-        subtitle: "Express your fandom with our exclusive collection",
-        overlay: true,
+        image: "/banners/keychain1.jpg?v=2025-01-07-5",
+        title: "",
+        subtitle: "",
+        overlay: false,
         order: 1
+      },
+      {
+        id: "2",
+        image: "/banners/keychain2.jpg?v=2025-01-07-5",
+        title: "",
+        subtitle: "",
+        overlay: false,
+        order: 2
       }
     ],
     autoPlay: true,
-    interval: 5000,
-    height: "h-[400px]",
+    interval: 4000,
+    height: "h-[70vh]",
     isActive: true,
     created_at: "2024-01-01T00:00:00.000Z",
-    updated_at: "2024-01-01T00:00:00.000Z"
+    updated_at: "2025-01-07T00:00:00.000Z"
   }
 ];
 
