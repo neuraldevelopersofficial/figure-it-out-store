@@ -71,8 +71,23 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate required fields
     if (!formData.name || !formData.price || !formData.category || !formData.stock) {
       alert('Please fill in all required fields');
+      return;
+    }
+
+    // Validate numeric fields
+    const price = parseFloat(formData.price);
+    const stock = parseInt(formData.stock);
+    
+    if (isNaN(price) || price <= 0) {
+      alert('Please enter a valid price');
+      return;
+    }
+    
+    if (isNaN(stock) || stock < 0) {
+      alert('Please enter a valid stock quantity');
       return;
     }
 
@@ -97,10 +112,10 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
 
     const productData = {
       name: formData.name,
-      price: parseFloat(formData.price),
+      price: price,
       category: formData.category,
       description: formData.description,
-      stock_quantity: parseInt(formData.stock),
+      stock_quantity: stock,
       image: allImages[0] || '', // First image is main image
       images: allImages.slice(1), // Rest are additional images
       powerPoints: parseFloat(formData.powerPoints) || 0

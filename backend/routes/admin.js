@@ -575,6 +575,14 @@ router.put('/products/:id', authenticateToken, requireAdmin, async (req, res) =>
     await store.init(); // Ensure store is initialized
     
     const { id } = req.params;
+    
+    // Debug: Log the update request
+    console.log('🔍 Backend - Update product request:', {
+      id: id,
+      body: req.body,
+      updates: req.body
+    });
+    
     const updates = applyProductDefaults(req.body || {});
 
     if (!updates || Object.keys(updates).length === 0) {
