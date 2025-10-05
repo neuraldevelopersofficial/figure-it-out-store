@@ -15,7 +15,7 @@ interface Product {
   price: number;
   category: string;
   description?: string;
-  stock: number;
+  stock_quantity: number;
   image?: string;
   images?: string[];
   powerPoints?: number;
@@ -34,7 +34,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
     price: '',
     category: '',
     description: '',
-    stock: '',
+    stock_quantity: '',
     image: '',
     allImages: '', // Single field for all images including main image
     powerPoints: '50' // Default power points
@@ -49,7 +49,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
         price: product.price.toString(),
         category: product.category,
         description: product.description || '',
-        stock: product.stock.toString(),
+        stock_quantity: product.stock_quantity.toString(),
         image: product.image || '',
         allImages: allImages.join(', '),
         powerPoints: product.powerPoints?.toString() || '50'
@@ -60,7 +60,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
         price: '',
         category: '',
         description: '',
-        stock: '',
+        stock_quantity: '',
         image: '',
         allImages: '',
         powerPoints: '50'
@@ -72,14 +72,14 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
     e.preventDefault();
     
     // Validate required fields
-    if (!formData.name || !formData.price || !formData.category || !formData.stock) {
+    if (!formData.name || !formData.price || !formData.category || !formData.stock_quantity) {
       alert('Please fill in all required fields');
       return;
     }
 
     // Validate numeric fields
     const price = parseFloat(formData.price);
-    const stock = parseInt(formData.stock);
+    const stock = parseInt(formData.stock_quantity);
     
     if (isNaN(price) || price <= 0) {
       alert('Please enter a valid price');
@@ -201,12 +201,12 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
               </div>
 
               <div>
-                <Label htmlFor="stock">Stock Quantity *</Label>
+                <Label htmlFor="stock_quantity">Stock Quantity *</Label>
                 <Input
-                  id="stock"
+                  id="stock_quantity"
                   type="number"
-                  value={formData.stock}
-                  onChange={(e) => handleChange('stock', e.target.value)}
+                  value={formData.stock_quantity}
+                  onChange={(e) => handleChange('stock_quantity', e.target.value)}
                   placeholder="0"
                   min="0"
                   required
