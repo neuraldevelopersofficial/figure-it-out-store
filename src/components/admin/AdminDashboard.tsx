@@ -276,7 +276,19 @@ const AdminDashboard = () => {
       console.log('Response success:', response?.success);
       console.log('Response keys:', Object.keys(response || {}));
       
-      if (response && response.success) {
+      // More robust success check
+      const isSuccess = response && (
+        response.success === true || 
+        response.success === 'true' || 
+        response.status === 'success' ||
+        response.status === 201 ||
+        response.status === 200 ||
+        (response.product && (response.success !== false))
+      );
+      
+      console.log('Success check result:', isSuccess);
+      
+      if (isSuccess) {
         // Show success message
         toast({
           title: selectedProduct ? "Product Updated" : "Product Added",
