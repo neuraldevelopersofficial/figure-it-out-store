@@ -36,12 +36,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
     description: '',
     stock: '',
     image: '',
-<<<<<<< HEAD
-    allImages: '' // Single field for all images including main image
-=======
     allImages: '', // Single field for all images including main image
     powerPoints: '50' // Default power points
->>>>>>> 214ebd2 (Initial commit: Complete anime collectibles store with admin dashboard fixes)
   });
 
   useEffect(() => {
@@ -55,12 +51,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
         description: product.description || '',
         stock: product.stock.toString(),
         image: product.image || '',
-<<<<<<< HEAD
-        allImages: allImages.join(', ')
-=======
         allImages: allImages.join(', '),
         powerPoints: product.powerPoints?.toString() || '50'
->>>>>>> 214ebd2 (Initial commit: Complete anime collectibles store with admin dashboard fixes)
       });
     } else {
       setFormData({
@@ -70,12 +62,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
         description: '',
         stock: '',
         image: '',
-<<<<<<< HEAD
-        allImages: ''
-=======
         allImages: '',
         powerPoints: '50'
->>>>>>> 214ebd2 (Initial commit: Complete anime collectibles store with admin dashboard fixes)
       });
     }
   }, [product]);
@@ -112,11 +100,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
       price: parseFloat(formData.price),
       category: formData.category,
       description: formData.description,
-<<<<<<< HEAD
-      stock: parseInt(formData.stock),
-=======
       stock_quantity: parseInt(formData.stock),
->>>>>>> 214ebd2 (Initial commit: Complete anime collectibles store with admin dashboard fixes)
       image: allImages[0] || '', // First image is main image
       images: allImages.slice(1), // Rest are additional images
       powerPoints: parseFloat(formData.powerPoints) || 0

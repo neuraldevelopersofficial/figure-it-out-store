@@ -25,13 +25,6 @@ const badgeVariants = cva(
 
 export interface BadgeProps
   extends React.HTMLAttributes<HTMLDivElement>,
-<<<<<<< HEAD
-    VariantProps<typeof badgeVariants> {}
-
-function Badge({ className, variant, ...props }: BadgeProps) {
-  return (
-    <div className={cn(badgeVariants({ variant }), className)} {...props} />
-=======
     VariantProps<typeof badgeVariants> {
   children?: React.ReactNode;
 }
@@ -41,7 +34,6 @@ function Badge({ className, variant, children, ...props }: BadgeProps) {
     <div className={cn(badgeVariants({ variant }), className)} {...props}>
       {children}
     </div>
->>>>>>> 214ebd2 (Initial commit: Complete anime collectibles store with admin dashboard fixes)
   )
 }
 
