@@ -647,8 +647,24 @@ router.put('/products/:id', authenticateToken, requireAdmin, async (req, res) =>
       }
       
       if (!result || !result.value) {
-        console.log('❌ Backend - Product not found after all attempts:', { id, filter });
-        return res.status(404).json({ error: 'Product not found' });
+        console.log('❌ Backend - Product not found, creating new product with ID:', id);
+        
+        // Create new product with the provided ID
+        const newProduct = {
+          id: id,
+          ...updates,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        
+        try {
+          const insertResult = await col.insertOne(newProduct);
+          console.log('✅ Backend - Product created successfully:', { id, productName: newProduct.name });
+          return res.json({ success: true, message: 'Product created successfully', product: newProduct });
+        } catch (insertError) {
+          console.error('❌ Backend - Failed to create product:', insertError);
+          return res.status(500).json({ error: 'Failed to create product' });
+        }
       }
       
       console.log('✅ Backend - Product updated successfully:', { id, productName: result.value.name });
@@ -668,7 +684,24 @@ router.put('/products/:id', authenticateToken, requireAdmin, async (req, res) =>
     }
     
     if (!updatedProduct) {
-      return res.status(404).json({ error: 'Product not found' });
+      console.log('❌ Backend - Product not found in memory store, creating new product with ID:', id);
+      
+      // Create new product in memory store
+      const newProduct = {
+        id: id,
+        ...updates,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      try {
+        updatedProduct = await store.add(newProduct);
+        console.log('✅ Backend - Product created in memory store:', { id, productName: newProduct.name });
+        return res.json({ success: true, message: 'Product created successfully', product: updatedProduct });
+      } catch (createError) {
+        console.error('❌ Backend - Failed to create product in memory store:', createError);
+        return res.status(500).json({ error: 'Failed to create product' });
+      }
     }
 
     res.json({ success: true, message: 'Product updated successfully', product: updatedProduct });
