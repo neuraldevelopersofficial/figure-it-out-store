@@ -510,7 +510,26 @@ router.post('/products', authenticateToken, requireAdmin, async (req, res) => {
     
     const { name, price, category, description, stock_quantity, image, original_price, is_new, is_on_sale, discount, in_stock, powerPoints } = req.body;
 
+    // Debug: Log the received data
+    console.log('🔍 Backend - Received product data:', req.body);
+    console.log('🔍 Backend - Required fields check:', {
+      name: !!name,
+      price: !!price,
+      category: !!category,
+      stock_quantity: !!stock_quantity,
+      nameValue: name,
+      priceValue: price,
+      categoryValue: category,
+      stock_quantityValue: stock_quantity
+    });
+
     if (!name || !price || !category || !stock_quantity) {
+      console.log('❌ Backend - Missing required fields:', {
+        name: name,
+        price: price,
+        category: category,
+        stock_quantity: stock_quantity
+      });
       return res.status(400).json({ error: 'Missing required product fields' });
     }
 

@@ -106,6 +106,19 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
       powerPoints: parseFloat(formData.powerPoints) || 0
     };
 
+    // Debug: Log the product data being sent
+    console.log('🔍 ProductForm - Sending product data:', productData);
+    console.log('🔍 ProductForm - Required fields check:', {
+      name: !!productData.name,
+      price: !!productData.price,
+      category: !!productData.category,
+      stock_quantity: !!productData.stock_quantity,
+      nameValue: productData.name,
+      priceValue: productData.price,
+      categoryValue: productData.category,
+      stock_quantityValue: productData.stock_quantity
+    });
+
     onSubmit(productData);
   };
 
