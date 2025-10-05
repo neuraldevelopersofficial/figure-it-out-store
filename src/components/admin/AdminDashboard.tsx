@@ -195,7 +195,11 @@ const AdminDashboard = () => {
             ...product,
             name: product.name?.trim() || 'Unnamed Product',
             price: Number(product.price) || 0,
+<<<<<<< HEAD
             stock: Number(product.stock) || 0,
+=======
+            stock: Number(product.stock_quantity || product.stock) || 0,
+>>>>>>> 214ebd2 (Initial commit: Complete anime collectibles store with admin dashboard fixes)
             category: product.category || 'Uncategorized',
             image: product.image || '/placeholder-product.jpg',
             images: Array.isArray(product.images) ? product.images : []
@@ -683,10 +687,18 @@ const AdminDashboard = () => {
 
   const handleAddCarousel = async (carouselData: any) => {
     try {
+<<<<<<< HEAD
+=======
+      console.log('Creating carousel with data:', carouselData);
+>>>>>>> 214ebd2 (Initial commit: Complete anime collectibles store with admin dashboard fixes)
       const response = await apiClient.request('/carousels/admin', {
         method: 'POST',
         body: JSON.stringify(carouselData)
       });
+<<<<<<< HEAD
+=======
+      console.log('Carousel creation response:', response);
+>>>>>>> 214ebd2 (Initial commit: Complete anime collectibles store with admin dashboard fixes)
       
       if (response.success) {
         toast({
@@ -696,6 +708,15 @@ const AdminDashboard = () => {
         setShowAddCarousel(false);
         setSelectedCarousel(null);
         fetchAdminData(); // Refresh data
+<<<<<<< HEAD
+=======
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || "Failed to create carousel. Please try again.",
+          variant: "destructive",
+        });
+>>>>>>> 214ebd2 (Initial commit: Complete anime collectibles store with admin dashboard fixes)
       }
     } catch (error) {
       toast({
@@ -708,10 +729,18 @@ const AdminDashboard = () => {
 
   const handleUpdateCarousel = async (carouselId: string, updates: any) => {
     try {
+<<<<<<< HEAD
+=======
+      console.log('Updating carousel:', carouselId, 'with data:', updates);
+>>>>>>> 214ebd2 (Initial commit: Complete anime collectibles store with admin dashboard fixes)
       const response = await apiClient.request(`/carousels/admin/${carouselId}`, {
         method: 'PUT',
         body: JSON.stringify(updates)
       });
+<<<<<<< HEAD
+=======
+      console.log('Carousel update response:', response);
+>>>>>>> 214ebd2 (Initial commit: Complete anime collectibles store with admin dashboard fixes)
       
       if (response.success) {
         toast({
@@ -721,6 +750,15 @@ const AdminDashboard = () => {
         setShowAddCarousel(false);
         setSelectedCarousel(null);
         fetchAdminData(); // Refresh data
+<<<<<<< HEAD
+=======
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || "Failed to update carousel. Please try again.",
+          variant: "destructive",
+        });
+>>>>>>> 214ebd2 (Initial commit: Complete anime collectibles store with admin dashboard fixes)
       }
     } catch (error) {
       toast({
@@ -729,7 +767,11 @@ const AdminDashboard = () => {
         variant: "destructive",
       });
     }
+<<<<<<< HEAD
     };
+=======
+  };
+>>>>>>> 214ebd2 (Initial commit: Complete anime collectibles store with admin dashboard fixes)
 
   const handleAddSlide = async (carouselId: string, slideData: any) => {
     try {
@@ -746,6 +788,15 @@ const AdminDashboard = () => {
         setShowAddSlide(false);
         setSelectedCarouselForSlide(null);
         fetchAdminData(); // Refresh data
+<<<<<<< HEAD
+=======
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || "Failed to add slide. Please try again.",
+          variant: "destructive",
+        });
+>>>>>>> 214ebd2 (Initial commit: Complete anime collectibles store with admin dashboard fixes)
       }
     } catch (error) {
       toast({
