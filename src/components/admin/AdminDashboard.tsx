@@ -148,12 +148,17 @@ const AdminDashboard = () => {
       
       // Fetch carousels
       try {
+        console.log('🔍 AdminDashboard - Fetching carousels...');
         const carouselResponse = await apiClient.get('/carousels/admin/all');
+        console.log('🔍 AdminDashboard - Carousel response:', carouselResponse);
         if (carouselResponse.success) {
           setCarousels(carouselResponse.carousels || []);
+          console.log('🔍 AdminDashboard - Set carousels:', carouselResponse.carousels?.length || 0);
+        } else {
+          console.log('❌ AdminDashboard - Carousel response not successful:', carouselResponse);
         }
       } catch (error) {
-        console.error('Failed to fetch carousels:', error);
+        console.error('❌ AdminDashboard - Failed to fetch carousels:', error);
         setCarousels([]);
       }
       
