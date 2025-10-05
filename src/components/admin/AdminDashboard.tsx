@@ -253,17 +253,28 @@ const AdminDashboard = () => {
 
   const handleAddProduct = async (product: Omit<Product, 'id'>) => {
     try {
+      console.log('Starting product operation:', { 
+        isUpdate: !!selectedProduct, 
+        productId: selectedProduct?.id, 
+        productName: product.name 
+      });
+      
       let response;
       if (selectedProduct) {
         // Update existing product
+        console.log('Updating product with ID:', selectedProduct.id);
         response = await apiClient.updateProduct(selectedProduct.id, product);
       } else {
         // Create new product
+        console.log('Creating new product');
         response = await apiClient.createProduct(product);
       }
       
       // Debug: Log the response to understand the structure
       console.log('Product operation response:', response);
+      console.log('Response type:', typeof response);
+      console.log('Response success:', response?.success);
+      console.log('Response keys:', Object.keys(response || {}));
       
       if (response && response.success) {
         // Show success message
@@ -285,10 +296,17 @@ const AdminDashboard = () => {
         });
       }
     } catch (error) {
-      console.error('Error with product:', error);
+      console.error('Error with product operation:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        productName: product.name,
+        isUpdate: !!selectedProduct
+      });
+      
       toast({
         title: "Error",
-        description: `Failed to ${selectedProduct ? 'update' : 'add'} product.`,
+        description: `Failed to ${selectedProduct ? 'update' : 'add'} product: ${error.message}`,
         variant: "destructive"
       });
     }

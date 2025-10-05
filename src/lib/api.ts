@@ -272,10 +272,14 @@ class ApiClient {
   }
 
   async createProduct(productData: any) {
+    console.log('🔍 API Client - Creating product:', { productName: productData.name, productData });
+    
     const response = await this.request('/admin/products', {
       method: 'POST',
       body: JSON.stringify(productData),
     });
+    
+    console.log('🔍 API Client - Create product response:', response);
     
     // Debug: Log successful product creation
     if (response && response.success) {
@@ -288,10 +292,14 @@ class ApiClient {
   }
 
   async updateProduct(id: string, productData: any) {
+    console.log('🔍 API Client - Updating product:', { id, productName: productData.name, productData });
+    
     const response = await this.request(`/admin/products/${id}`, {
       method: 'PUT',
       body: JSON.stringify(productData),
     });
+    
+    console.log('🔍 API Client - Update product response:', response);
     
     // Debug: Log successful product updates
     if (response && response.success) {
