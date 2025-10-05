@@ -646,7 +646,12 @@ router.put('/products/:id', authenticateToken, requireAdmin, async (req, res) =>
         }
       }
       
-      if (!result || !result.value) return res.status(404).json({ error: 'Product not found' });
+      if (!result || !result.value) {
+        console.log('❌ Backend - Product not found after all attempts:', { id, filter });
+        return res.status(404).json({ error: 'Product not found' });
+      }
+      
+      console.log('✅ Backend - Product updated successfully:', { id, productName: result.value.name });
       return res.json({ success: true, message: 'Product updated successfully', product: result.value });
     }
 

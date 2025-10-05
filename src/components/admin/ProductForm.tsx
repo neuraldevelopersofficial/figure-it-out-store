@@ -255,7 +255,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
                     </div>
                     <div className="aspect-square bg-white rounded border overflow-hidden max-w-32">
                       <img 
-                        src={formData.image.startsWith('/uploads/') ? formData.image : convertGoogleDriveUrl(formData.image)} 
+                        src={formData.image.startsWith('/uploads/') ? formData.image : `/api/products/image-proxy?url=${encodeURIComponent(formData.image)}`} 
                         alt="Main product image" 
                         className="w-full h-full object-cover"
                         onError={(e) => {
@@ -378,7 +378,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
                                 <X className="h-3 w-3" />
                               </Button>
                               <img 
-                                src={image.startsWith('/uploads/') ? image : convertGoogleDriveUrl(image)} 
+                                src={image.startsWith('/uploads/') ? image : `/api/products/image-proxy?url=${encodeURIComponent(image)}`} 
                                 alt={`Image ${index + 1}`} 
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
