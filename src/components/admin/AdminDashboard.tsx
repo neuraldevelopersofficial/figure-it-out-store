@@ -56,7 +56,7 @@ interface Product {
   id: string;
   name: string;
   category: string;
-  stock: number;
+  stock_quantity: number;
   price: number;
   image?: string; // Main image field
   images?: string[]; // Additional images array
@@ -200,7 +200,7 @@ const AdminDashboard = () => {
             ...product,
             name: product.name?.trim() || 'Unnamed Product',
             price: Number(product.price) || 0,
-            stock: Number(product.stock_quantity || product.stock) || 0,
+            stock_quantity: Number(product.stock_quantity) || 0,
             category: product.category || 'Uncategorized',
             image: product.image || '/placeholder-product.jpg',
             images: Array.isArray(product.images) ? product.images : []
@@ -1272,8 +1272,8 @@ const AdminDashboard = () => {
                             </p>
                           </div>
                           <div className="flex items-center space-x-2">
-                            <Badge variant={product.stock < 10 ? "destructive" : "secondary"}>
-                              Stock: {product.stock}
+                            <Badge variant={product.stock_quantity < 10 ? "destructive" : "secondary"}>
+                              Stock: {product.stock_quantity}
                             </Badge>
                             <Button size="sm" variant="outline" className="hover:bg-green-50 hover:text-green-700">
                               <Edit className="h-4 w-4" />
@@ -1614,12 +1614,12 @@ const AdminDashboard = () => {
                         <h3 className="text-lg font-semibold">All Products</h3>
                         <p className="text-sm text-gray-600">
                           Total: {allProducts.length} | 
-                          Valid: {allProducts.filter(p => p.name && p.price > 0 && p.stock > 0).length} | 
-                          Invalid: {allProducts.filter(p => !p.name || p.price <= 0 || p.stock <= 0).length}
+                          Valid: {allProducts.filter(p => p.name && p.price > 0 && p.stock_quantity > 0).length} | 
+                          Invalid: {allProducts.filter(p => !p.name || p.price <= 0 || p.stock_quantity <= 0).length}
                         </p>
-                        {allProducts.filter(p => !p.name || p.price <= 0 || p.stock <= 0).length > 0 && (
+                        {allProducts.filter(p => !p.name || p.price <= 0 || p.stock_quantity <= 0).length > 0 && (
                           <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
-                            ⚠️ Found {allProducts.filter(p => !p.name || p.price <= 0 || p.stock <= 0).length} invalid products. 
+                            ⚠️ Found {allProducts.filter(p => !p.name || p.price <= 0 || p.stock_quantity <= 0).length} invalid products. 
                             Use "Cleanup Invalid Products" to remove them.
                           </div>
                         )}
@@ -1673,13 +1673,13 @@ const AdminDashboard = () => {
                               <td className="p-2 text-sm text-gray-600">{product.category || 'Uncategorized'}</td>
                               <td className="p-2 font-semibold text-green-600">₹{product.price ? product.price.toLocaleString() : '0'}</td>
                               <td className="p-2">
-                                <Badge variant={product.stock < 10 ? "destructive" : product.stock > 0 ? "secondary" : "outline"}>
-                                  {product.stock}
+                                <Badge variant={product.stock_quantity < 10 ? "destructive" : product.stock_quantity > 0 ? "secondary" : "outline"}>
+                                  {product.stock_quantity}
                                 </Badge>
                               </td>
                               <td className="p-2">
-                                <Badge variant={product.stock > 0 ? "default" : "destructive"}>
-                                  {product.stock > 0 ? "In Stock" : "Out of Stock"}
+                                <Badge variant={product.stock_quantity > 0 ? "default" : "destructive"}>
+                                  {product.stock_quantity > 0 ? "In Stock" : "Out of Stock"}
                                 </Badge>
                               </td>
                             <td className="p-2">
