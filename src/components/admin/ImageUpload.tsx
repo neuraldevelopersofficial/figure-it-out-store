@@ -67,7 +67,7 @@ const ImageUpload = ({
           formData.append('images', file);
         });
 
-        const response = await apiClient.request('/upload/multiple', {
+        const response = await apiClient.request('/cloudinary/multiple', {
           method: 'POST',
           body: formData
         });
@@ -86,7 +86,7 @@ const ImageUpload = ({
         const formData = new FormData();
         formData.append('image', files[0]);
 
-        const response = await apiClient.request('/upload/single', {
+        const response = await apiClient.request('/cloudinary/single', {
           method: 'POST',
           body: formData
         });
@@ -146,7 +146,7 @@ const ImageUpload = ({
             or drag and drop
           </div>
           <p className="text-xs text-gray-500">
-            {multiple ? `Up to ${maxFiles} images` : "Single image"} • PNG, JPG, GIF up to 5MB
+            {multiple ? `Up to ${maxFiles} images` : "Single image"} • PNG, JPG, GIF up to 10MB
           </p>
         </div>
 
@@ -161,7 +161,7 @@ const ImageUpload = ({
       </div>
 
       <div className="mt-2 text-xs text-gray-500">
-        Supported formats: JPG, PNG, GIF, WebP • Max size: 5MB per file
+        Supported formats: JPG, PNG, GIF, WebP • Max size: 10MB per file • Uploaded to Cloudinary
       </div>
     </div>
   );

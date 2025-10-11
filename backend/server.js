@@ -79,6 +79,7 @@ const razorpayRoutes = require('./routes/razorpay');
 const carouselRoutes = require('./routes/carousels');
 const pincodeRouter = require('./routes/pincode');
 const uploadRoutes = require('./routes/upload');
+const cloudinaryRoutes = require('./routes/cloudinary');
 const userRoutes = require('./routes/user');
 
 // Routes
@@ -90,6 +91,7 @@ app.use('/api/razorpay', razorpayRoutes);
 app.use('/api/carousels', carouselRoutes);
 app.use('/api/pincode', pincodeRouter);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/cloudinary', cloudinaryRoutes);
 app.use('/api/user', userRoutes);
 
 // Serve static files from public folder

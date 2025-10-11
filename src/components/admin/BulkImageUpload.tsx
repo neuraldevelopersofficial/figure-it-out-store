@@ -102,7 +102,7 @@ const BulkImageUpload = ({
         formData.append('images', file);
       });
 
-      const response = await apiClient.request('/upload/bulk-product', {
+      const response = await apiClient.request('/cloudinary/bulk-product', {
         method: 'POST',
         body: formData,
         onUploadProgress: (progressEvent) => {
@@ -176,7 +176,7 @@ const BulkImageUpload = ({
             or drag and drop
           </div>
           <p className="text-xs text-gray-500">
-            Up to {maxFiles} product images • PNG, JPG, GIF up to 5MB each
+            Up to {maxFiles} product images • PNG, JPG, GIF up to 10MB each
           </p>
         </div>
 
@@ -243,7 +243,7 @@ const BulkImageUpload = ({
       )}
 
       <div className="mt-2 text-xs text-gray-500">
-        Supported formats: JPG, PNG, GIF, WebP • Max size: 5MB per file
+        Supported formats: JPG, PNG, GIF, WebP • Max size: 10MB per file • Uploaded to Cloudinary
       </div>
     </div>
   );

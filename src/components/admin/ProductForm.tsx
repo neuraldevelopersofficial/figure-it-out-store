@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ImageUpload from './ImageUpload';
-import { convertGoogleDriveUrl, isValidImageUrl, testGoogleDriveImage } from "@/lib/utils";
+import { isValidImageUrl } from "@/lib/utils";
 
 interface Product {
   id: string;
@@ -255,7 +255,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
                     </div>
                     <div className="aspect-square bg-white rounded border overflow-hidden max-w-32">
                       <img 
-                        src={formData.image.startsWith('/uploads/') ? formData.image : `/api/products/image-proxy?url=${encodeURIComponent(formData.image)}`} 
+                        src={formData.image} 
                         alt="Main product image" 
                         className="w-full h-full object-cover"
                         onError={(e) => {
@@ -315,7 +315,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
                           image: e.target.value.split(',')[0]?.trim() || prev.image
                         }));
                       }}
-                      placeholder="Upload images above or enter URLs manually (comma separated)&#10;https://drive.google.com/file/d/IMG1_ID/view, https://drive.google.com/file/d/IMG2_ID/view"
+                      placeholder="Upload images above or enter URLs manually (comma separated)&#10;https://res.cloudinary.com/your-cloud/image/upload/v1234567890/products/image1.jpg, https://res.cloudinary.com/your-cloud/image/upload/v1234567890/products/image2.jpg"
                       rows={3}
                       className="font-mono text-sm"
                     />
@@ -378,7 +378,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
                                 <X className="h-3 w-3" />
                               </Button>
                               <img 
-                                src={image.startsWith('/uploads/') ? image : `/api/products/image-proxy?url=${encodeURIComponent(image)}`} 
+                                src={image} 
                                 alt={`Image ${index + 1}`} 
                                 className="w-full h-full object-cover"
                                 onError={(e) => {

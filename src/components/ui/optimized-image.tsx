@@ -57,14 +57,12 @@ export function OptimizedImage({
       return originalSrc;
     }
 
-    // For Google Drive images, use the existing proxy
-    if (originalSrc.includes('drive.google.com')) {
-      return originalSrc; // FallbackImage will handle Google Drive optimization
+    // For Cloudinary images, they're already optimized - return as is
+    if (originalSrc.includes('cloudinary.com')) {
+      return originalSrc;
     }
 
-    // For external images, you could add image optimization service here
-    // Example: return `https://images.weserv.nl/?url=${encodeURIComponent(originalSrc)}&w=800&q=${quality}`;
-    
+    // For other external images, return as is (Cloudinary handles optimization)
     return originalSrc;
   }, [fallbackSrc, quality]);
 
