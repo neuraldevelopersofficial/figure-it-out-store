@@ -360,8 +360,8 @@ async function remove(id) {
   return true;
 }
 
-function addSlide(carouselId, slideData) {
-  const carousel = getById(carouselId);
+async function addSlide(carouselId, slideData) {
+  const carousel = await getById(carouselId);
   if (!carousel) return null;
 
   const slideId = slideData.id || uuidv4();
@@ -383,14 +383,34 @@ function addSlide(carouselId, slideData) {
     order: slideData.order || (carousel.slides.length + 1)
   };
 
+  // Add slide to carousel
   carousel.slides.push(newSlide);
   carousel.updated_at = nowIso();
+  
+  // Update carousel in database
+  try {
+    const collection = await getCarouselsCollection();
+    if (collection) {
+      await collection.updateOne(
+        { id: carouselId },
+        { 
+          $set: { 
+            slides: carousel.slides,
+            updated_at: carousel.updated_at
+          }
+        }
+      );
+      console.log('✅ Slide added to carousel in database:', carouselId);
+    }
+  } catch (e) {
+    console.error('Error updating carousel in database:', e);
+  }
   
   return newSlide;
 }
 
-function updateSlide(carouselId, slideId, updates) {
-  const carousel = getById(carouselId);
+async function updateSlide(carouselId, slideId, updates) {
+  const carousel = await getById(carouselId);
   if (!carousel) return null;
 
   const slideIndex = carousel.slides.findIndex(s => s.id === slideId);
@@ -407,11 +427,31 @@ function updateSlide(carouselId, slideId, updates) {
   };
 
   carousel.updated_at = nowIso();
+  
+  // Update carousel in database
+  try {
+    const collection = await getCarouselsCollection();
+    if (collection) {
+      await collection.updateOne(
+        { id: carouselId },
+        { 
+          $set: { 
+            slides: carousel.slides,
+            updated_at: carousel.updated_at
+          }
+        }
+      );
+      console.log('✅ Slide updated in carousel database:', carouselId);
+    }
+  } catch (e) {
+    console.error('Error updating carousel in database:', e);
+  }
+  
   return carousel.slides[slideIndex];
 }
 
-function removeSlide(carouselId, slideId) {
-  const carousel = getById(carouselId);
+async function removeSlide(carouselId, slideId) {
+  const carousel = await getById(carouselId);
   if (!carousel) return false;
 
   const slideIndex = carousel.slides.findIndex(s => s.id === slideId);
@@ -425,11 +465,30 @@ function removeSlide(carouselId, slideId) {
     slide.order = index + 1;
   });
 
+  // Update carousel in database
+  try {
+    const collection = await getCarouselsCollection();
+    if (collection) {
+      await collection.updateOne(
+        { id: carouselId },
+        { 
+          $set: { 
+            slides: carousel.slides,
+            updated_at: carousel.updated_at
+          }
+        }
+      );
+      console.log('✅ Slide removed from carousel database:', carouselId);
+    }
+  } catch (e) {
+    console.error('Error updating carousel in database:', e);
+  }
+
   return true;
 }
 
-function reorderSlides(carouselId, slideIds) {
-  const carousel = getById(carouselId);
+async function reorderSlides(carouselId, slideIds) {
+  const carousel = await getById(carouselId);
   if (!carousel) return false;
 
   // Create a map of new order
@@ -448,6 +507,25 @@ function reorderSlides(carouselId, slideIds) {
   // Sort slides by new order
   carousel.slides.sort((a, b) => a.order - b.order);
   carousel.updated_at = nowIso();
+
+  // Update carousel in database
+  try {
+    const collection = await getCarouselsCollection();
+    if (collection) {
+      await collection.updateOne(
+        { id: carouselId },
+        { 
+          $set: { 
+            slides: carousel.slides,
+            updated_at: carousel.updated_at
+          }
+        }
+      );
+      console.log('✅ Slides reordered in carousel database:', carouselId);
+    }
+  } catch (e) {
+    console.error('Error updating carousel in database:', e);
+  }
 
   return true;
 }

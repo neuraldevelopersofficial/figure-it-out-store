@@ -164,7 +164,7 @@ router.delete('/admin/:id', authenticateToken, requireAdmin, async (req, res) =>
 });
 
 // Add slide to carousel
-router.post('/admin/:id/slides', authenticateToken, requireAdmin, (req, res) => {
+router.post('/admin/:id/slides', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const slideData = req.body;
@@ -173,7 +173,7 @@ router.post('/admin/:id/slides', authenticateToken, requireAdmin, (req, res) => 
       return res.status(400).json({ error: 'Image and title are required for slides' });
     }
 
-    const newSlide = carouselStore.addSlide(id, slideData);
+    const newSlide = await carouselStore.addSlide(id, slideData);
     if (!newSlide) {
       return res.status(404).json({ error: 'Carousel not found' });
     }
@@ -191,7 +191,7 @@ router.post('/admin/:id/slides', authenticateToken, requireAdmin, (req, res) => 
 });
 
 // Update slide
-router.put('/admin/:id/slides/:slideId', authenticateToken, requireAdmin, (req, res) => {
+router.put('/admin/:id/slides/:slideId', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { id, slideId } = req.params;
     const updates = req.body;
@@ -200,7 +200,7 @@ router.put('/admin/:id/slides/:slideId', authenticateToken, requireAdmin, (req, 
       return res.status(400).json({ error: 'No updates provided' });
     }
 
-    const updatedSlide = carouselStore.updateSlide(id, slideId, updates);
+    const updatedSlide = await carouselStore.updateSlide(id, slideId, updates);
     if (!updatedSlide) {
       return res.status(404).json({ error: 'Carousel or slide not found' });
     }
@@ -218,11 +218,11 @@ router.put('/admin/:id/slides/:slideId', authenticateToken, requireAdmin, (req, 
 });
 
 // Delete slide
-router.delete('/admin/:id/slides/:slideId', authenticateToken, requireAdmin, (req, res) => {
+router.delete('/admin/:id/slides/:slideId', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { id, slideId } = req.params;
 
-    const removed = carouselStore.removeSlide(id, slideId);
+    const removed = await carouselStore.removeSlide(id, slideId);
     if (!removed) {
       return res.status(404).json({ error: 'Carousel or slide not found' });
     }
@@ -239,7 +239,7 @@ router.delete('/admin/:id/slides/:slideId', authenticateToken, requireAdmin, (re
 });
 
 // Reorder slides
-router.post('/admin/:id/slides/reorder', authenticateToken, requireAdmin, (req, res) => {
+router.post('/admin/:id/slides/reorder', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { slideIds } = req.body;
@@ -248,7 +248,7 @@ router.post('/admin/:id/slides/reorder', authenticateToken, requireAdmin, (req, 
       return res.status(400).json({ error: 'Slide IDs array is required' });
     }
 
-    const reordered = carouselStore.reorderSlides(id, slideIds);
+    const reordered = await carouselStore.reorderSlides(id, slideIds);
     if (!reordered) {
       return res.status(404).json({ error: 'Carousel not found' });
     }
