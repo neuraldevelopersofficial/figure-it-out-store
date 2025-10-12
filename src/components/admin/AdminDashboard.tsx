@@ -784,10 +784,12 @@ const AdminDashboard = () => {
 
   const handleAddSlide = async (carouselId: string, slideData: any) => {
     try {
+      console.log('🔍 Adding slide to carousel:', carouselId, 'with data:', slideData);
       const response = await apiClient.request(`/carousels/admin/${carouselId}/slides`, {
         method: 'POST',
         body: JSON.stringify(slideData)
       });
+      console.log('🔍 Slide addition response:', response);
       
       if (response.success) {
         toast({
@@ -798,6 +800,7 @@ const AdminDashboard = () => {
         setSelectedCarouselForSlide(null);
         fetchAdminData(); // Refresh data
       } else {
+        console.error('❌ Slide addition failed:', response);
         toast({
           title: "Error",
           description: response.message || "Failed to add slide. Please try again.",
@@ -805,6 +808,7 @@ const AdminDashboard = () => {
         });
       }
     } catch (error) {
+      console.error('❌ Slide addition error:', error);
       toast({
         title: "Error",
         description: "Failed to add slide. Please try again.",
@@ -844,10 +848,10 @@ const AdminDashboard = () => {
 
     const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault();
-      if (!slideData.image || !slideData.title || !slideData.subtitle) {
+      if (!slideData.image || !slideData.title) {
         toast({
           title: "Missing Information",
-          description: "Please fill in image, title, and subtitle fields.",
+          description: "Please fill in image and title fields.",
           variant: "destructive"
         });
         return;
@@ -913,14 +917,13 @@ const AdminDashboard = () => {
             </div>
             
             <div>
-              <label className="block text-sm font-medium mb-1">Subtitle *</label>
+              <label className="block text-sm font-medium mb-1">Subtitle</label>
               <textarea
                 value={slideData.subtitle}
                 onChange={(e) => setSlideData(prev => ({ ...prev, subtitle: e.target.value }))}
                 className="w-full p-2 border rounded"
                 placeholder="Slide subtitle or description"
                 rows={3}
-                required
               />
             </div>
             
