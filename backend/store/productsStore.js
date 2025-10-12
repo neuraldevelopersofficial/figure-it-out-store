@@ -1649,7 +1649,28 @@ function mapDbProductToApi(doc) {
   };
 }
 
+// Compatibility functions for backward compatibility
+const add = addProduct;
+const update = updateProduct;
+const delete = deleteProduct;
+const getAll = getAllProducts;
+const getById = getProductById;
+const getByCategory = getProductsByCategory;
+const search = searchProducts;
+
+// Initialize function for compatibility
+const init = async () => {
+  // Initialize database connection
+  try {
+    await getProductsCollection();
+    console.log('✅ Products store initialized');
+  } catch (error) {
+    console.log('⚠️ Products store initialized with in-memory fallback');
+  }
+};
+
 module.exports = {
+  // New async functions
   getAllProducts,
   getProductById,
   getProductsByCategory,
@@ -1657,5 +1678,17 @@ module.exports = {
   addProduct,
   updateProduct,
   deleteProduct,
+  
+  // Compatibility aliases
+  add,
+  update,
+  delete: delete,
+  getAll,
+  getById,
+  getByCategory,
+  search,
+  init,
+  
+  // Data export
   products // Export for backward compatibility
 };

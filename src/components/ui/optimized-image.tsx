@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { FallbackImage } from './fallback-image';
+import { getGoogleDriveProxyUrl } from '@/lib/utils';
 
 interface OptimizedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src: string;
@@ -59,12 +60,19 @@ export function OptimizedImage({
 
     // For Cloudinary images, they're already optimized - return as is
     if (originalSrc.includes('cloudinary.com')) {
+      if (debug) console.log(`☁️ Using Cloudinary image: ${originalSrc}`);
       return originalSrc;
     }
 
-    // For other external images, return as is (Cloudinary handles optimization)
+    // For Google Drive images, convert to proxy URL
+    if (originalSrc.includes('drive.google.com')) {
+      if (debug) console.log(`🔄 Converting Google Drive URL: ${originalSrc}`);
+      return getGoogleDriveProxyUrl(originalSrc, fallbackSrc, debug);
+    }
+
+    // For other external images, return as is
     return originalSrc;
-  }, [fallbackSrc, quality]);
+  }, [fallbackSrc, quality, debug]);
 
   // Intersection Observer for lazy loading
   useEffect(() => {

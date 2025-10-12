@@ -106,6 +106,12 @@ router.get('/image-proxy', async (req, res) => {
       return res.status(400).json({ error: 'Image URL is required' });
     }
 
+    // For Cloudinary images, redirect directly (no proxy needed)
+    if (url.includes('cloudinary.com')) {
+      console.log(`☁️ Redirecting to Cloudinary image: ${url}`);
+      return res.redirect(url);
+    }
+
     // Convert Google Drive URL to direct format
     function convertGoogleDriveUrl(url) {
       // If it's already a direct export URL, return as is

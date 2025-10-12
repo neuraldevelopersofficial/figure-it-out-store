@@ -339,6 +339,20 @@ class ApiClient {
     });
   }
 
+  async uploadGoogleDriveUrl(url: string) {
+    return this.request('/cloudinary/upload-drive-url', {
+      method: 'POST',
+      body: JSON.stringify({ url }),
+    });
+  }
+
+  async bulkUploadGoogleDriveUrls(urls: string[]) {
+    return this.request('/cloudinary/bulk-upload-drive-urls', {
+      method: 'POST',
+      body: JSON.stringify({ urls }),
+    });
+  }
+
   async bulkUpsertProducts(file: File, mode: 'add' | 'update' | 'upsert' = 'upsert', imageMap?: Record<string, string>) {
     const formData = new FormData();
     formData.append('file', file);

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getGoogleDriveProxyUrl } from '@/lib/utils';
 
 interface FallbackImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src: string;
@@ -37,7 +38,7 @@ export function FallbackImage({
     setRetries(0);
   }, [src]);
 
-  // Process source URL - Cloudinary images are already optimized
+  // Process source URL - prioritize Cloudinary images
   const processedSrc = React.useMemo(() => {
     if (!imgSrc) return fallbackSrc;
     
@@ -45,6 +46,12 @@ export function FallbackImage({
     if (imgSrc.includes('cloudinary.com')) {
       if (debug) console.log(`☁️ Using Cloudinary image: ${imgSrc}`);
       return imgSrc;
+    }
+    
+    // For Google Drive images, convert to proxy URL
+    if (imgSrc.includes('drive.google.com')) {
+      if (debug) console.log(`🔄 Converting Google Drive URL: ${imgSrc}`);
+      return getGoogleDriveProxyUrl(imgSrc, fallbackSrc, debug);
     }
     
     // For local images, return as-is
@@ -58,6 +65,14 @@ export function FallbackImage({
 
   const handleError = () => {
     if (debug) console.warn(`❌ Image failed to load: ${processedSrc}`);
+    
+    // Don't retry if we're already showing the fallback image
+    if (processedSrc === fallbackSrc) {
+      if (debug) console.log(`⚠️ Fallback image also failed to load: ${fallbackSrc}`);
+      setHasError(true);
+      onError?.();
+      return;
+    }
     
     // Try retry mechanism
     if (retries < retryCount) {

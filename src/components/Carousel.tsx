@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FallbackImage } from "@/components/ui/fallback-image";
 
 interface CarouselSlide {
   id: string;
@@ -98,9 +99,10 @@ const Carousel = ({
                 </div>
               )}
               
-              <img
+              <FallbackImage
                 src={slide.image}
                 alt={slide.title}
+                fallbackSrc="/placeholder-image.png"
                 className={`w-full h-full object-cover transition-opacity duration-500 ${
                   imagesLoaded[index] ? 'opacity-100' : 'opacity-0'
                 }`}
@@ -109,6 +111,7 @@ const Carousel = ({
                   console.error('Image failed to load:', slide.image);
                   handleImageLoad(index);
                 }}
+                debug={true}
               />
             </div>
 

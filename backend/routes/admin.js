@@ -1,6 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
+const { v4: uuidv4 } = require('uuid');
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 const { getDatabase, getCollection, COLLECTIONS } = require('../config/database');
@@ -537,6 +538,7 @@ router.post('/products', authenticateToken, requireAdmin, async (req, res) => {
     const convertedImage = image ? convertGoogleDriveUrl(image) : image;
 
     const productData = applyProductDefaults({
+      id: uuidv4(),
       name,
       price,
       category,
@@ -548,7 +550,9 @@ router.post('/products', authenticateToken, requireAdmin, async (req, res) => {
       is_on_sale,
       discount,
       in_stock,
-      powerPoints: powerPoints || 50
+      powerPoints: powerPoints || 50,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     });
 
     const col = await getProductsCollection();
@@ -854,7 +858,7 @@ router.post('/products/bulk', authenticateToken, requireAdmin, bulkUploadLimiter
       return Number.isFinite(n) ? n : undefined;
     };
 
-    const mapCamelToSnake = (p, imageMap = {}) => {
+    const mapCamelToSnake = async (p, imageMap = {}) => {
       // Process image filenames to URLs if imageMap is provided
       let mainImage = p.image || '';
       // Handle both comma-separated string and array formats for allImages
@@ -882,9 +886,55 @@ router.post('/products/bulk', authenticateToken, requireAdmin, bulkUploadLimiter
         // Map additional images if they're filenames in the imageMap
         imagesList = imagesList.map(img => imageMap[img] || img);
       } else {
-        // If no imageMap, use the old Google Drive URL conversion
-        mainImage = mainImage ? convertGoogleDriveUrl(mainImage) : mainImage;
-        imagesList = imagesList.map(img => convertGoogleDriveUrl(img));
+        // If no imageMap, check for Google Drive URLs and convert to Cloudinary
+        if (mainImage && (mainImage.includes('drive.google.com') || /^[a-zA-Z0-9-_]+$/.test(mainImage))) {
+          try {
+            console.log(`🔄 Converting Google Drive URL to Cloudinary: ${mainImage}`);
+            const response = await fetch(`${process.env.API_URL || 'http://localhost:5000'}/api/cloudinary/upload-drive-url`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ url: mainImage })
+            });
+            
+            if (response.ok) {
+              const result = await response.json();
+              if (result.success) {
+                mainImage = result.cloudinaryUrl;
+                console.log(`✅ Converted to Cloudinary: ${result.cloudinaryUrl}`);
+              }
+            }
+          } catch (error) {
+            console.error('Error converting main image to Cloudinary:', error);
+            mainImage = convertGoogleDriveUrl(mainImage); // Fallback to direct URL
+          }
+        } else {
+          mainImage = mainImage ? convertGoogleDriveUrl(mainImage) : mainImage;
+        }
+        
+        // Process additional images
+        imagesList = await Promise.all(imagesList.map(async (img) => {
+          if (img && (img.includes('drive.google.com') || /^[a-zA-Z0-9-_]+$/.test(img))) {
+            try {
+              console.log(`🔄 Converting Google Drive URL to Cloudinary: ${img}`);
+              const response = await fetch(`${process.env.API_URL || 'http://localhost:5000'}/api/cloudinary/upload-drive-url`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: img })
+              });
+              
+              if (response.ok) {
+                const result = await response.json();
+                if (result.success) {
+                  console.log(`✅ Converted to Cloudinary: ${result.cloudinaryUrl}`);
+                  return result.cloudinaryUrl;
+                }
+              }
+            } catch (error) {
+              console.error('Error converting image to Cloudinary:', error);
+            }
+          }
+          return convertGoogleDriveUrl(img); // Fallback to direct URL
+        }));
       }
       
       return {
@@ -990,18 +1040,19 @@ router.post('/products/bulk', authenticateToken, requireAdmin, bulkUploadLimiter
     // Validate minimal required fields
     const errors = [];
     const valid = [];
-    normalized.forEach((p, idx) => {
+    for (let idx = 0; idx < normalized.length; idx++) {
+      const p = normalized[idx];
       if (!p.name || !p.category || (p.price === undefined || p.price === '')) {
         errors.push({ row: idx + 2, error: 'Missing required fields: name, category, price' });
-        return;
+        continue;
       }
-      const mapped = mapCamelToSnake(p, imageMap);
+      const mapped = await mapCamelToSnake(p, imageMap);
       // Derive in_stock from stock_quantity if not provided
       if (typeof mapped.in_stock !== 'boolean' && typeof mapped.stock_quantity === 'number') {
         mapped.in_stock = mapped.stock_quantity > 0;
       }
       valid.push(mapped);
-    });
+    }
 
     // Apply to MongoDB if available, otherwise in-memory store
     const col = await getProductsCollection();

@@ -1793,23 +1793,18 @@ const AdminDashboard = () => {
                             <div key={slide.id} className="border rounded-lg p-3 bg-gray-50">
                               <div className="aspect-video bg-gray-200 rounded mb-2 overflow-hidden">
                                 {slide.image ? (
-                                  <img 
-                                    src={slide.image.startsWith('/uploads/') ? slide.image : slide.image}
+                                  <FallbackImage 
+                                    src={slide.image}
                                     alt={slide.title}
+                                    fallbackSrc="/placeholder-image.png"
                                     className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                      const target = e.currentTarget as HTMLImageElement;
-                                      target.style.display = 'none';
-                                      const nextElement = target.nextElementSibling as HTMLElement;
-                                      if (nextElement) {
-                                        nextElement.style.display = 'flex';
-                                      }
-                                    }}
+                                    debug={true}
                                   />
-                                ) : null}
-                                <div className={`w-full h-full items-center justify-center text-gray-400 ${slide.image ? 'hidden' : 'flex'}`}>
-                                  <Image className="h-8 w-8" />
-                                </div>
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                    <Image className="h-8 w-8" />
+                                  </div>
+                                )}
                               </div>
                               <h4 className="font-medium text-sm mb-1 truncate" title={slide.title}>{slide.title}</h4>
                               <p className="text-xs text-gray-600 mb-2 line-clamp-2" title={slide.subtitle}>{slide.subtitle}</p>

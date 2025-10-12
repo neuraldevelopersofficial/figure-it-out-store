@@ -27,6 +27,11 @@ export function getOptimizedImageUrl(
     blur = 0
   } = options;
 
+  // For Cloudinary images, they're already optimized - return as is
+  if (originalUrl.includes('cloudinary.com')) {
+    return originalUrl;
+  }
+
   // For Google Drive images, use existing proxy
   if (originalUrl.includes('drive.google.com')) {
     return originalUrl; // Let FallbackImage handle Google Drive optimization
