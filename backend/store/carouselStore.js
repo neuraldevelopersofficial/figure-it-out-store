@@ -1,6 +1,18 @@
 const { v4: uuidv4 } = require('uuid');
+const { getDatabase, getCollection, COLLECTIONS } = require('../config/database');
 
-// In-memory carousel store. Replace with DB in production.
+// Helper: try to get MongoDB collection; return null if DB not configured
+async function getCarouselsCollection() {
+  try {
+    const db = await getDatabase();
+    if (!db) return null;
+    return await getCollection(COLLECTIONS.CAROUSELS);
+  } catch (e) {
+    return null;
+  }
+}
+
+// In-memory carousel store. Uses DB when available, falls back to memory.
 let carousels = [
   {
     id: "1",
@@ -196,23 +208,67 @@ function nowIso() {
   return new Date().toISOString();
 }
 
-function getAll() {
+async function getAll() {
+  try {
+    const collection = await getCarouselsCollection();
+    if (collection) {
+      const docs = await collection.find({}).toArray();
+      return docs;
+    }
+  } catch (e) {
+    console.error('Error fetching carousels from database:', e);
+  }
+  
+  // Fallback to in-memory store
   return carousels;
 }
 
-function getById(id) {
+async function getById(id) {
+  try {
+    const collection = await getCarouselsCollection();
+    if (collection) {
+      const doc = await collection.findOne({ id: id });
+      return doc;
+    }
+  } catch (e) {
+    console.error('Error fetching carousel from database:', e);
+  }
+  
+  // Fallback to in-memory store
   return carousels.find(c => c.id === id);
 }
 
-function getByName(name) {
+async function getByName(name) {
+  try {
+    const collection = await getCarouselsCollection();
+    if (collection) {
+      const doc = await collection.findOne({ name: name });
+      return doc;
+    }
+  } catch (e) {
+    console.error('Error fetching carousel by name from database:', e);
+  }
+  
+  // Fallback to in-memory store
   return carousels.find(c => c.name === name);
 }
 
-function getActive() {
+async function getActive() {
+  try {
+    const collection = await getCarouselsCollection();
+    if (collection) {
+      const docs = await collection.find({ isActive: true }).toArray();
+      return docs;
+    }
+  } catch (e) {
+    console.error('Error fetching active carousels from database:', e);
+  }
+  
+  // Fallback to in-memory store
   return carousels.filter(c => c.isActive);
 }
 
-function add(carouselData) {
+async function add(carouselData) {
   const id = carouselData.id || uuidv4();
   const created_at = nowIso();
   
@@ -229,11 +285,47 @@ function add(carouselData) {
     updated_at: created_at
   };
 
+  try {
+    const collection = await getCarouselsCollection();
+    if (collection) {
+      await collection.insertOne(newCarousel);
+      console.log('✅ Carousel saved to database:', newCarousel.name);
+      return newCarousel;
+    }
+  } catch (e) {
+    console.error('Error saving carousel to database:', e);
+  }
+
+  // Fallback to in-memory store
   carousels.push(newCarousel);
   return newCarousel;
 }
 
-function update(id, updates) {
+async function update(id, updates) {
+  try {
+    const collection = await getCarouselsCollection();
+    if (collection) {
+      const updateData = {
+        ...updates,
+        updated_at: nowIso()
+      };
+      
+      const result = await collection.findOneAndUpdate(
+        { id: id },
+        { $set: updateData },
+        { returnDocument: 'after' }
+      );
+      
+      if (result) {
+        console.log('✅ Carousel updated in database:', id);
+        return result;
+      }
+    }
+  } catch (e) {
+    console.error('Error updating carousel in database:', e);
+  }
+
+  // Fallback to in-memory store
   const index = carousels.findIndex(c => c.id === id);
   if (index === -1) return null;
 
@@ -246,7 +338,21 @@ function update(id, updates) {
   return carousels[index];
 }
 
-function remove(id) {
+async function remove(id) {
+  try {
+    const collection = await getCarouselsCollection();
+    if (collection) {
+      const result = await collection.deleteOne({ id: id });
+      if (result.deletedCount > 0) {
+        console.log('✅ Carousel deleted from database:', id);
+        return true;
+      }
+    }
+  } catch (e) {
+    console.error('Error deleting carousel from database:', e);
+  }
+
+  // Fallback to in-memory store
   const index = carousels.findIndex(c => c.id === id);
   if (index === -1) return false;
 
@@ -346,6 +452,27 @@ function reorderSlides(carouselId, slideIds) {
   return true;
 }
 
+// Initialize function to migrate existing carousels to database
+async function init() {
+  try {
+    const collection = await getCarouselsCollection();
+    if (collection) {
+      // Check if database already has carousels
+      const existingCount = await collection.countDocuments();
+      if (existingCount === 0) {
+        // Migrate in-memory carousels to database
+        console.log('🔄 Migrating carousels to database...');
+        await collection.insertMany(carousels);
+        console.log(`✅ Migrated ${carousels.length} carousels to database`);
+      } else {
+        console.log(`✅ Database already has ${existingCount} carousels`);
+      }
+    }
+  } catch (error) {
+    console.error('❌ Error initializing carousel store:', error);
+  }
+}
+
 module.exports = {
   getAll,
   getById,
@@ -357,5 +484,7 @@ module.exports = {
   addSlide,
   updateSlide,
   removeSlide,
-  reorderSlides
+  reorderSlides,
+  init,
+  carousels // Export for backward compatibility
 };

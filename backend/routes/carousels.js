@@ -30,9 +30,9 @@ const requireAdmin = (req, res, next) => {
 
 // Public routes - no authentication required
 // Get all active carousels
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    const carousels = carouselStore.getActive();
+    const carousels = await carouselStore.getActive();
     res.json({
       success: true,
       carousels
@@ -44,10 +44,10 @@ router.get('/', (req, res) => {
 });
 
 // Get carousel by name (for hero, promo, etc.)
-router.get('/:name', (req, res) => {
+router.get('/:name', async (req, res) => {
   try {
     const { name } = req.params;
-    const carousel = carouselStore.getByName(name);
+    const carousel = await carouselStore.getByName(name);
     
     if (!carousel) {
       return res.status(404).json({ error: 'Carousel not found' });
@@ -65,9 +65,9 @@ router.get('/:name', (req, res) => {
 
 // Admin routes - require authentication
 // Get all carousels (including inactive)
-router.get('/admin/all', authenticateToken, requireAdmin, (req, res) => {
+router.get('/admin/all', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const carousels = carouselStore.getAll();
+    const carousels = await carouselStore.getAll();
     res.json({
       success: true,
       carousels
@@ -79,7 +79,7 @@ router.get('/admin/all', authenticateToken, requireAdmin, (req, res) => {
 });
 
 // Create new carousel
-router.post('/admin', authenticateToken, requireAdmin, (req, res) => {
+router.post('/admin', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { name, title, slides, autoPlay, interval, height, isActive } = req.body;
 
@@ -88,12 +88,12 @@ router.post('/admin', authenticateToken, requireAdmin, (req, res) => {
     }
 
     // Check if carousel with this name already exists
-    const existingCarousel = carouselStore.getByName(name);
+    const existingCarousel = await carouselStore.getByName(name);
     if (existingCarousel) {
       return res.status(400).json({ error: 'Carousel with this name already exists' });
     }
 
-    const newCarousel = carouselStore.add({
+    const newCarousel = await carouselStore.add({
       name,
       title,
       slides: slides || [],
@@ -116,7 +116,7 @@ router.post('/admin', authenticateToken, requireAdmin, (req, res) => {
 });
 
 // Update carousel
-router.put('/admin/:id', authenticateToken, requireAdmin, (req, res) => {
+router.put('/admin/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
@@ -125,7 +125,7 @@ router.put('/admin/:id', authenticateToken, requireAdmin, (req, res) => {
       return res.status(400).json({ error: 'No updates provided' });
     }
 
-    const updatedCarousel = carouselStore.update(id, updates);
+    const updatedCarousel = await carouselStore.update(id, updates);
     if (!updatedCarousel) {
       return res.status(404).json({ error: 'Carousel not found' });
     }
@@ -143,11 +143,11 @@ router.put('/admin/:id', authenticateToken, requireAdmin, (req, res) => {
 });
 
 // Delete carousel
-router.delete('/admin/:id', authenticateToken, requireAdmin, (req, res) => {
+router.delete('/admin/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
 
-    const removed = carouselStore.remove(id);
+    const removed = await carouselStore.remove(id);
     if (!removed) {
       return res.status(404).json({ error: 'Carousel not found' });
     }

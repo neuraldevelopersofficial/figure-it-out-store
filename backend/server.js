@@ -141,6 +141,11 @@ app.listen(PORT, async () => {
   // Connect to database
   try {
     await connectToDatabase();
+    
+    // Initialize stores
+    const carouselStore = require('./store/carouselStore');
+    await carouselStore.init();
+    
   } catch (error) {
     console.error('❌ Failed to connect to database:', error);
     console.log('⚠️  Server will continue with in-memory stores for development');
