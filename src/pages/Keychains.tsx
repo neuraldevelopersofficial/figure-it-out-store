@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Grid3X3, List, Star } from "lucide-react";
+import { Grid3X3, List, Star, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,7 @@ const Keychains = () => {
   const [allKeychains, setAllKeychains] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [keychainCarousel, setKeychainCarousel] = useState<any>(null);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
 
   useEffect(() => {
     (async () => {
@@ -33,7 +34,7 @@ const Keychains = () => {
         // Fetch keychains carousel
         try {
           console.log('Fetching keychains carousel from API...');
-          const carouselResponse = await apiClient.get('/carousels/keychains');
+          const carouselResponse = await apiClient.get(`/carousels/keychains?t=${Date.now()}`);
           console.log('Keychains carousel API response:', carouselResponse);
           if (carouselResponse && carouselResponse.success && carouselResponse.carousel) {
             console.log('✅ Using API keychains carousel data');
@@ -108,6 +109,34 @@ const Keychains = () => {
       }
     })();
   }, []);
+
+  // Refresh carousel data
+  const refreshCarousel = async () => {
+    setRefreshing(true);
+    try {
+      console.log('Refreshing keychains carousel...');
+      const carouselResponse = await apiClient.get(`/carousels/keychains?t=${Date.now()}`);
+      console.log('Refreshed keychains carousel response:', carouselResponse);
+      if (carouselResponse && carouselResponse.success && carouselResponse.carousel) {
+        console.log('✅ Using refreshed keychains carousel data');
+        setKeychainCarousel(carouselResponse.carousel);
+      }
+    } catch (error) {
+      console.error('Failed to refresh keychains carousel:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  // Refresh on page focus
+  useEffect(() => {
+    const handleFocus = () => {
+      refreshCarousel();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
   
   // Use dynamic carousel data or fallback
   const keychainSlides = keychainCarousel?.slides || [];
@@ -162,7 +191,19 @@ const Keychains = () => {
       <Header />
       
       {/* Hero Carousel */}
-      <section className="mb-8">
+      <section className="mb-8 relative">
+        <div className="absolute top-4 right-4 z-10">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refreshCarousel}
+            disabled={refreshing}
+            className="bg-white/90 hover:bg-white shadow-lg"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? 'Refreshing...' : 'Refresh'}
+          </Button>
+        </div>
         <Carousel 
           slides={keychainSlides} 
           height="h-[70vh]"

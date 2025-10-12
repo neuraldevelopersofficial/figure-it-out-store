@@ -35,7 +35,7 @@ const HeroSection = () => {
     const fetchHeroCarousel = async () => {
       try {
         console.log('Fetching hero carousel from API...');
-        const response = await apiClient.get('/carousels/hero');
+        const response = await apiClient.get(`/carousels/hero?t=${Date.now()}`);
         console.log('Hero carousel API response:', response);
         if (response && response.success && response.carousel) {
           console.log('✅ Using API carousel data');
