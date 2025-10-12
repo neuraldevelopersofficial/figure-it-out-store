@@ -848,10 +848,10 @@ const AdminDashboard = () => {
 
     const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault();
-      if (!slideData.image || !slideData.title) {
+      if (!slideData.image) {
         toast({
           title: "Missing Information",
-          description: "Please fill in image and title fields.",
+          description: "Please provide an image for the slide.",
           variant: "destructive"
         });
         return;
@@ -905,14 +905,13 @@ const AdminDashboard = () => {
           {/* Right Column - Slide Details */}
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Title *</label>
+              <label className="block text-sm font-medium mb-1">Title</label>
               <input
                 type="text"
                 value={slideData.title}
                 onChange={(e) => setSlideData(prev => ({ ...prev, title: e.target.value }))}
                 className="w-full p-2 border rounded"
-                placeholder="Slide Title"
-                required
+                placeholder="Slide Title (optional)"
               />
             </div>
             
@@ -922,7 +921,7 @@ const AdminDashboard = () => {
                 value={slideData.subtitle}
                 onChange={(e) => setSlideData(prev => ({ ...prev, subtitle: e.target.value }))}
                 className="w-full p-2 border rounded"
-                placeholder="Slide subtitle or description"
+                placeholder="Slide subtitle or description (optional)"
                 rows={3}
               />
             </div>
@@ -1809,8 +1808,15 @@ const AdminDashboard = () => {
                                   </div>
                                 )}
                               </div>
-                              <h4 className="font-medium text-sm mb-1 truncate" title={slide.title}>{slide.title}</h4>
-                              <p className="text-xs text-gray-600 mb-2 line-clamp-2" title={slide.subtitle}>{slide.subtitle}</p>
+                              {slide.title && (
+                                <h4 className="font-medium text-sm mb-1 truncate" title={slide.title}>{slide.title}</h4>
+                              )}
+                              {slide.subtitle && (
+                                <p className="text-xs text-gray-600 mb-2 line-clamp-2" title={slide.subtitle}>{slide.subtitle}</p>
+                              )}
+                              {!slide.title && !slide.subtitle && (
+                                <p className="text-xs text-gray-500 italic mb-2">Image only banner</p>
+                              )}
                               <div className="flex items-center justify-between">
                                 <Badge variant="outline" className="text-xs">
                                   Order: {slide.order}

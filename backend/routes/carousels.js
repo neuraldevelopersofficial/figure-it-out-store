@@ -169,8 +169,8 @@ router.post('/admin/:id/slides', authenticateToken, requireAdmin, async (req, re
     const { id } = req.params;
     const slideData = req.body;
 
-    if (!slideData.image || !slideData.title) {
-      return res.status(400).json({ error: 'Image and title are required for slides' });
+    if (!slideData.image) {
+      return res.status(400).json({ error: 'Image is required for slides' });
     }
 
     const newSlide = await carouselStore.addSlide(id, slideData);

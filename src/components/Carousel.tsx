@@ -6,7 +6,7 @@ import { FallbackImage } from "@/components/ui/fallback-image";
 interface CarouselSlide {
   id: string;
   image: string;
-  title: string;
+  title?: string;
   subtitle?: string;
   ctaText?: string;
   ctaLink?: string;
@@ -101,7 +101,7 @@ const Carousel = ({
               
               <FallbackImage
                 src={slide.image}
-                alt={slide.title}
+                alt={slide.title || `Slide ${index + 1}`}
                 fallbackSrc="/placeholder-image.png"
                 className={`w-full h-full object-cover transition-opacity duration-500 ${
                   imagesLoaded[index] ? 'opacity-100' : 'opacity-0'
