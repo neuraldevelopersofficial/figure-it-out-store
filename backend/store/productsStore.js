@@ -1652,7 +1652,7 @@ function mapDbProductToApi(doc) {
 // Compatibility functions for backward compatibility
 const add = addProduct;
 const update = updateProduct;
-const delete = deleteProduct;
+const remove = deleteProduct;
 const getAll = getAllProducts;
 const getById = getProductById;
 const getByCategory = getProductsByCategory;
@@ -1682,7 +1682,7 @@ module.exports = {
   // Compatibility aliases
   add,
   update,
-  delete: delete,
+  delete: remove,
   getAll,
   getById,
   getByCategory,
