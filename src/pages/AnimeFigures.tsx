@@ -20,14 +20,108 @@ const AnimeFigures = () => {
 
   const [allFigures, setAllFigures] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [animeFigureCarousel, setAnimeFigureCarousel] = useState<any>(null);
 
   useEffect(() => {
     setIsLoading(true);
     (async () => {
       try {
+        // Fetch anime figures products
         const resp = await apiClient.getProductsByCategory('Anime Figures');
         if (resp && resp.success) {
           setAllFigures(mapApiProducts(resp.products));
+        }
+
+        // Fetch anime figures carousel
+        try {
+          console.log('Fetching anime figures carousel from API...');
+          const carouselResponse = await apiClient.get('/carousels/anime-figures');
+          console.log('Anime figures carousel API response:', carouselResponse);
+          if (carouselResponse && carouselResponse.success && carouselResponse.carousel) {
+            console.log('✅ Using API anime figures carousel data');
+            setAnimeFigureCarousel(carouselResponse.carousel);
+          } else {
+            console.log('⚠️ API response invalid, using fallback carousel');
+            // Fallback to default slides if API fails
+            setAnimeFigureCarousel({
+              id: "fallback",
+              name: "anime-figures",
+              title: "Anime Figures Carousel",
+              slides: [
+                {
+                  id: "1",
+                  image: "/banners/figurine1.jpg?v=2025-01-07-5",
+                  title: "",
+                  subtitle: "",
+                  ctaText: "",
+                  ctaLink: "",
+                  overlay: false,
+                  order: 1
+                },
+                {
+                  id: "2",
+                  image: "/banners/figurine2.jpg?v=2025-01-07-5",
+                  title: "",
+                  subtitle: "",
+                  ctaText: "",
+                  ctaLink: "",
+                  overlay: false,
+                  order: 2
+                },
+                {
+                  id: "3",
+                  image: "/banners/figurine3.jpg?v=2025-01-07-5",
+                  title: "",
+                  subtitle: "",
+                  ctaText: "",
+                  ctaLink: "",
+                  overlay: false,
+                  order: 3
+                }
+              ]
+            });
+          }
+        } catch (error) {
+          console.error('Failed to fetch anime figures carousel:', error);
+          console.log('Using fallback carousel due to error');
+          // Fallback to default slides if API fails
+          setAnimeFigureCarousel({
+            id: "fallback",
+            name: "anime-figures",
+            title: "Anime Figures Carousel",
+            slides: [
+              {
+                id: "1",
+                image: "/banners/figurine1.jpg?v=2025-01-07-5",
+                title: "",
+                subtitle: "",
+                ctaText: "",
+                ctaLink: "",
+                overlay: false,
+                order: 1
+              },
+              {
+                id: "2",
+                image: "/banners/figurine2.jpg?v=2025-01-07-5",
+                title: "",
+                subtitle: "",
+                ctaText: "",
+                ctaLink: "",
+                overlay: false,
+                order: 2
+              },
+              {
+                id: "3",
+                image: "/banners/figurine3.jpg?v=2025-01-07-5",
+                title: "",
+                subtitle: "",
+                ctaText: "",
+                ctaLink: "",
+                overlay: false,
+                order: 3
+              }
+            ]
+          });
         }
       } catch (e) {
         console.error('Failed to load anime figures', e);
@@ -37,36 +131,8 @@ const AnimeFigures = () => {
     })();
   }, []);
   
-  // Carousel slides for Anime Figures page
-  const animeFigureSlides = [
-    {
-      id: "1",
-      image: "/banners/figurine1.jpg?v=2025-01-07-5",
-      title: "",
-      subtitle: "",
-      ctaText: "",
-      ctaLink: "",
-      overlay: false
-    },
-    {
-      id: "2",
-      image: "/banners/figurine2.jpg?v=2025-01-07-5",
-      title: "",
-      subtitle: "",
-      ctaText: "",
-      ctaLink: "",
-      overlay: false
-    },
-    {
-      id: "3",
-      image: "/banners/figurine3.jpg?v=2025-01-07-5",
-      title: "",
-      subtitle: "",
-      ctaText: "",
-      ctaLink: "",
-      overlay: false
-    }
-  ];
+  // Use dynamic carousel data or fallback
+  const animeFigureSlides = animeFigureCarousel?.slides || [];
   
   // Filter and sort products
   let filteredProducts = [...allFigures];

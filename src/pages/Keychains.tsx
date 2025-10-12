@@ -18,14 +18,88 @@ const Keychains = () => {
 
   const [allKeychains, setAllKeychains] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [keychainCarousel, setKeychainCarousel] = useState<any>(null);
 
   useEffect(() => {
     (async () => {
       setLoading(true);
       try {
+        // Fetch keychains products
         const resp = await apiClient.getProductsByCategory('Keychains');
         if (resp && resp.success) {
           setAllKeychains(mapApiProducts(resp.products));
+        }
+
+        // Fetch keychains carousel
+        try {
+          console.log('Fetching keychains carousel from API...');
+          const carouselResponse = await apiClient.get('/carousels/keychains');
+          console.log('Keychains carousel API response:', carouselResponse);
+          if (carouselResponse && carouselResponse.success && carouselResponse.carousel) {
+            console.log('✅ Using API keychains carousel data');
+            setKeychainCarousel(carouselResponse.carousel);
+          } else {
+            console.log('⚠️ API response invalid, using fallback carousel');
+            // Fallback to default slides if API fails
+            setKeychainCarousel({
+              id: "fallback",
+              name: "keychains",
+              title: "Keychains Carousel",
+              slides: [
+                {
+                  id: "1",
+                  image: "/banners/keychain1.jpg?v=2025-01-07-5",
+                  title: "",
+                  subtitle: "",
+                  ctaText: "",
+                  ctaLink: "",
+                  overlay: false,
+                  order: 1
+                },
+                {
+                  id: "2",
+                  image: "/banners/keychain2.jpg?v=2025-01-07-5",
+                  title: "",
+                  subtitle: "",
+                  ctaText: "",
+                  ctaLink: "",
+                  overlay: false,
+                  order: 2
+                }
+              ]
+            });
+          }
+        } catch (error) {
+          console.error('Failed to fetch keychains carousel:', error);
+          console.log('Using fallback carousel due to error');
+          // Fallback to default slides if API fails
+          setKeychainCarousel({
+            id: "fallback",
+            name: "keychains",
+            title: "Keychains Carousel",
+            slides: [
+              {
+                id: "1",
+                image: "/banners/keychain1.jpg?v=2025-01-07-5",
+                title: "",
+                subtitle: "",
+                ctaText: "",
+                ctaLink: "",
+                overlay: false,
+                order: 1
+              },
+              {
+                id: "2",
+                image: "/banners/keychain2.jpg?v=2025-01-07-5",
+                title: "",
+                subtitle: "",
+                ctaText: "",
+                ctaLink: "",
+                overlay: false,
+                order: 2
+              }
+            ]
+          });
         }
       } catch (e) {
         console.error('Failed to load keychains', e);
@@ -35,27 +109,8 @@ const Keychains = () => {
     })();
   }, []);
   
-  // Carousel slides for Keychains page
-  const keychainSlides = [
-    {
-      id: "1",
-      image: "/banners/keychain1.jpg?v=2025-01-07-5",
-      title: "",
-      subtitle: "",
-      ctaText: "",
-      ctaLink: "",
-      overlay: false
-    },
-    {
-      id: "2",
-      image: "/banners/keychain2.jpg?v=2025-01-07-5",
-      title: "",
-      subtitle: "",
-      ctaText: "",
-      ctaLink: "",
-      overlay: false
-    }
-  ];
+  // Use dynamic carousel data or fallback
+  const keychainSlides = keychainCarousel?.slides || [];
   
   // Filter and sort products
   let filteredProducts = [...allKeychains];
