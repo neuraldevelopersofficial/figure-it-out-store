@@ -341,10 +341,6 @@ const ProductDetail = () => {
                 <Shield className="h-4 w-4" />
                 <span>Authentic product guarantee</span>
               </div>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <RotateCcw className="h-4 w-4" />
-                <span>Easy returns within 7 days</span>
-              </div>
             </div>
           </div>
         </div>
