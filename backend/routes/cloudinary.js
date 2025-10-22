@@ -222,8 +222,6 @@ router.post('/upload-drive-url', async (req, res) => {
     }
 
     const directUrl = convertGoogleDriveUrl(url);
-    
-    console.log(`🔄 Converting Google Drive URL: ${url} -> ${directUrl}`);
 
     // Fetch image from Google Drive
     const response = await fetch(directUrl, {
@@ -296,8 +294,6 @@ router.post('/bulk-upload-drive-urls', async (req, res) => {
     if (!urls || !Array.isArray(urls)) {
       return res.status(400).json({ error: 'Array of Google Drive URLs is required' });
     }
-
-    console.log(`🔄 Processing ${urls.length} Google Drive URLs for Cloudinary upload`);
 
     const uploadPromises = urls.map(async (url, index) => {
       try {

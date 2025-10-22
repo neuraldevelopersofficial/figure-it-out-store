@@ -11,12 +11,7 @@ const getApiBaseUrl = () => {
 
 const API_BASE_URL = getApiBaseUrl();
 
-// Log API configuration for debugging
-console.log('🌐 API Configuration:', {
-  baseUrl: API_BASE_URL,
-  hostname: typeof window !== 'undefined' ? window.location.hostname : 'server',
-  environment: typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? 'production' : 'development'
-});
+// API configuration loaded
 
 // API Client
 class ApiClient {
@@ -58,16 +53,6 @@ class ApiClient {
       ...options,
       headers,
     };
-
-    // Add debugging for payment verification requests
-    if (endpoint === '/razorpay/verify-payment') {
-      console.log('🔍 API Request Debug - verify-payment endpoint:');
-      console.log('  URL:', url);
-      console.log('  Method:', config.method);
-      console.log('  Headers:', config.headers);
-      console.log('  Body:', options.body);
-      console.log('  Body parsed:', typeof options.body === 'string' ? JSON.parse(options.body) : options.body);
-    }
 
     try {
       const response = await fetch(url, config);
@@ -162,16 +147,14 @@ class ApiClient {
   }
   
   async updateOrderStatus(orderId: string, status: string, retryCount = 0) {
-    console.log('🔄 Updating order status:', { orderId, status, endpoint: `/orders/${orderId}/status`, retryCount });
     try {
       const response = await this.request(`/orders/${orderId}/status`, {
         method: 'PUT',
         body: JSON.stringify({ status }),
       });
-      console.log('✅ Order status update response:', response);
       return response;
     } catch (error: any) {
-      console.error('❌ Order status update error:', error);
+      console.error('Order status update error:', error);
       
       // Retry logic for network errors
       if (retryCount < 2 && (
@@ -180,7 +163,6 @@ class ApiClient {
         error.message?.includes('503') ||
         error.message?.includes('504')
       )) {
-        console.log(`🔄 Retrying order status update (attempt ${retryCount + 1}/2)...`);
         await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1))); // Exponential backoff
         return this.updateOrderStatus(orderId, status, retryCount + 1);
       }
@@ -190,16 +172,14 @@ class ApiClient {
   }
 
   async updateOrderStatusAdmin(orderId: string, status: string, retryCount = 0) {
-    console.log('🔄 Admin updating order status:', { orderId, status, endpoint: `/admin/orders/${orderId}/status`, retryCount });
     try {
       const response = await this.request(`/admin/orders/${orderId}/status`, {
         method: 'PUT',
         body: JSON.stringify({ status }),
       });
-      console.log('✅ Admin order status update response:', response);
       return response;
     } catch (error: any) {
-      console.error('❌ Admin order status update error:', error);
+      console.error('Admin order status update error:', error);
       
       // Retry logic for network errors
       if (retryCount < 2 && (
@@ -208,7 +188,6 @@ class ApiClient {
         error.message?.includes('503') ||
         error.message?.includes('504')
       )) {
-        console.log(`🔄 Retrying admin order status update (attempt ${retryCount + 1}/2)...`);
         await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1))); // Exponential backoff
         return this.updateOrderStatusAdmin(orderId, status, retryCount + 1);
       }
@@ -218,30 +197,26 @@ class ApiClient {
   }
 
   async deleteOrderAdmin(orderId: string) {
-    console.log('🔄 Admin deleting order:', { orderId, endpoint: `/admin/orders/${orderId}` });
     try {
       const response = await this.request(`/admin/orders/${orderId}`, {
         method: 'DELETE',
       });
-      console.log('✅ Admin order deletion response:', response);
       return response;
     } catch (error: any) {
-      console.error('❌ Admin order deletion error:', error);
+      console.error('Admin order deletion error:', error);
       throw error;
     }
   }
 
   async bulkDeleteOrdersAdmin(orderIds: string[]) {
-    console.log('🔄 Admin bulk deleting orders:', { orderIds, endpoint: `/admin/orders` });
     try {
       const response = await this.request(`/admin/orders`, {
         method: 'DELETE',
         body: JSON.stringify({ orderIds }),
       });
-      console.log('✅ Admin bulk order deletion response:', response);
       return response;
     } catch (error: any) {
-      console.error('❌ Admin bulk order deletion error:', error);
+      console.error('Admin bulk order deletion error:', error);
       throw error;
     }
   }
@@ -272,41 +247,19 @@ class ApiClient {
   }
 
   async createProduct(productData: any) {
-    console.log('🔍 API Client - Creating product:', { productName: productData.name, productData });
-    
     const response = await this.request('/admin/products', {
       method: 'POST',
       body: JSON.stringify(productData),
     });
     
-    console.log('🔍 API Client - Create product response:', response);
-    
-    // Debug: Log successful product creation
-    if (response && response.success) {
-      console.log('✅ Product created successfully:', { productName: productData.name, response });
-    } else {
-      console.log('❌ Product creation failed:', { productName: productData.name, response });
-    }
-    
     return response;
   }
 
   async updateProduct(id: string, productData: any) {
-    console.log('🔍 API Client - Updating product:', { id, productName: productData.name, productData });
-    
     const response = await this.request(`/admin/products/${id}`, {
       method: 'PUT',
       body: JSON.stringify(productData),
     });
-    
-    console.log('🔍 API Client - Update product response:', response);
-    
-    // Debug: Log successful product updates
-    if (response && response.success) {
-      console.log('✅ Product updated successfully:', { id, productName: productData.name, response });
-    } else {
-      console.log('❌ Product update failed:', { id, productName: productData.name, response });
-    }
     
     return response;
   }

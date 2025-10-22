@@ -108,7 +108,6 @@ router.get('/image-proxy', async (req, res) => {
 
     // For Cloudinary images, redirect directly (no proxy needed)
     if (url.includes('cloudinary.com')) {
-      console.log(`☁️ Redirecting to Cloudinary image: ${url}`);
       return res.redirect(url);
     }
 
@@ -147,9 +146,6 @@ router.get('/image-proxy', async (req, res) => {
 
     const directUrl = convertGoogleDriveUrl(url);
     
-    console.log(`🖼️ Image proxy: Converting "${url}" to "${directUrl}"`);
-    console.log(`🖼️ Image proxy: URL length - Original: ${url.length}, Converted: ${directUrl.length}`);
-    
     // Set timeout for fetch to avoid hanging requests
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
@@ -167,8 +163,6 @@ router.get('/image-proxy', async (req, res) => {
       });
       
       clearTimeout(timeoutId);
-      
-      console.log(`🖼️ Image proxy: Response status ${response.status} for ${directUrl}`);
       
       if (!response.ok) {
         console.error(`❌ Image proxy failed: ${response.status} - ${response.statusText}`);
@@ -267,17 +261,7 @@ router.get('/category/:category', async (req, res) => {
         ]
       }).toArray();
       
-      console.log(`Found ${docs.length} products for category: ${category}`);
-      if (docs.length === 0) {
-        // Log the first few products to help debug category issues
-        const sampleDocs = await col.find({}).limit(5).toArray();
-        console.log('Sample products in database:', sampleDocs.map(d => ({ 
-          id: d._id || d.id, 
-          name: d.name, 
-          category: d.category, 
-          category_slug: d.category_slug 
-        })));
-      }
+      // Category filter applied
       
       const products = docs.map(mapDbProductToApi);
       return res.json({ success: true, products, category });
@@ -324,7 +308,6 @@ router.get('/search', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    console.log(`🔍 Fetching product with ID: ${id}`);
     
     const col = await getProductsCollection();
     if (col) {
@@ -337,33 +320,26 @@ router.get('/:id', async (req, res) => {
         query.$or.push({ _id: new ObjectId(id) });
       }
       
-      console.log(`🔍 MongoDB query: ${JSON.stringify(query)}`);
       const doc = await col.findOne(query);
       
       if (!doc) {
-        console.log(`❌ MongoDB: No product found with ID ${id}`);
         // Try fallback to in-memory store
         const fallbackProduct = store.getById(id);
         if (fallbackProduct) {
-          console.log(`✅ In-memory store: Found product with ID ${id}`);
           return res.json({ success: true, product: fallbackProduct });
         }
         return res.status(404).json({ error: 'Product not found' });
       }
       
       const product = mapDbProductToApi(doc);
-      console.log(`✅ MongoDB: Found product ${product.name} with ID ${id}`);
       return res.json({ success: true, product });
     }
     
     // Fallback to in-memory store if no MongoDB
-    console.log(`🔍 Trying in-memory store for product ID: ${id}`);
     const product = store.getById(id);
     if (!product) {
-      console.log(`❌ In-memory store: No product found with ID ${id}`);
       return res.status(404).json({ error: 'Product not found' });
     }
-    console.log(`✅ In-memory store: Found product ${product.name} with ID ${id}`);
     res.json({ success: true, product });
   } catch (error) {
     console.error('❌ Error fetching product by ID:', error);

@@ -211,57 +211,35 @@ router.put('/orders/:id/status', authenticateToken, requireAdmin, async (req, re
       return res.status(400).json({ error: 'Status is required' });
     }
 
-    console.log('Admin updating order status:', { order_id: id, new_status: status, admin_id: req.user.id });
-
     // Check if COLLECTIONS.ORDERS is defined
     if (!COLLECTIONS.ORDERS) {
-      console.error('❌ COLLECTIONS.ORDERS is not defined');
+      console.error('COLLECTIONS.ORDERS is not defined');
       return res.status(500).json({ error: 'Orders collection configuration not available' });
     }
 
-    console.log('🔍 Getting orders collection:', COLLECTIONS.ORDERS);
     const ordersCollection = await getCollection(COLLECTIONS.ORDERS);
     
     if (ordersCollection) {
-      console.log('✅ Orders collection obtained successfully');
-      
       // First, let's check if the order exists
       const existingOrder = await ordersCollection.findOne({ id: id });
-      console.log('🔍 Admin order lookup result:', { 
-        order_id: id, 
-        found: !!existingOrder,
-        order_user_id: existingOrder?.user_id || existingOrder?.userId,
-        admin_id: req.user.id
-      });
       
       if (!existingOrder) {
-        console.log('❌ Order not found in database for admin update:', { order_id: id, admin_id: req.user.id });
         return res.status(404).json({ error: 'Order not found' });
       }
       
       // Update the order status (no user restrictions for admin)
-      console.log('🔄 Updating order status in database...');
       const result = await ordersCollection.findOneAndUpdate(
         { id: id },
         { $set: { status, updated_at: new Date().toISOString() } },
         { returnOriginal: false }
       );
       
-      console.log('🔍 Update result:', { 
-        success: !!result, 
-        hasValue: !!result?.value,
-        resultValue: result?.value ? 'present' : 'missing'
-      });
-      
       if (!result || !result.value) {
-        console.log('❌ Failed to update order status in database:', { order_id: id, admin_id: req.user.id });
         return res.status(500).json({ error: 'Failed to update order status' });
       }
       
-      console.log('✅ Admin order status updated in database:', { order_id: id, new_status: status });
       return res.json({ success: true, message: 'Order status updated successfully', order: result.value });
     } else {
-      console.log('⚠️ Database not available, using in-memory orders store');
       
       // Fallback to in-memory storage
       const ordersStore = require('../store/ordersStore');
