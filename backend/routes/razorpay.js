@@ -3,18 +3,32 @@ const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const router = express.Router();
 
-// Initialize Razorpay
-if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-  console.error('❌ Razorpay credentials not configured in environment variables');
+// Initialize Razorpay only if credentials are available
+let razorpay = null;
+
+if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+  razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET
+  });
+  console.log('✅ Razorpay initialized successfully');
+} else {
+  console.warn('⚠️ Razorpay credentials not configured - payment routes will be disabled');
 }
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET
-});
+// Middleware to check if Razorpay is initialized
+const requireRazorpay = (req, res, next) => {
+  if (!razorpay) {
+    return res.status(503).json({ 
+      error: 'Payment service not configured',
+      message: 'Razorpay credentials are not set up. Please contact support.'
+    });
+  }
+  next();
+};
 
 // Create order
-router.post('/create-order', async (req, res) => {
+router.post('/create-order', requireRazorpay, async (req, res) => {
   try {
     const { amount, currency = 'INR' } = req.body;
 
@@ -42,7 +56,7 @@ router.post('/create-order', async (req, res) => {
 });
 
 // Verify payment
-router.post('/verify-payment', async (req, res) => {
+router.post('/verify-payment', requireRazorpay, async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
