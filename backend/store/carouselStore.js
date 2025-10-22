@@ -213,6 +213,7 @@ async function getAll() {
     const collection = await getCarouselsCollection();
     if (collection) {
       const docs = await collection.find({}).toArray();
+      console.log('📦 [Store] getAll carousels from DB:', docs.length);
       return docs;
     }
   } catch (e) {
@@ -220,6 +221,7 @@ async function getAll() {
   }
   
   // Fallback to in-memory store
+  console.log('📦 [Store] getAll carousels from memory:', carousels.length);
   return carousels;
 }
 
@@ -228,6 +230,7 @@ async function getById(id) {
     const collection = await getCarouselsCollection();
     if (collection) {
       const doc = await collection.findOne({ id: id });
+      console.log('📦 [Store] getById from DB:', { id, found: !!doc });
       return doc;
     }
   } catch (e) {
@@ -235,7 +238,9 @@ async function getById(id) {
   }
   
   // Fallback to in-memory store
-  return carousels.find(c => c.id === id);
+  const mem = carousels.find(c => c.id === id);
+  console.log('📦 [Store] getById from memory:', { id, found: !!mem });
+  return mem;
 }
 
 async function getByName(name) {
@@ -243,6 +248,7 @@ async function getByName(name) {
     const collection = await getCarouselsCollection();
     if (collection) {
       const doc = await collection.findOne({ name: name });
+      console.log('📦 [Store] getByName from DB:', { name, found: !!doc });
       return doc;
     }
   } catch (e) {
@@ -250,7 +256,9 @@ async function getByName(name) {
   }
   
   // Fallback to in-memory store
-  return carousels.find(c => c.name === name);
+  const mem = carousels.find(c => c.name === name);
+  console.log('📦 [Store] getByName from memory:', { name, found: !!mem });
+  return mem;
 }
 
 async function getActive() {
@@ -258,6 +266,7 @@ async function getActive() {
     const collection = await getCarouselsCollection();
     if (collection) {
       const docs = await collection.find({ isActive: true }).toArray();
+      console.log('📦 [Store] getActive from DB:', docs.length);
       return docs;
     }
   } catch (e) {
@@ -265,7 +274,9 @@ async function getActive() {
   }
   
   // Fallback to in-memory store
-  return carousels.filter(c => c.isActive);
+  const mem = carousels.filter(c => c.isActive);
+  console.log('📦 [Store] getActive from memory:', mem.length);
+  return mem;
 }
 
 async function add(carouselData) {
@@ -298,6 +309,7 @@ async function add(carouselData) {
 
   // Fallback to in-memory store
   carousels.push(newCarousel);
+  console.log('✅ Carousel saved to memory:', newCarousel.name);
   return newCarousel;
 }
 
@@ -335,6 +347,7 @@ async function update(id, updates) {
     updated_at: nowIso()
   };
 
+  console.log('✅ Carousel updated in memory:', id);
   return carousels[index];
 }
 
@@ -357,6 +370,7 @@ async function remove(id) {
   if (index === -1) return false;
 
   carousels.splice(index, 1);
+  console.log('✅ Carousel deleted from memory:', id);
   return true;
 }
 
@@ -386,12 +400,13 @@ async function addSlide(carouselId, slideData) {
   // Add slide to carousel
   carousel.slides.push(newSlide);
   carousel.updated_at = nowIso();
+  console.log('🖼️  [Store] addSlide:', { carouselId, slideId, image: newSlide.image, totalSlides: carousel.slides.length });
   
-  // Update carousel in database
+  // Update carousel in database AND in-memory store
   try {
     const collection = await getCarouselsCollection();
     if (collection) {
-      await collection.updateOne(
+      const result = await collection.updateOne(
         { id: carouselId },
         { 
           $set: { 
@@ -400,10 +415,32 @@ async function addSlide(carouselId, slideData) {
           }
         }
       );
-      console.log('✅ Slide added to carousel in database:', carouselId);
+      console.log('✅ Slide added to carousel in database:', { carouselId, matched: result.matchedCount, modified: result.modifiedCount });
+      
+      if (result.matchedCount === 0) {
+        console.warn('⚠️ No carousel found in DB with id:', carouselId, '- updating memory instead');
+        const memIndex = carousels.findIndex(c => c.id === carouselId);
+        if (memIndex !== -1) {
+          carousels[memIndex] = carousel;
+          console.log('✅ Slide added to carousel in memory (no DB match):', carouselId);
+        }
+      }
+    } else {
+      // If no DB, update in-memory store
+      const memIndex = carousels.findIndex(c => c.id === carouselId);
+      if (memIndex !== -1) {
+        carousels[memIndex] = carousel;
+        console.log('✅ Slide added to carousel in memory:', carouselId);
+      }
     }
   } catch (e) {
     console.error('Error updating carousel in database:', e);
+    // Fallback to memory update
+    const memIndex = carousels.findIndex(c => c.id === carouselId);
+    if (memIndex !== -1) {
+      carousels[memIndex] = carousel;
+      console.log('✅ Slide added to carousel in memory (fallback):', carouselId);
+    }
   }
   
   return newSlide;
@@ -427,12 +464,13 @@ async function updateSlide(carouselId, slideId, updates) {
   };
 
   carousel.updated_at = nowIso();
+  console.log('🖼️  [Store] updateSlide:', { carouselId, slideId, image: carousel.slides[slideIndex].image });
   
-  // Update carousel in database
+  // Update carousel in database AND in-memory store
   try {
     const collection = await getCarouselsCollection();
     if (collection) {
-      await collection.updateOne(
+      const result = await collection.updateOne(
         { id: carouselId },
         { 
           $set: { 
@@ -441,10 +479,32 @@ async function updateSlide(carouselId, slideId, updates) {
           }
         }
       );
-      console.log('✅ Slide updated in carousel database:', carouselId);
+      console.log('✅ Slide updated in carousel database:', { carouselId, matched: result.matchedCount, modified: result.modifiedCount });
+      
+      if (result.matchedCount === 0) {
+        console.warn('⚠️ No carousel found in DB with id:', carouselId, '- updating memory instead');
+        const memIndex = carousels.findIndex(c => c.id === carouselId);
+        if (memIndex !== -1) {
+          carousels[memIndex] = carousel;
+          console.log('✅ Slide updated in carousel in memory (no DB match):', carouselId);
+        }
+      }
+    } else {
+      // If no DB, update in-memory store
+      const memIndex = carousels.findIndex(c => c.id === carouselId);
+      if (memIndex !== -1) {
+        carousels[memIndex] = carousel;
+        console.log('✅ Slide updated in carousel in memory:', carouselId);
+      }
     }
   } catch (e) {
     console.error('Error updating carousel in database:', e);
+    // Fallback to memory update
+    const memIndex = carousels.findIndex(c => c.id === carouselId);
+    if (memIndex !== -1) {
+      carousels[memIndex] = carousel;
+      console.log('✅ Slide updated in carousel in memory (fallback):', carouselId);
+    }
   }
   
   return carousel.slides[slideIndex];
@@ -459,17 +519,18 @@ async function removeSlide(carouselId, slideId) {
 
   carousel.slides.splice(slideIndex, 1);
   carousel.updated_at = nowIso();
+  console.log('🖼️  [Store] removeSlide:', { carouselId, slideId, totalSlides: carousel.slides.length });
   
   // Reorder remaining slides
   carousel.slides.forEach((slide, index) => {
     slide.order = index + 1;
   });
 
-  // Update carousel in database
+  // Update carousel in database AND in-memory store
   try {
     const collection = await getCarouselsCollection();
     if (collection) {
-      await collection.updateOne(
+      const result = await collection.updateOne(
         { id: carouselId },
         { 
           $set: { 
@@ -478,10 +539,32 @@ async function removeSlide(carouselId, slideId) {
           }
         }
       );
-      console.log('✅ Slide removed from carousel database:', carouselId);
+      console.log('✅ Slide removed from carousel database:', { carouselId, matched: result.matchedCount, modified: result.modifiedCount });
+      
+      if (result.matchedCount === 0) {
+        console.warn('⚠️ No carousel found in DB with id:', carouselId, '- updating memory instead');
+        const memIndex = carousels.findIndex(c => c.id === carouselId);
+        if (memIndex !== -1) {
+          carousels[memIndex] = carousel;
+          console.log('✅ Slide removed from carousel in memory (no DB match):', carouselId);
+        }
+      }
+    } else {
+      // If no DB, update in-memory store
+      const memIndex = carousels.findIndex(c => c.id === carouselId);
+      if (memIndex !== -1) {
+        carousels[memIndex] = carousel;
+        console.log('✅ Slide removed from carousel in memory:', carouselId);
+      }
     }
   } catch (e) {
     console.error('Error updating carousel in database:', e);
+    // Fallback to memory update
+    const memIndex = carousels.findIndex(c => c.id === carouselId);
+    if (memIndex !== -1) {
+      carousels[memIndex] = carousel;
+      console.log('✅ Slide removed from carousel in memory (fallback):', carouselId);
+    }
   }
 
   return true;
@@ -507,12 +590,13 @@ async function reorderSlides(carouselId, slideIds) {
   // Sort slides by new order
   carousel.slides.sort((a, b) => a.order - b.order);
   carousel.updated_at = nowIso();
+  console.log('🖼️  [Store] reorderSlides:', { carouselId, slideIdsCount: slideIds.length });
 
-  // Update carousel in database
+  // Update carousel in database AND in-memory store
   try {
     const collection = await getCarouselsCollection();
     if (collection) {
-      await collection.updateOne(
+      const result = await collection.updateOne(
         { id: carouselId },
         { 
           $set: { 
@@ -521,10 +605,32 @@ async function reorderSlides(carouselId, slideIds) {
           }
         }
       );
-      console.log('✅ Slides reordered in carousel database:', carouselId);
+      console.log('✅ Slides reordered in carousel database:', { carouselId, matched: result.matchedCount, modified: result.modifiedCount });
+      
+      if (result.matchedCount === 0) {
+        console.warn('⚠️ No carousel found in DB with id:', carouselId, '- updating memory instead');
+        const memIndex = carousels.findIndex(c => c.id === carouselId);
+        if (memIndex !== -1) {
+          carousels[memIndex] = carousel;
+          console.log('✅ Slides reordered in carousel in memory (no DB match):', carouselId);
+        }
+      }
+    } else {
+      // If no DB, update in-memory store
+      const memIndex = carousels.findIndex(c => c.id === carouselId);
+      if (memIndex !== -1) {
+        carousels[memIndex] = carousel;
+        console.log('✅ Slides reordered in carousel in memory:', carouselId);
+      }
     }
   } catch (e) {
     console.error('Error updating carousel in database:', e);
+    // Fallback to memory update
+    const memIndex = carousels.findIndex(c => c.id === carouselId);
+    if (memIndex !== -1) {
+      carousels[memIndex] = carousel;
+      console.log('✅ Slides reordered in carousel in memory (fallback):', carouselId);
+    }
   }
 
   return true;

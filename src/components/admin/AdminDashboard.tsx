@@ -150,7 +150,10 @@ const AdminDashboard = () => {
       try {
         console.log('🔍 AdminDashboard - Fetching carousels...');
         const carouselResponse = await apiClient.get('/carousels/admin/all');
-        console.log('🔍 AdminDashboard - Carousel response:', carouselResponse);
+        console.log('🔍 AdminDashboard - Carousel response meta:', { success: carouselResponse?.success, count: carouselResponse?.carousels?.length });
+        if (carouselResponse?.carousels) {
+          console.log('🧾 AdminDashboard - First carousel preview:', carouselResponse.carousels[0]?.name, carouselResponse.carousels[0]?.slides?.map((s: any) => s.image));
+        }
         if (carouselResponse.success) {
           setCarousels(carouselResponse.carousels || []);
           console.log('🔍 AdminDashboard - Set carousels:', carouselResponse.carousels?.length || 0);
@@ -756,7 +759,7 @@ const AdminDashboard = () => {
         method: 'PUT',
         body: JSON.stringify(updates)
       });
-      console.log('Carousel update response:', response);
+      console.log('✏️  AdminDashboard - Carousel update response:', { success: response?.success, id: response?.carousel?.id });
       
       if (response.success) {
         toast({
@@ -789,7 +792,7 @@ const AdminDashboard = () => {
         method: 'POST',
         body: JSON.stringify(slideData)
       });
-      console.log('🔍 Slide addition response:', response);
+      console.log('🖼️  AdminDashboard - Add slide response:', { success: response?.success, slideId: response?.slide?.id, image: response?.slide?.image });
       
       if (response.success) {
         toast({
