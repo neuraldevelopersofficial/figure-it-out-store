@@ -41,12 +41,6 @@ const Footer = () => {
                 </div>
                 <span className="text-xs text-gray-700">COD Available</span>
               </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                  <RotateCcw className="h-2 w-2 text-white" />
-                </div>
-                <span className="text-xs text-gray-700">30 Days Returns</span>
-              </div>
             </div>
           </div>
 
