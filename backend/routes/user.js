@@ -25,7 +25,7 @@ const authenticateToken = (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
     next();
   } catch (error) {
@@ -77,8 +77,6 @@ router.put('/profile', authenticateToken, async (req, res) => {
 // Get user orders
 router.get('/orders', authenticateToken, async (req, res) => {
   try {
-    console.log('Fetching orders for user via user route:', { user_id: req.user.id });
-    
     // Use the same logic as the orders route
     const { getCollection, COLLECTIONS } = require('../config/database');
     
@@ -94,7 +92,6 @@ router.get('/orders', authenticateToken, async (req, res) => {
     
     const col = await getOrdersCollection();
     if (!col) {
-      console.log('⚠️ Database not available, using in-memory orders');
       const orders = ordersStore.getOrdersByUserId(req.user.id);
       return res.json({
         success: true,
@@ -112,19 +109,17 @@ router.get('/orders', authenticateToken, async (req, res) => {
         ]
       }).sort({ created_at: -1 }).toArray();
     } catch (dbError) {
-      console.error('❌ Database query error:', dbError);
+      console.error('Database query error');
       // Fallback to in-memory orders
       userOrders = ordersStore.getOrdersByUserId(req.user.id);
     }
-    
-    console.log('✅ Found orders for user via user route:', { user_id: req.user.id, count: userOrders.length });
     
     res.json({
       success: true,
       orders: userOrders
     });
   } catch (error) {
-    console.error('Orders fetch error:', error);
+    console.error('Orders fetch error');
     res.status(500).json({ error: 'Failed to fetch orders' });
   }
 });
@@ -163,8 +158,6 @@ router.get('/orders/:orderId/invoice', authenticateToken, async (req, res) => {
   try {
     const { orderId } = req.params;
     
-    console.log('Generating invoice for order via user route:', { order_id: orderId, user_id: req.user.id });
-    
     // Use the same logic as the orders route
     const { getCollection, COLLECTIONS } = require('../config/database');
     
@@ -198,7 +191,6 @@ router.get('/orders/:orderId/invoice', authenticateToken, async (req, res) => {
     }
     
     if (!order) {
-      console.log('❌ Order not found for invoice generation:', { order_id: orderId, user_id: req.user.id });
       return res.status(404).json({ error: 'Order not found' });
     }
 
@@ -240,21 +232,12 @@ router.get('/orders/:orderId/invoice', authenticateToken, async (req, res) => {
       status: order.status
     };
     
-    console.log('✅ Invoice generated successfully via user route:', { 
-      order_id: orderId,
-      subtotal,
-      shipping,
-      tax,
-      calculatedTotal,
-      orderTotal: order.total_amount || order.totalAmount,
-      finalTotal: total
-    });
     res.json({
       success: true,
       invoice
     });
   } catch (error) {
-    console.error('❌ Invoice generation error:', error);
+    console.error('Invoice generation error');
     res.status(500).json({ error: 'Failed to generate invoice' });
   }
 });
@@ -360,7 +343,6 @@ router.get('/addresses', authenticateToken, async (req, res) => {
 router.post('/addresses', authenticateToken, async (req, res) => {
   try {
     const addressData = req.body;
-    console.log('Received address data:', addressData);
     
     // Validate required fields
     const missingFields = [];
@@ -371,8 +353,7 @@ router.post('/addresses', authenticateToken, async (req, res) => {
     
     if (missingFields.length > 0) {
       return res.status(400).json({ 
-        error: `Missing required fields: ${missingFields.join(', ')}`,
-        received: addressData
+        error: `Missing required fields: ${missingFields.join(', ')}`
       });
     }
     
@@ -415,11 +396,9 @@ router.post('/addresses', authenticateToken, async (req, res) => {
     
     res.status(201).json({ success: true, message: 'Address added successfully', address: newAddress });
   } catch (error) {
-    console.error('Address creation error:', error);
+    console.error('Address creation error');
     res.status(500).json({ 
-      error: 'Failed to add address', 
-      message: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      error: 'Failed to add address'
     });
   }
 });

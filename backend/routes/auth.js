@@ -7,6 +7,11 @@ const { getDatabase, getCollection, COLLECTIONS } = require('../config/database'
 
 const userStore = require('../store/userStore');
 
+// Validate JWT secret is configured
+if (!process.env.JWT_SECRET) {
+  console.error('❌ JWT_SECRET not configured in environment variables - authentication will fail');
+}
+
 async function getUsersCollection() {
   try {
     const db = await getDatabase();
@@ -50,7 +55,6 @@ const initializeAdmin = () => {
       }
     }).catch(() => {});
     console.log('🔐 Admin user created:', adminEmail);
-    console.log('🔑 Admin password:', adminPassword);
   } else {
     console.log('ℹ️ Admin user already exists:', adminEmail);
   }
@@ -68,7 +72,7 @@ const authenticateToken = (req, res, next) => {
     return res.status(401).json({ error: 'Access token required' });
   }
 
-  jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key', (err, user) => {
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
     if (err) {
       return res.status(403).json({ error: 'Invalid or expired token' });
     }
@@ -137,7 +141,7 @@ router.post('/signup', async (req, res) => {
     // Generate JWT token
     const token = jwt.sign(
       { id: newUser.id, email: newUser.email, role: newUser.role },
-      process.env.JWT_SECRET || 'your-secret-key',
+      process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 
@@ -182,7 +186,7 @@ router.post('/login', async (req, res) => {
     // Generate JWT token
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET || 'your-secret-key',
+      process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 
@@ -308,24 +312,8 @@ router.put('/change-password', authenticateToken, async (req, res) => {
   }
 });
 
-// Get admin credentials (for setup)
-router.get('/admin-setup', (req, res) => {
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@figureitout.in';
-  const adminUser = userStore.getUserByEmail(adminEmail);
-
-  if (adminUser) {
-    res.json({
-      success: true,
-      admin_email: adminUser.email,
-      admin_password: process.env.ADMIN_PASSWORD || 'admin123456',
-      message: 'Admin user is already set up'
-    });
-  } else {
-    res.json({
-      success: false,
-      message: 'Admin user not found'
-    });
-  }
-});
+// Admin setup endpoint - DISABLED for security
+// This endpoint has been removed to prevent credential exposure
+// Admin credentials should only be accessed via secure environment variables
 
 module.exports = router;
