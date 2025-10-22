@@ -36,7 +36,6 @@ const Carousel = ({
   useEffect(() => {
     // Initialize images loaded state
     setImagesLoaded(new Array(slides.length).fill(false));
-    console.log('🖼️ Carousel received slides:', slides.map(s => s.image));
   }, [slides.length]);
 
   useEffect(() => {
@@ -109,7 +108,6 @@ const Carousel = ({
                 }`}
                 onLoad={() => handleImageLoad(index)}
                 onError={() => {
-                  console.error('🛑 Carousel image failed to load:', { src: slide.image });
                   handleImageLoad(index);
                 }}
                 debug={true}

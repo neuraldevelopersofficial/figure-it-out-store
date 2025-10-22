@@ -50,10 +50,6 @@ router.get('/', async (req, res) => {
 router.get('/admin/all', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const carousels = await carouselStore.getAll();
-    console.log('🔍 [Admin] Fetch all carousels:', {
-      user: req.user?.email,
-      count: Array.isArray(carousels) ? carousels.length : 0
-    });
     res.json({
       success: true,
       carousels
@@ -68,7 +64,6 @@ router.get('/admin/all', authenticateToken, requireAdmin, async (req, res) => {
 router.post('/admin', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { name, title, slides, autoPlay, interval, height, isActive } = req.body;
-    console.log('🆕 [Admin] Create carousel request:', { name, title, slidesCount: Array.isArray(slides) ? slides.length : 0, autoPlay, interval, height, isActive });
 
     if (!name || !title) {
       return res.status(400).json({ error: 'Name and title are required' });
@@ -95,7 +90,6 @@ router.post('/admin', authenticateToken, requireAdmin, async (req, res) => {
       message: 'Carousel created successfully',
       carousel: newCarousel
     });
-    console.log('✅ [Admin] Carousel created:', { id: newCarousel?.id, name: newCarousel?.name, slides: newCarousel?.slides?.length });
 
   } catch (error) {
     console.error('Carousel creation error:', error);
@@ -108,7 +102,6 @@ router.put('/admin/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
-    console.log('✏️  [Admin] Update carousel request:', { id, updatesKeys: Object.keys(updates || {}) });
 
     if (!updates || Object.keys(updates).length === 0) {
       return res.status(400).json({ error: 'No updates provided' });
@@ -124,7 +117,6 @@ router.put('/admin/:id', authenticateToken, requireAdmin, async (req, res) => {
       message: 'Carousel updated successfully',
       carousel: updatedCarousel
     });
-    console.log('✅ [Admin] Carousel updated:', { id: updatedCarousel?.id, slides: updatedCarousel?.slides?.length });
 
   } catch (error) {
     console.error('Carousel update error:', error);
@@ -136,7 +128,6 @@ router.put('/admin/:id', authenticateToken, requireAdmin, async (req, res) => {
 router.delete('/admin/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    console.log('🗑️  [Admin] Delete carousel request:', { id });
 
     const removed = await carouselStore.remove(id);
     if (!removed) {
@@ -147,7 +138,6 @@ router.delete('/admin/:id', authenticateToken, requireAdmin, async (req, res) =>
       success: true,
       message: 'Carousel deleted successfully'
     });
-    console.log('✅ [Admin] Carousel deleted:', { id });
 
   } catch (error) {
     console.error('Carousel deletion error:', error);
@@ -160,7 +150,6 @@ router.post('/admin/:id/slides', authenticateToken, requireAdmin, async (req, re
   try {
     const { id } = req.params;
     const slideData = req.body;
-    console.log('🖼️  [Admin] Add slide request:', { carouselId: id, image: slideData?.image, title: slideData?.title });
 
     if (!slideData.image) {
       return res.status(400).json({ error: 'Image is required for slides' });
@@ -176,7 +165,6 @@ router.post('/admin/:id/slides', authenticateToken, requireAdmin, async (req, re
       message: 'Slide added successfully',
       slide: newSlide
     });
-    console.log('✅ [Admin] Slide added:', { carouselId: id, slideId: newSlide?.id, image: newSlide?.image });
 
   } catch (error) {
     console.error('Slide addition error:', error);
@@ -189,7 +177,6 @@ router.put('/admin/:id/slides/:slideId', authenticateToken, requireAdmin, async 
   try {
     const { id, slideId } = req.params;
     const updates = req.body;
-    console.log('✏️  [Admin] Update slide request:', { carouselId: id, slideId, updatesKeys: Object.keys(updates || {}) });
 
     if (!updates || Object.keys(updates).length === 0) {
       return res.status(400).json({ error: 'No updates provided' });
@@ -205,7 +192,6 @@ router.put('/admin/:id/slides/:slideId', authenticateToken, requireAdmin, async 
       message: 'Slide updated successfully',
       slide: updatedSlide
     });
-    console.log('✅ [Admin] Slide updated:', { carouselId: id, slideId: updatedSlide?.id, image: updatedSlide?.image });
 
   } catch (error) {
     console.error('Slide update error:', error);
@@ -217,7 +203,6 @@ router.put('/admin/:id/slides/:slideId', authenticateToken, requireAdmin, async 
 router.delete('/admin/:id/slides/:slideId', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { id, slideId } = req.params;
-    console.log('🗑️  [Admin] Delete slide request:', { carouselId: id, slideId });
 
     const removed = await carouselStore.removeSlide(id, slideId);
     if (!removed) {
@@ -228,7 +213,6 @@ router.delete('/admin/:id/slides/:slideId', authenticateToken, requireAdmin, asy
       success: true,
       message: 'Slide deleted successfully'
     });
-    console.log('✅ [Admin] Slide deleted:', { carouselId: id, slideId });
 
   } catch (error) {
     console.error('Slide deletion error:', error);
@@ -241,7 +225,6 @@ router.post('/admin/:id/slides/reorder', authenticateToken, requireAdmin, async 
   try {
     const { id } = req.params;
     const { slideIds } = req.body;
-    console.log('🔀 [Admin] Reorder slides request:', { carouselId: id, slideIdsCount: Array.isArray(slideIds) ? slideIds.length : 0 });
 
     if (!slideIds || !Array.isArray(slideIds)) {
       return res.status(400).json({ error: 'Slide IDs array is required' });
@@ -256,7 +239,6 @@ router.post('/admin/:id/slides/reorder', authenticateToken, requireAdmin, async 
       success: true,
       message: 'Slides reordered successfully'
     });
-    console.log('✅ [Admin] Slides reordered:', { carouselId: id });
 
   } catch (error) {
     console.error('Slide reorder error:', error);
@@ -268,7 +250,6 @@ router.post('/admin/:id/slides/reorder', authenticateToken, requireAdmin, async 
 router.get('/:name', async (req, res) => {
   try {
     const { name } = req.params;
-    console.log('🔎 Public carousel fetch:', { name });
     const carousel = await carouselStore.getByName(name);
     
     if (!carousel) {
@@ -279,7 +260,6 @@ router.get('/:name', async (req, res) => {
       success: true,
       carousel
     });
-    console.log('✅ Public carousel served:', { name, slides: carousel?.slides?.length, isActive: carousel?.isActive });
   } catch (error) {
     console.error('Carousel fetch error:', error);
     res.status(500).json({ error: 'Failed to fetch carousel' });

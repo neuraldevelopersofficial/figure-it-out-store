@@ -148,20 +148,12 @@ const AdminDashboard = () => {
       
       // Fetch carousels
       try {
-        console.log('🔍 AdminDashboard - Fetching carousels...');
         const carouselResponse = await apiClient.get('/carousels/admin/all');
-        console.log('🔍 AdminDashboard - Carousel response meta:', { success: carouselResponse?.success, count: carouselResponse?.carousels?.length });
-        if (carouselResponse?.carousels) {
-          console.log('🧾 AdminDashboard - First carousel preview:', carouselResponse.carousels[0]?.name, carouselResponse.carousels[0]?.slides?.map((s: any) => s.image));
-        }
         if (carouselResponse.success) {
           setCarousels(carouselResponse.carousels || []);
-          console.log('🔍 AdminDashboard - Set carousels:', carouselResponse.carousels?.length || 0);
-        } else {
-          console.log('❌ AdminDashboard - Carousel response not successful:', carouselResponse);
         }
       } catch (error) {
-        console.error('❌ AdminDashboard - Failed to fetch carousels:', error);
+        console.error('Failed to fetch carousels:', error);
         setCarousels([]);
       }
       
@@ -754,12 +746,10 @@ const AdminDashboard = () => {
 
   const handleUpdateCarousel = async (carouselId: string, updates: any) => {
     try {
-      console.log('Updating carousel:', carouselId, 'with data:', updates);
       const response = await apiClient.request(`/carousels/admin/${carouselId}`, {
         method: 'PUT',
         body: JSON.stringify(updates)
       });
-      console.log('✏️  AdminDashboard - Carousel update response:', { success: response?.success, id: response?.carousel?.id });
       
       if (response.success) {
         toast({
@@ -787,12 +777,10 @@ const AdminDashboard = () => {
 
   const handleAddSlide = async (carouselId: string, slideData: any) => {
     try {
-      console.log('🔍 Adding slide to carousel:', carouselId, 'with data:', slideData);
       const response = await apiClient.request(`/carousels/admin/${carouselId}/slides`, {
         method: 'POST',
         body: JSON.stringify(slideData)
       });
-      console.log('🖼️  AdminDashboard - Add slide response:', { success: response?.success, slideId: response?.slide?.id, image: response?.slide?.image });
       
       if (response.success) {
         toast({
@@ -803,7 +791,6 @@ const AdminDashboard = () => {
         setSelectedCarouselForSlide(null);
         fetchAdminData(); // Refresh data
       } else {
-        console.error('❌ Slide addition failed:', response);
         toast({
           title: "Error",
           description: response.message || "Failed to add slide. Please try again.",
@@ -811,7 +798,6 @@ const AdminDashboard = () => {
         });
       }
     } catch (error) {
-      console.error('❌ Slide addition error:', error);
       toast({
         title: "Error",
         description: "Failed to add slide. Please try again.",
