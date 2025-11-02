@@ -6,6 +6,11 @@ const router = express.Router();
 // Initialize Razorpay only if credentials are available
 let razorpay = null;
 
+// Debug logging
+console.log('🔍 Razorpay initialization check:');
+console.log('   RAZORPAY_KEY_ID exists:', !!process.env.RAZORPAY_KEY_ID);
+console.log('   RAZORPAY_KEY_SECRET exists:', !!process.env.RAZORPAY_KEY_SECRET);
+
 if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
   razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,

@@ -161,8 +161,12 @@ npm start
    JWT_SECRET=your-production-jwt-secret
    ADMIN_EMAIL=admin@yourdomain.in
    ADMIN_PASSWORD=your-secure-admin-password
+   MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/dbname
    RAZORPAY_KEY_ID=rzp_live_RD4Ia7eTGct90w
    RAZORPAY_KEY_SECRET=B18FWmc6yNaaVSQkPDULsJ2U
+   CLOUDINARY_CLOUD_NAME=dpeun5lss
+   CLOUDINARY_API_KEY=857648438576998
+   CLOUDINARY_API_SECRET=jx970PKPrcQMZ8G24HPjMEKiMq4
    ```
 
 4. **Custom Domain:**

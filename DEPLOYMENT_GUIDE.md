@@ -64,6 +64,11 @@ JWT_SECRET=your-super-secret-jwt-key-here
 ADMIN_EMAIL=admin@figureitout.in
 ADMIN_PASSWORD=admin123456
 FRONTEND_URL=https://figureitout.in
+RAZORPAY_KEY_ID=rzp_live_RD4Ia7eTGct90w
+RAZORPAY_KEY_SECRET=B18FWmc6yNaaVSQkPDULsJ2U
+CLOUDINARY_CLOUD_NAME=dpeun5lss
+CLOUDINARY_API_KEY=857648438576998
+CLOUDINARY_API_SECRET=jx970PKPrcQMZ8G24HPjMEKiMq4
 ```
 
 ### 4. Custom Domain
@@ -276,6 +281,12 @@ curl https://api.figureitout.in/api/carousels
    - Check package.json dependencies
    - Verify Node.js version
    - Check build commands
+
+5. **Payment Service Not Configured (503 Error)**
+   - This error occurs when Razorpay credentials are missing in production
+   - Add `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` to Render environment variables
+   - Also add `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET`
+   - Restart the Render service after adding environment variables
 
 ## 📞 Support
 
