@@ -20,14 +20,15 @@ const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
-  
+
   // Cache busting - force fresh deployment
   console.log('ProductDetail loaded - v2025-01-07-6 (Power score removed, Reviews added)');
-  
+
   // Product state
-  
+
   const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useStore();
-  
+  const { toast } = useToast();
+
   const [product, setProduct] = useState<any | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -39,14 +40,14 @@ const ProductDetail = () => {
     window.scrollTo(0, 0);
     setIsLoading(true);
     setNotFound(false);
-    
+
     (async () => {
       if (!id) {
         setIsLoading(false);
         setNotFound(true);
         return;
       }
-      
+
       try {
         const resp = await apiClient.getProduct(id);
         if (resp && resp.success) {
@@ -83,7 +84,7 @@ const ProductDetail = () => {
       </>
     );
   }
-  
+
   if (notFound || !product) {
     return (
       <>
@@ -117,8 +118,6 @@ const ProductDetail = () => {
   };
 
   const handleAddToCart = () => {
-    const { toast } = useToast();
-    
     // Check stock availability
     if (!product.inStock) {
       toast({
@@ -128,7 +127,7 @@ const ProductDetail = () => {
       });
       return;
     }
-    
+
     // Check if requested quantity exceeds available stock
     if (product.stockQuantity && quantity > product.stockQuantity) {
       toast({
@@ -138,12 +137,12 @@ const ProductDetail = () => {
       });
       return;
     }
-    
+
     // Add to cart with the selected quantity
     for (let i = 0; i < quantity; i++) {
       addToCart(product);
     }
-    
+
     toast({
       title: "Added to Cart",
       description: `${quantity} x ${product.name} has been added to your cart.`,
@@ -152,8 +151,6 @@ const ProductDetail = () => {
   };
 
   const handleBuyNow = () => {
-    const { toast } = useToast();
-    
     // Check stock availability
     if (!product.inStock) {
       toast({
@@ -163,7 +160,7 @@ const ProductDetail = () => {
       });
       return;
     }
-    
+
     // Check if requested quantity exceeds available stock
     if (product.stockQuantity && quantity > product.stockQuantity) {
       toast({
@@ -173,18 +170,18 @@ const ProductDetail = () => {
       });
       return;
     }
-    
+
     // Add to cart with the selected quantity
     for (let i = 0; i < quantity; i++) {
       addToCart(product);
     }
-    
+
     toast({
       title: "Added to Cart",
       description: `${quantity} x ${product.name} has been added to your cart. Redirecting to checkout...`,
       variant: "default"
     });
-    
+
     // Navigate to checkout after a short delay
     setTimeout(() => {
       window.location.href = '/checkout';
@@ -205,7 +202,7 @@ const ProductDetail = () => {
   return (
     <PageTransition className="min-h-screen bg-white">
       <Header />
-      
+
       {/* Product Details - Compact Layout */}
       <div className="container mx-auto px-4 py-6">
         <div className="grid lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
@@ -217,11 +214,10 @@ const ProductDetail = () => {
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
-                  className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${
-                    selectedImage === index 
-                      ? 'border-black' 
+                  className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${selectedImage === index
+                      ? 'border-black'
                       : 'border-gray-200 hover:border-gray-400'
-                  }`}
+                    }`}
                 >
                   <FallbackImage
                     src={image}
@@ -232,7 +228,7 @@ const ProductDetail = () => {
                 </button>
               ))}
             </div>
-            
+
             {/* Main Image */}
             <div className="flex-1 aspect-square bg-gray-50 rounded-lg overflow-hidden">
               <FallbackImage
@@ -272,8 +268,8 @@ const ProductDetail = () => {
             <div className="space-y-2">
               <p className="text-sm font-medium text-gray-900">Quantity:</p>
               <div className="relative w-20">
-                <select 
-                  value={quantity} 
+                <select
+                  value={quantity}
                   onChange={(e) => setQuantity(Number(e.target.value))}
                   className="w-full p-2 border border-gray-300 rounded text-sm appearance-none bg-white"
                   disabled={!product.inStock}
@@ -322,10 +318,10 @@ const ProductDetail = () => {
             <div className="flex items-center gap-2">
               <div className={`w-2 h-2 rounded-full ${product.inStock ? 'bg-green-500' : 'bg-red-500'}`} />
               <span className={`text-sm ${product.inStock ? 'text-green-600' : 'text-red-600'}`}>
-                {product.inStock 
-                  ? (product.stockQuantity 
-                      ? `${product.stockQuantity} in Stock` 
-                      : 'In Stock')
+                {product.inStock
+                  ? (product.stockQuantity
+                    ? `${product.stockQuantity} in Stock`
+                    : 'In Stock')
                   : 'Out of Stock'
                 }
               </span>
