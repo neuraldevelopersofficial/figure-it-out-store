@@ -154,8 +154,11 @@
     @apply border-border;
   }
 
+  html,
   body {
-    @apply bg-background text-foreground overflow-x-hidden w-full;
+    @apply bg-background text-foreground overflow-x-hidden;
+    width: 100%;
+    position: relative;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
@@ -163,7 +166,12 @@
     @apply overflow-x-hidden w-full;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-weight: 600;
   }
 
