@@ -32,7 +32,7 @@ const Footer = () => {
               <Link to="/faq" className="block text-gray-700 hover:text-red-600 transition-colors text-xs">FAQs</Link>
               <Link to="/account" className="block text-gray-700 hover:text-red-600 transition-colors text-xs">My Account</Link>
             </div>
-            
+
             {/* Trust Badges */}
             <div className="space-y-2 mt-3">
               <div className="flex items-center space-x-2">
@@ -69,14 +69,7 @@ const Footer = () => {
 
           {/* STORE & SOCIAL */}
           <div className="space-y-3">
-            <h3 className="text-sm font-bold text-red-600">STORE NEAR ME:</h3>
-            <div className="space-y-1">
-              <Link to="/stores/mumbai" className="block text-gray-700 hover:text-red-600 transition-colors text-xs">Mumbai</Link>
-              <Link to="/stores/pune" className="block text-gray-700 hover:text-red-600 transition-colors text-xs">Pune</Link>
-              <Link to="/stores/bangalore" className="block text-gray-700 hover:text-red-600 transition-colors text-xs">Bangalore</Link>
-              <Link to="/stores" className="block text-blue-600 font-bold hover:text-blue-800 transition-colors text-xs">View More</Link>
-            </div>
-            
+
             {/* Social Media */}
             <div className="mt-3">
               <h4 className="text-xs font-semibold text-gray-800 mb-2">Follow Us:</h4>
@@ -84,7 +77,7 @@ const Footer = () => {
                 <Button className="w-6 h-6 bg-blue-600 rounded-full p-0 hover:bg-blue-700 transition-colors">
                   <Facebook className="h-3 w-3 text-white" />
                 </Button>
-                <Button 
+                <Button
                   className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full p-0 hover:opacity-90 transition-opacity"
                   onClick={() => window.open('https://www.instagram.com/figureitout.in?igsh=MTRsem9vcnVlMzZteA==', '_blank')}
                 >
