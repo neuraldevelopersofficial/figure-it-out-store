@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Multiple Images Feature</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+        .test-section { 
+            margin: 20px 0; 
+            padding: 20px; 
+            border: 2px solid #ddd; 
+            border-radius: 10px;
+        }
+        .success { border-color: #28a745; background: #d4edda; }
+        .error { border-color: #dc3545; background: #f8d7da; }
+        .info { border-color: #17a2b8; background: #d1ecf1; }
+        
+        img { 
+            max-width: 200px; 
+            max-height: 200px;
+            border: 1px solid #ddd; 
+            border-radius: 5px;
+            margin: 5px;
+        }
+        
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 10px 0;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🖼️ Test Multiple Images Feature</h1>
+        <p>Testing the new multiple images functionality for products.</p>
+    </div>
+    
+    <div class="container">
+        <div class="test-section info">
+            <h3>🧪 Test 1: API Response with Multiple Images</h3>
+            <p>Testing if the API returns products with multiple images:</p>
+            <button onclick="testApiResponse()">Test API Response</button>
+            <div id="apiResult"></div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="test-section info">
+            <h3>🧪 Test 2: Product Detail Page</h3>
+            <p>Go to a product detail page to see multiple images in action:</p>
+            <a href="/product/1" target="_blank" class="button">View Product Detail</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="test-section info">
+            <h3>🧪 Test 3: Admin Form</h3>
+            <p>Test the admin form with multiple images:</p>
+            <a href="/admin" target="_blank" class="button">Go to Admin Dashboard</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h3>📋 How to Use Multiple Images</h3>
+        <ul>
+            <li><strong>Single Field:</strong> All images in one field, separated by commas</li>
+            <li><strong>First Image:</strong> First image becomes the main image for catalog</li>
+            <li><strong>Hover Effect:</strong> Images cycle automatically when hovering over products</li>
+            <li><strong>Product Details:</strong> All images shown in gallery with main image included</li>
+            <li><strong>Google Drive:</strong> All images support Google Drive links with automatic proxy</li>
+        </ul>
+        
+        <h3>📝 Format Examples</h3>
+        
+        <h4>Admin Form & CSV - Comma Separated:</h4>
+        <pre>
+https://drive.google.com/file/d/IMG1_ID/view,https://drive.google.com/file/d/IMG2_ID/view,https://drive.google.com/file/d/IMG3_ID/view
+        </pre>
+        
+        <h4>CSV Upload Format:</h4>
+        <pre>
+id,name,category,price,image,allImages
+,Test Product,Anime Figures,2500,https://drive.google.com/file/d/MAIN_IMAGE_ID/view,"https://drive.google.com/file/d/IMG1_ID/view,https://drive.google.com/file/d/IMG2_ID/view,https://drive.google.com/file/d/IMG3_ID/view"
+        </pre>
+    </div>
+    
+    <script>
+        async function testApiResponse() {
+            const resultDiv = document.getElementById('apiResult');
+            resultDiv.innerHTML = '<p>🔄 Testing API response...</p>';
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/products');
+                const data = await response.json();
+                
+                if (data.success && data.products) {
+                    const productsWithImages = data.products.filter(p => p.images && p.images.length > 0);
+                    
+                    let html = '<div class="success status">✅ API Response Test Successful</div>';
+                    html += `<p><strong>Total Products:</strong> ${data.products.length}</p>`;
+                    html += `<p><strong>Products with Multiple Images:</strong> ${productsWithImages.length}</p>`;
+                    
+                    if (productsWithImages.length > 0) {
+                        html += '<h4>Products with Multiple Images:</h4>';
+                        productsWithImages.forEach(product => {
+                            html += `<div style="margin: 10px 0; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">`;
+                            html += `<p><strong>${product.name}</strong></p>`;
+                            html += `<p>Main Image: ${product.image}</p>`;
+                            html += `<p>Additional Images: ${product.images.length}</p>`;
+                            html += '<div class="image-grid">';
+                            product.images.forEach(img => {
+                                html += `<img src="http://localhost:5000/api/products/image-proxy?url=${encodeURIComponent(img)}" alt="Product image" onerror="this.style.display=\'none\'" />`;
+                            });
+                            html += '</div></div>';
+                        });
+                    } else {
+                        html += '<p>No products with multiple images found. Try adding some through the admin panel!</p>';
+                    }
+                    
+                    resultDiv.innerHTML = html;
+                } else {
+                    resultDiv.innerHTML = '<div class="error status">❌ API Response Test Failed</div>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error status">❌ Error: ${error.message}</div>`;
+            }
+        }
+        
+        // Auto-test on page load
+        window.onload = function() {
+            setTimeout(testApiResponse, 1000);
+        };
+    </script>
+</body>
+</html>

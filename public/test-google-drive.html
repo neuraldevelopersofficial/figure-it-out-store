@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Drive Image Tester</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .image-preview {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .image-preview img {
+            max-width: 100%;
+            max-height: 400px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+        }
+        .instructions {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Google Drive Image Tester</h1>
+        
+        <div class="instructions">
+            <h3>How to use this tester:</h3>
+            <ol>
+                <li>Paste your Google Drive link below</li>
+                <li>Click "Test Image" to verify it works</li>
+                <li>If you see "Sign in" page, fix permissions in Google Drive</li>
+                <li>Use working links in your product data</li>
+            </ol>
+        </div>
+
+        <div class="input-group">
+            <label for="imageUrl">Google Drive Image URL:</label>
+            <input type="text" id="imageUrl" placeholder="https://drive.google.com/file/d/YOUR_FILE_ID/view?usp=sharing">
+        </div>
+
+        <button onclick="testImage()">Test Image</button>
+
+        <div id="result"></div>
+        <div id="imagePreview" class="image-preview"></div>
+    </div>
+
+    <script>
+        function convertGoogleDriveUrl(url) {
+            if (!url) return '';
+            
+            // If it's already a direct image URL, return as is
+            if (url.startsWith('http') && (url.includes('drive.google.com/uc') || url.includes('lh3.googleusercontent.com'))) {
+                return url;
+            }
+            
+            // Handle Google Drive sharing links
+            if (url.includes('drive.google.com/file/d/')) {
+                const match = url.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
+                if (match && match[1]) {
+                    const fileId = match[1];
+                    return `https://drive.google.com/uc?export=view&id=${fileId}`;
+                }
+            }
+            
+            // Handle Google Drive sharing links with /view
+            if (url.includes('drive.google.com/open?id=')) {
+                const match = url.match(/id=([a-zA-Z0-9-_]+)/);
+                if (match && match[1]) {
+                    const fileId = match[1];
+                    return `https://drive.google.com/uc?export=view&id=${fileId}`;
+                }
+            }
+            
+            // If it's just a file ID, convert to direct URL
+            if (/^[a-zA-Z0-9-_]+$/.test(url)) {
+                return `https://drive.google.com/uc?export=view&id=${url}`;
+            }
+            
+            return url;
+        }
+
+        async function testImage() {
+            const url = document.getElementById('imageUrl').value.trim();
+            const resultDiv = document.getElementById('result');
+            const previewDiv = document.getElementById('imagePreview');
+            
+            if (!url) {
+                resultDiv.innerHTML = '<div class="error">Please enter a URL</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div>Testing image...</div>';
+            previewDiv.innerHTML = '';
+
+            try {
+                const convertedUrl = convertGoogleDriveUrl(url);
+                
+                // Test if image is accessible
+                const response = await fetch(convertedUrl, { method: 'HEAD' });
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ <strong>Image is accessible!</strong><br>
+                            <small>Direct URL: ${convertedUrl}</small>
+                        </div>
+                    `;
+                    
+                    // Show image preview
+                    previewDiv.innerHTML = `
+                        <h3>Image Preview:</h3>
+                        <img src="${convertedUrl}" alt="Test image" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <div style="display:none; padding: 20px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px;">
+                            <p>⚠️ Image preview failed to load</p>
+                            <p>This might be a permission issue. Check Google Drive settings.</p>
+                        </div>
+                    `;
+                } else if (response.status === 403) {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            ❌ <strong>Access Denied (403)</strong><br>
+                            The image is not publicly accessible. Please:<br>
+                            1. Go to Google Drive<br>
+                            2. Right-click the image → "Share"<br>
+                            3. Set to "Anyone with the link can view"<br>
+                            4. Set permission to "Viewer"
+                        </div>
+                    `;
+                } else if (response.status === 404) {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            ❌ <strong>Image Not Found (404)</strong><br>
+                            The image doesn't exist or the link is incorrect.
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            ❌ <strong>Error ${response.status}</strong><br>
+                            Failed to access the image.
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ <strong>Network Error</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Allow Enter key to test
+        document.getElementById('imageUrl').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                testImage();
+            }
+        });
+    </script>
+</body>
+</html>

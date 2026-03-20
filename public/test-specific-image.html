@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Your Specific Google Drive Image</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        .warning { background: #fff3cd; border-color: #ffeaa7; }
+        .info { background: #d1ecf1; border-color: #bee5eb; }
+        
+        .image-preview {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .image-preview img {
+            max-width: 100%;
+            max-height: 400px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+        }
+        .url-display {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Testing Your Specific Google Drive Image</h1>
+        
+        <div class="test-section info">
+            <h3>Your Image Details:</h3>
+            <p><strong>File ID:</strong> 1eCZ1MqayGsGzI1WwrLlJVYEmMl_Kn6pb</p>
+            <p><strong>Original Link:</strong> https://drive.google.com/file/d/1eCZ1MqayGsGzI1WwrLlJVYEmMl_Kn6pb/view?usp=sharing</p>
+            <p><strong>File Name:</strong> tanjiro-keychain.jpg</p>
+        </div>
+
+        <div class="test-section">
+            <h3>Test Results:</h3>
+            <div id="testResults">Click "Run Tests" to begin...</div>
+        </div>
+
+        <button onclick="runAllTests()" style="background: #007bff; color: white; border: none; padding: 15px 30px; border-radius: 5px; font-size: 16px; cursor: pointer;">
+            🚀 Run All Tests
+        </button>
+
+        <div class="image-preview" id="imagePreview"></div>
+    </div>
+
+    <script>
+        const FILE_ID = '1eCZ1MqayGsGzI1WwrLlJVYEmMl_Kn6pb';
+        const ORIGINAL_URL = 'https://drive.google.com/file/d/1eCZ1MqayGsGzI1WwrLlJVYEmMl_Kn6pb/view?usp=sharing';
+        
+        function convertGoogleDriveUrl(url) {
+            if (url.includes('drive.google.com/file/d/')) {
+                const match = url.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
+                if (match && match[1]) {
+                    const fileId = match[1];
+                    return `https://drive.google.com/uc?export=view&id=${fileId}`;
+                }
+            }
+            return url;
+        }
+
+        async function testImageAccess(url, description) {
+            try {
+                const response = await fetch(url, { method: 'HEAD' });
+                return {
+                    url,
+                    description,
+                    status: response.status,
+                    ok: response.ok,
+                    accessible: response.ok
+                };
+            } catch (error) {
+                return {
+                    url,
+                    description,
+                    status: 'ERROR',
+                    ok: false,
+                    accessible: false,
+                    error: error.message
+                };
+            }
+        }
+
+        async function runAllTests() {
+            const resultsDiv = document.getElementById('testResults');
+            const previewDiv = document.getElementById('imagePreview');
+            
+            resultsDiv.innerHTML = '<p>🔄 Running tests...</p>';
+            previewDiv.innerHTML = '';
+
+            const tests = [
+                {
+                    url: ORIGINAL_URL,
+                    description: 'Original sharing link'
+                },
+                {
+                    url: `https://drive.google.com/uc?export=view&id=${FILE_ID}`,
+                    description: 'Direct export URL'
+                },
+                {
+                    url: `https://drive.google.com/file/d/${FILE_ID}/preview`,
+                    description: 'Preview URL'
+                },
+                {
+                    url: `https://drive.google.com/thumbnail?id=${FILE_ID}&sz=w800`,
+                    description: 'Thumbnail URL (800px)'
+                },
+                {
+                    url: `http://localhost:5000/api/products/image-proxy?url=${encodeURIComponent(ORIGINAL_URL)}`,
+                    description: 'Backend Proxy URL (Bypasses CORS)'
+                }
+            ];
+
+            let results = [];
+            for (const test of tests) {
+                const result = await testImageAccess(test.url, test.description);
+                results.push(result);
+                await new Promise(resolve => setTimeout(resolve, 500)); // Small delay between tests
+            }
+
+            // Display results
+            let html = '<h4>Test Results:</h4>';
+            results.forEach(result => {
+                const statusClass = result.accessible ? 'success' : 'error';
+                const statusIcon = result.accessible ? '✅' : '❌';
+                
+                html += `
+                    <div class="test-section ${statusClass}">
+                        <h5>${statusIcon} ${result.description}</h5>
+                        <p><strong>Status:</strong> ${result.status}</p>
+                        <p><strong>URL:</strong></p>
+                        <div class="url-display">${result.url}</div>
+                        ${result.error ? `<p><strong>Error:</strong> ${result.error}</p>` : ''}
+                    </div>
+                `;
+            });
+
+            resultsDiv.innerHTML = html;
+
+            // Try to display the working image
+            const workingResult = results.find(r => r.accessible);
+            if (workingResult) {
+                previewDiv.innerHTML = `
+                    <h3>🎉 Working Image Found!</h3>
+                    <p><strong>Use this URL in your products:</strong></p>
+                    <div class="url-display">${workingResult.url}</div>
+                    <div class="image-preview">
+                        <img src="${workingResult.url}" alt="Working image" 
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <div style="display:none; padding: 20px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px;">
+                            <p>⚠️ Image preview failed to load</p>
+                            <p>This might be a permission issue. Check Google Drive settings.</p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                previewDiv.innerHTML = `
+                    <div class="test-section error">
+                        <h3>❌ No Working URLs Found</h3>
+                        <p>All direct URLs failed due to CORS restrictions. However, we have a solution!</p>
+                        
+                        <div class="test-section info">
+                            <h4>🚀 Solution: Use Backend Proxy</h4>
+                            <p>Your Google Drive permissions are correct, but browsers block direct access due to CORS.</p>
+                            <p><strong>Use this proxy URL in your products:</strong></p>
+                            <div class="url-display">http://localhost:5000/api/products/image-proxy?url=${encodeURIComponent(ORIGINAL_URL)}</div>
+                            
+                            <h5>How it works:</h5>
+                            <ol>
+                                <li>Your frontend requests the image from our backend</li>
+                                <li>Backend fetches it from Google Drive (no CORS restrictions)</li>
+                                <li>Backend serves it to your frontend</li>
+                                <li>Images display perfectly!</li>
+                            </ol>
+                        </div>
+                        
+                        <h4>🔧 Alternative: Test the Proxy</h4>
+                        <p>Click the button below to test if the proxy works:</p>
+                        <button onclick="testProxy()" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                            Test Proxy Image
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        async function testProxy() {
+            const proxyUrl = `http://localhost:5000/api/products/image-proxy?url=${encodeURIComponent(ORIGINAL_URL)}`;
+            const previewDiv = document.getElementById('imagePreview');
+            
+            previewDiv.innerHTML = '<p>🔄 Testing proxy...</p>';
+            
+            try {
+                const response = await fetch(proxyUrl);
+                if (response.ok) {
+                    previewDiv.innerHTML = `
+                        <h3>🎉 Proxy Working!</h3>
+                        <p><strong>Your image is accessible through the proxy!</strong></p>
+                        <p><strong>Use this URL in your products:</strong></p>
+                        <div class="url-display">${proxyUrl}</div>
+                        <div class="image-preview">
+                            <img src="${proxyUrl}" alt="Working image via proxy">
+                        </div>
+                    `;
+                } else {
+                    previewDiv.innerHTML = `
+                        <div class="test-section error">
+                            <h3>❌ Proxy Test Failed</h3>
+                            <p>Status: ${response.status}</p>
+                            <p>Make sure your backend server is running on port 5000.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                previewDiv.innerHTML = `
+                    <div class="test-section error">
+                        <h3>❌ Proxy Test Failed</h3>
+                        <p>Error: ${error.message}</p>
+                        <p>Make sure your backend server is running on port 5000.</p>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

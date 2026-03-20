@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Proxy Fixed</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+        .test { 
+            margin: 20px 0; 
+            padding: 20px; 
+            border: 2px solid #ddd; 
+            border-radius: 10px;
+            text-align: center;
+        }
+        img { 
+            max-width: 300px; 
+            max-height: 300px;
+            border: 1px solid #ddd; 
+            border-radius: 5px;
+        }
+        .success { border-color: #28a745; background: #d4edda; }
+        .error { border-color: #dc3545; background: #f8d7da; }
+        .info { border-color: #17a2b8; background: #d1ecf1; }
+        
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        
+        .url-display {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            word-break: break-all;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Test Proxy Fixed</h1>
+        <p>Testing the proxy endpoint after fixing the route ordering issue.</p>
+    </div>
+    
+    <div class="container">
+        <div class="test info">
+            <h3>🧪 Testing Backend Proxy (Fixed Route Order)</h3>
+            <p>URL: <code>https://drive.google.com/uc?export=view&id=1eCZ1MqayGsGzI1WwrLlJVYEmMl_Kn6pb</code></p>
+            <div class="url-display">http://localhost:5000/api/products/image-proxy?url=https://drive.google.com/uc?export=view&id=1eCZ1MqayGsGzI1WwrLlJVYEmMl_Kn6pb</div>
+            <img 
+                src="http://localhost:5000/api/products/image-proxy?url=https://drive.google.com/uc?export=view&id=1eCZ1MqayGsGzI1WwrLlJVYEmMl_Kn6pb" 
+                alt="Naruto Figure via Proxy"
+                onload="document.getElementById('proxyStatus').innerHTML='✅ Proxy image loaded successfully!'; this.parentElement.classList.add('success');"
+                onerror="document.getElementById('proxyStatus').innerHTML='❌ Proxy image failed to load'; this.parentElement.classList.add('error');"
+            />
+            <div id="proxyStatus" class="status info">🔄 Testing...</div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="test info">
+            <h3>🧪 Direct Google Drive Test (For Comparison)</h3>
+            <p>URL: <code>https://drive.google.com/uc?export=view&id=1eCZ1MqayGsGzI1WwrLlJVYEmMl_Kn6pb</code></p>
+            <img 
+                src="https://drive.google.com/uc?export=view&id=1eCZ1MqayGsGzI1WwrLlJVYEmMl_Kn6pb" 
+                alt="Direct Google Drive Test"
+                onload="document.getElementById('directStatus').innerHTML='✅ Direct image loaded!'; this.parentElement.classList.add('success');"
+                onerror="document.getElementById('directStatus').innerHTML='❌ Direct image failed'; this.parentElement.classList.add('error');"
+            />
+            <div id="directStatus" class="status info">🔄 Testing...</div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h3>📋 Expected Results</h3>
+        <ul>
+            <li><strong>If proxy works:</strong> ✅ Green background, image displays</li>
+            <li><strong>If proxy fails:</strong> ❌ Red background, broken image</li>
+            <li><strong>Check backend console:</strong> Look for 🖼️ Image proxy logs</li>
+        </ul>
+        
+        <h3>🔧 Next Steps</h3>
+        <ul>
+            <li>If proxy works: Your frontend images should now display correctly</li>
+            <li>If proxy fails: Check the backend console for error messages</li>
+            <li>Test your main store: Go back to your store and refresh the page</li>
+        </ul>
+    </div>
+    
+    <script>
+        // Auto-check after 3 seconds
+        setTimeout(() => {
+            const proxyStatus = document.getElementById('proxyStatus').textContent;
+            const directStatus = document.getElementById('directStatus').textContent;
+            
+            console.log('Proxy Status:', proxyStatus);
+            console.log('Direct Status:', directStatus);
+            
+            if (proxyStatus.includes('✅')) {
+                console.log('🎉 PROXY IS WORKING! Your frontend images should display correctly.');
+            } else {
+                console.log('❌ PROXY IS STILL FAILING. Check backend console for errors.');
+            }
+        }, 3000);
+    </script>
+</body>
+</html>

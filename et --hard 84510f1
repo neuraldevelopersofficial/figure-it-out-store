@@ -1,0 +1,58 @@
+[33m84510f1[m Fix product update - create product if not found instead of returning 404
+[1mdiff --git a/backend/routes/admin.js b/backend/routes/admin.js[m
+[1mindex 1fc9dcc..4e264d5 100644[m
+[1m--- a/backend/routes/admin.js[m
+[1m+++ b/backend/routes/admin.js[m
+[36m@@ -647,8 +647,24 @@[m [mrouter.put('/products/:id', authenticateToken, requireAdmin, async (req, res) =>[m
+       }[m
+       [m
+       if (!result || !result.value) {[m
+[31m-        console.log('❌ Backend - Product not found after all attempts:', { id, filter });[m
+[31m-        return res.status(404).json({ error: 'Product not found' });[m
+[32m+[m[32m        console.log('❌ Backend - Product not found, creating new product with ID:', id);[m
+[32m+[m[41m        [m
+[32m+[m[32m        // Create new product with the provided ID[m
+[32m+[m[32m        const newProduct = {[m
+[32m+[m[32m          id: id,[m
+[32m+[m[32m          ...updates,[m
+[32m+[m[32m          created_at: new Date().toISOString(),[m
+[32m+[m[32m          updated_at: new Date().toISOString()[m
+[32m+[m[32m        };[m
+[32m+[m[41m        [m
+[32m+[m[32m        try {[m
+[32m+[m[32m          const insertResult = await col.insertOne(newProduct);[m
+[32m+[m[32m          console.log('✅ Backend - Product created successfully:', { id, productName: newProduct.name });[m
+[32m+[m[32m          return res.json({ success: true, message: 'Product created successfully', product: newProduct });[m
+[32m+[m[32m        } catch (insertError) {[m
+[32m+[m[32m          console.error('❌ Backend - Failed to create product:', insertError);[m
+[32m+[m[32m          return res.status(500).json({ error: 'Failed to create product' });[m
+[32m+[m[32m        }[m
+       }[m
+       [m
+       console.log('✅ Backend - Product updated successfully:', { id, productName: result.value.name });[m
+[36m@@ -668,7 +684,24 @@[m [mrouter.put('/products/:id', authenticateToken, requireAdmin, async (req, res) =>[m
+     }[m
+     [m
+     if (!updatedProduct) {[m
+[31m-      return res.status(404).json({ error: 'Product not found' });[m
+[32m+[m[32m      console.log('❌ Backend - Product not found in memory store, creating new product with ID:', id);[m
+[32m+[m[41m      [m
+[32m+[m[32m      // Create new product in memory store[m
+[32m+[m[32m      const newProduct = {[m
+[32m+[m[32m        id: id,[m
+[32m+[m[32m        ...updates,[m
+[32m+[m[32m        created_at: new Date().toISOString(),[m
+[32m+[m[32m        updated_at: new Date().toISOString()[m
+[32m+[m[32m      };[m
+[32m+[m[41m      [m
+[32m+[m[32m      try {[m
+[32m+[m[32m        updatedProduct = await store.add(newProduct);[m
+[32m+[m[32m        console.log('✅ Backend - Product created in memory store:', { id, productName: newProduct.name });[m
+[32m+[m[32m        return res.json({ success: true, message: 'Product created successfully', product: updatedProduct });[m
+[32m+[m[32m      } catch (createError) {[m
+[32m+[m[32m        console.error('❌ Backend - Failed to create product in memory store:', createError);[m
+[32m+[m[32m        return res.status(500).json({ error: 'Failed to create product' });[m
+[32m+[m[32m      }[m
+     }[m
+ [m
+     res.json({ success: true, message: 'Product updated successfully', product: updatedProduct });[m
